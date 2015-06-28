@@ -1,0 +1,86 @@
+<div id="help_seg" class="help">
+    <h2>Segmentation - Help</h2><button class="help_mini" onclick='hide_help();'>X</button>
+    <ul>
+        <li>Click the "segment" button to enter segmentation mode.</li>
+        <li>Your document will be displayed as a running text with green lines separating any elementary discourse units (EDU) that have already been segmented</li>
+        <li>To add more segments, click between words to create separators</li>
+        <li>To merge adjacent segments, click on the separator between them</li>
+        <li>You can undo / redo your actions using the appropriate buttons</li>
+        <li>Don't forget to save your work before returning to edit mode</li>
+    </ul>
+    <button class="close_button" onclick='hide_help();'>Close</button>
+</div>
+
+<div id="help_edit" class="help">
+    <h2>Edit structure - Help</h2><button class="help_mini" onclick='hide_help();'>X</button>
+    <p>In edit mode, each elementary discourse unit (EDU) has its text under a line with a number giving its position in the text. Similarly, groups of units have a range of numbers. You can connect nodes, unlink them, and group them together under spans and multinuclear nodes. You can undo and redo actions at any point using the appropriate buttons. Don't forget to save your work!</p>
+
+    <h3>Connections</h3>
+    <ul>
+        <li>To connect nodes, drag from the numbers under one unit to the numbers under a target unit</li>
+        <li>To change the relation between two units, use the drop down list on the connection between them</li>
+        <li>To unlink a node from the graph, click its <button class="dummy_minibtn">X</button> button - all of the nodes connected above it will be unlinked</li>
+    </ul>
+
+    <h3>Spans</h3>
+    <ul>
+        <li>Use the <button class="dummy_minibtn">T</button> button to add a span above a node. The span will group together all of the nodes connected to that node</li>
+    </ul>
+
+    <h3>Multinuclear relations</h3>
+    <ul>
+        <li>Use the <button class="dummy_minibtn">Λ</button> button to create a multinuclear node (multinuc) above a node. The multinuc can have multiple child nodes with the same relation (e.g. a set of items in contrast to each other)</li>
+        <li>To change the relation of a multinuc to its children, change the relation box of any of its children</li>
+        <li>When connecting a new node to a multinuc node, it will be added as a multinuc child by default. You can change the relation to a satellite relation by choosing "change to satellite" in the relation box</li>
+    </ul>
+    <button class="close_button" onclick='hide_help();'>Close</button>
+</div>
+
+<div id="help_open" class="help">
+    <h2>Open - Help</h2><button class="help_mini" onclick='hide_help();'>X</button>
+    <ul>
+        <li>To open a file for editing, select it from the list and click open</li>
+        <li>If no files have been imported yet, an administrator must import them from the administrator interface</li>
+        <li>If a file has been imported but you cannot see it in the open file area, your user may not have been assigned the right to edit the file. An administrator can assign the file to you from the administrator interface</li>
+    </ul>
+    <button class="close_button" onclick='hide_help();'>Close</button>
+</div>
+
+<div id="help_admin" class="help">
+    <h2>Administration - Help</h2><button class="help_mini" onclick='hide_help();'>X</button>
+
+    <p>The administration area has five tabs:</p>
+
+    <h3>Project management</h3>
+    <ul>
+        <li>All documents belong to a project - you must create at least one project to import into</li>
+        <li>Deleting a project will also delete all documents within that project</li>
+    </ul>
+
+    <h3>User management</h3>
+    <ul>
+        <li>You can add or delete users (user names may not contain spaces or special characters except underscores and cannot be: 'config', 'default', 'temp', 'emails', '_orig' or 'pending'</li>
+        <li>You can assign/unassign a user to a document. This will create/delete a copy of the document for that user to annotate</li>
+    </ul>
+
+    <h3>Document management</h3>
+    <ul>
+        <li>Deleting a document will completely remove it from the database - to delete only a single user's annotated version, unassign the document in User Management</li>
+        <li>Exporting documents will result in one *.rs3 file for each annotated version of each exported document</li>
+    </ul>
+
+    <h3>Import</h3>
+    <ul>
+        <li>You can import documents from RSTTool files (*.rs3) or plain text files (one discourse unit per line)</li>
+        <li>Documents must be imported into a project, and you can also create new projects. Project names should not contain spaces or special characters except the underscore.</li>
+        <li>For plain text files use the file default_relations.tab to edit the relations that will be available after import</li>
+        <li>Exporting documents will result in one *.rs3 file for each annotated version of each exported document</li>
+    </ul>
+
+    <h3>Database</h3>
+    <ul>
+        <li>Here you can reset the database to its initial state.</li>
+        <li>This will delete all annotation projects. Only use this option if the database becomes corrupt.</li>
+    </ul>
+    <button class="close_button" onclick='hide_help();'>Close</button>
+</div>

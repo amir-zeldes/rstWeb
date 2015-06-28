@@ -1,0 +1,12 @@
+<div id="loginform"> 
+    <form action="**script**" method="post">
+        <table class="gray_tab">
+            <tr><td>Login:</td><td><input name="username" type="text"></td></tr>
+            <tr><td>Password:</td><td><input name="pass" type="password">
+            <input type="hidden" name="login" value="loginnojs">
+            <!-- **action** -->
+            </td></tr>
+            <tr><td height="50px" colspan="2" align="right"><input type="submit" value="Login" class="nav_button"></td></tr>
+        </table>
+    </form>
+</div>

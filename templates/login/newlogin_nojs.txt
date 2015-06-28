@@ -1,0 +1,18 @@
+<div id="createlogin"> 
+
+
+    <form action="**script**" method="post">
+        <table class="gray_tab">
+            <tr><td>Real name:</td><td><input name="realname" type="text" value="**realname**"></td></tr>
+            <tr><td>User name:</td><td><input name="username" type="text" value="**username**"></td></tr>
+            <tr><td>Email address:</td><td><input name="email" type="text" value="**email**"></td></tr>
+            <tr><td>Password:</td><td><input name="pass1" type="password">
+            <tr><td>Password confirmation:</td><td><input name="pass2" type="password">
+            <input type="hidden" name="login" value="donewloginnojs">
+            <!-- **action** -->
+            </td></tr>
+            
+            <tr><td>&nbsp;</td><td><input type="submit" value="submit" class="nav_button"></td></tr>
+        </table>
+    </form>
+</div>
