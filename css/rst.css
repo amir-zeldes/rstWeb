@@ -25,9 +25,9 @@ html{width:100%}
 .num_cont{position:absolute;width:78px;height:20px;padding-top:3px; z-index:40}
 .edu_num_cont{top:1;margin-top:1px;text-align:center;width:100%}
 
-.edu:hover, .group:hover{border-color: red;z-index:200}
+.edu:hover, .group:hover{border-color: red;}
 .num_cont:hover .num_id{border: 1px solid red;border-color: red;z-index:200}
-.group:hover .whisker{border-color: red;z-index:200}
+.group:hover .whisker{border-color: red;}
 .edu:hover .num_id{border: 1px solid red;border-color: red;z-index:200}
 .edu:hover .whisker{border-color: red;z-index:200}
 
