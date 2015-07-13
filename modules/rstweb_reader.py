@@ -23,6 +23,7 @@ def read_rst(filename, rel_hash):
 
 	nodes = []
 	ordered_id = {}
+	default_rst = ""
 
 	# Get relation names and their types, append type suffix to disambiguate
 	# relation names that can be both RST and multinuc
@@ -30,6 +31,8 @@ def read_rst(filename, rel_hash):
 	for rel in item_list:
 		relname = re.sub(r"[:;,]","",rel.attributes["name"].value)
 		rel_hash[relname+"_"+rel.attributes["type"].value[0:1]] = rel.attributes["type"].value
+		if rel.attributes["type"].value == "rst" and default_rst=="":
+			default_rst = relname+"_"+rel.attributes["type"].value[0:1]
 
 
 	item_list = xmldoc.getElementsByTagName("segment")
@@ -68,7 +71,7 @@ def read_rst(filename, rel_hash):
 		if segment.hasAttribute("relname"):
 			relname = segment.attributes["relname"].value
 		else:
-			relname = ""
+			relname = default_rst
 		relname = re.sub(r"[:;,]","",relname) #remove characters used for undo logging, not allowed in rel names
 		# Note that in RSTTool, a multinuc child with a multinuc compatible relation is always interpreted as multinuc
 		if parent in element_types:
@@ -77,7 +80,8 @@ def read_rst(filename, rel_hash):
 			elif relname !="span":
 				relname = relname+"_r"
 		else:
-			relname=""
+			if not relname.endswith("_r") and len(relname)>0:
+				relname = relname+"_r"
 		edu_id = segment.attributes["id"].value
 		contents = segment.childNodes[0].data.strip()
 		nodes.append([str(ordered_id[edu_id]), id_counter, id_counter, str(ordered_id[parent]), 0, "edu", contents, relname])

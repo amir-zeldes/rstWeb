@@ -149,9 +149,9 @@ def create_project(project_name):
 
 def update_parent(node_id,new_parent_id,doc,project,user):
 	prev_parent = get_parent(node_id,doc,project,user)
+	generic_query("UPDATE rst_nodes SET parent=? WHERE id=? and doc=? and project=? and user=?",(new_parent_id,node_id,doc,project,user))
 	if new_parent_id == "0":
 		update_rel(node_id,get_def_rel("rst",doc,project),doc,project,user)
-	generic_query("UPDATE rst_nodes SET parent=? WHERE id=? and doc=? and project=? and user=?",(new_parent_id,node_id,doc,project,user))
 	if new_parent_id != "0":
 		if get_kind(new_parent_id,doc,project,user) =="multinuc":
 			multi_rel = get_multirel(new_parent_id,node_id,doc,project,user)
