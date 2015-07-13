@@ -207,7 +207,7 @@ for key in nodes:
 	node = nodes[key]
 	if node.kind!="edu":
 		g_wid = str(int((node.right- node.left+1) *100 -4 ))
-		print '<div id="lg'+ node.id +'" class="group" style="left: ' +str(int(node.left*100 - 100))+ '; width: ' + g_wid + '; top:'+ str(int(top_spacing + layer_spacing+node.depth*layer_spacing)) +'px; z-index:'+str(int(200-(node.right-node.left)))+'"><div id="wsk'+node.id+'" class="whisker" style="width:'+g_wid+';"></div></div>'
+		print '<div id="lg'+ node.id +'" class="group" style="left: ' +str(int(node.left*100 - 100))+ '; width: ' + g_wid + '; top:'+ str(int(top_spacing + layer_spacing+node.depth*layer_spacing)) +'px; z-index:1"><div id="wsk'+node.id+'" class="whisker" style="width:'+g_wid+';"></div></div>'
 		print '<div id="g'+ node.id +'" class="num_cont" style="position: absolute; left:' + pix_anchors[node.id] +'px; top:'+ str(int(4+ top_spacing + layer_spacing+node.depth*layer_spacing))+'px; z-index:'+str(int(200-(node.right-node.left)))+'"><table class="btn_tb"><tr><td rowspan="2"><button id="unlink_'+ node.id+'"  title="unlink this node" class="minibtn" onclick="act('+"'up:"+node.id+",0'"+');">X</button></td><td rowspan="2"><span class="num_id">'+str(int(node.left))+"-"+str(int(node.right))+'</span></td><td><button id="aspan_'+ node.id+'" title="add span above" class="minibtn" onclick="act('+"'sp:"+node.id+"'"+');">T</button></td></tr><tr><td><button id="amulti_'+ node.id+'" title="add multinuc above" class="minibtn" onclick="act('+"'mn:"+node.id+"'"+');">' + "Λ".decode("utf-8") + '</button></td></tr></table></div><br/>'
 
 	elif node.kind=="edu":
