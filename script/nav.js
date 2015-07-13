@@ -104,6 +104,7 @@ function do_reset(){
 }
 
 function do_open(project_doc){
+    if (project_doc =="") {alert("No document has been selected!");return;}
     document.getElementById('current_project').value = project_doc.split('/')[0];
     document.getElementById('current_doc').value = project_doc.split('/')[1];
     document.getElementById('edit_form').submit();
