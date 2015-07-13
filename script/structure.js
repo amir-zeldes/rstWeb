@@ -274,6 +274,9 @@ function update_rel(node_id,new_rel,nodes){
                 jsPlumb.connect({source: element_id,target:parent_element_id, overlays: [ ["Arrow" , { width:12, length:12, location:0.95 }], ["Custom", {create:function(component) {return make_relchooser(node_id,"rst",new_rel);},location:0.2,id:"customOverlay"}]]});
             }
             update_data(node_id,node_id+","+nodes[node_id].parent+","+nodes[node_id].kind.substring(0,1)+","+nodes[node_id].left.toString()+","+new_rel+","+new_rel_type);
+            if ($("#sel"+node_id.replace("n","")).length > 0){
+                document.getElementById('sel'+node_id.replace("n","")).value = new_rel;
+            }
 		}
 		else { // New multinuc relation for a multinuc child, change all children to this relation
             update_data(node_id,node_id+","+nodes[node_id].parent+","+nodes[node_id].kind.substring(0,1)+","+nodes[node_id].left.toString()+","+new_rel+","+new_rel_type);
