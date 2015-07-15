@@ -43,7 +43,7 @@ templatedir = scriptpath + config['controltemplates'].replace("/",os.sep)
 
 template = "main_header.html"
 header = readfile(templatedir+template)
-header = header.replace("**page_title**","Editor")
+header = header.replace("**page_title**","Structure editor")
 header = header.replace("**user**",user)
 
 

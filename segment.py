@@ -44,7 +44,7 @@ config = ConfigObj(userdir + 'config.ini')
 templatedir = scriptpath + config['controltemplates'].replace("/",os.sep)
 template = "main_header.html"
 header = readfile(templatedir+template)
-header = header.replace("**page_title**","Editor")
+header = header.replace("**page_title**","Segmentation editor")
 header = header.replace("**user**",user)
 header = header.replace("**open_disabled**",'')
 
