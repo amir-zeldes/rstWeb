@@ -215,7 +215,7 @@ function update_assignments(){
     doc_sel.empty();
     for (i=0;i<user_sel.length;i++){
         if (document.getElementById("assigned_user_sel").options[i].text == user){
-            docs = document.getElementById("assigned_user_sel").options[i].value.substring(0, document.getElementById("assigned_user_sel").options[i].value.length-2).trim().split(";");
+            docs = document.getElementById("assigned_user_sel").options[i].value.substring(0, document.getElementById("assigned_user_sel").options[i].value.length-1).trim().split(";");
             for (doc in docs){
                 doc_sel.append('<option value="' + docs[doc] + '">' + docs[doc] + '</option>');
             }

@@ -208,3 +208,5 @@ font-family: Verdana, sans-serif;
 
 .struct_logo_frame{height:8px;overflow-y:hidden;padding-top:3px;display:inline-block;border-top:2px solid black; border-right: 2px dotted black;padding-right:1px; border-bottom:2px dashed black}
 .nav_button:hover:enabled div.struct_logo_frame{height:8px;overflow-y:hidden;padding-top:3px;display:inline-block;border-top:2px solid red; border-right: 2px dotted red;padding-right:1px; border-bottom:2px dashed red}
+
+.disabled_tab{color:gray;cursor:default!important}

@@ -26,6 +26,8 @@ header = readfile(templatedir+template)
 header = header.replace("**page_title**","Logged out")
 header = header.replace('Logged in as: **user** (<a href="logout.py">log out</a>)',"")
 header = header.replace("**open_disabled**",'')
+header = header.replace("**user**",'(none)')
+header = header.replace("**logout_control**",'')
 print header
 
 print '''

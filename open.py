@@ -8,10 +8,8 @@ to the user. Other versions of each document's annotation are visible to those u
 Author: Amir Zeldes
 """
 
-
 import cgitb
 import cgi
-import os
 import _version
 
 from modules.logintools import login
@@ -19,93 +17,123 @@ from modules.configobj import ConfigObj
 from modules.pathutils import *
 from modules.rstweb_sql import *
 
-thisscript = os.environ.get('SCRIPT_NAME', '')
-action = None
-scriptpath = os.path.dirname(os.path.realpath(__file__)) + os.sep
-userdir = scriptpath + "users" + os.sep
-theform = cgi.FieldStorage()
-action, userconfig = login(theform, userdir, thisscript, action)
-user = userconfig["username"]
+def open_main(user, admin, mode, **kwargs):
 
-cgitb.enable()
+	cpout = ""
+	scriptpath = os.path.dirname(os.path.realpath(__file__)) + os.sep
+	userdir = scriptpath + "users" + os.sep
+	theform = kwargs
 
-config = ConfigObj(userdir + 'config.ini')
-templatedir = scriptpath + config['controltemplates'].replace("/",os.sep)
-template = "main_header.html"
-header = readfile(templatedir+template)
-header = header.replace("**page_title**","Open a File for Editing")
-header = header.replace("**user**",user)
+	cgitb.enable()
+	
+	config = ConfigObj(userdir + 'config.ini')
+	templatedir = scriptpath + config['controltemplates'].replace("/",os.sep)
+	template = "main_header.html"
+	header = readfile(templatedir+template)
+	header = header.replace("**page_title**","Open a file for editing")
+	header = header.replace("**user**",user)
+	
+	if mode == "server":
+		cpout += "Content-Type: text/html\n\n\n"
+		header = header.replace("**logout_control**",'(<a href="logout.py">log out</a>)')
+	else:
+		header = header.replace("**logout_control**",'')
+	cpout += header
 
-print "Content-Type: text/html\n\n\n"
-print header
+	if "current_doc" in theform:
+		current_doc = theform["current_doc"]
+		current_project = theform["current_project"]
+	else:
+		current_doc = ""
+		current_project = ""
+
+	edit_bar = "edit_bar.html"
+	edit_bar = readfile(templatedir+edit_bar)
+	edit_bar = edit_bar.replace("**doc**",current_doc)
+	edit_bar = edit_bar.replace("**project**",current_project)
+	edit_bar = edit_bar.replace("**structure_disabled**",'')
+	edit_bar = edit_bar.replace("**segment_disabled**",'')
+	edit_bar = edit_bar.replace("**relations_disabled**",'')
+	if mode == "server":
+		edit_bar = edit_bar.replace("**submit_target**",'structure.py')
+	else:
+		edit_bar = edit_bar.replace("**submit_target**",'structure')
+	edit_bar = edit_bar.replace("**action_type**",'')
+	edit_bar = edit_bar.replace("**serve_mode**",mode)
+	edit_bar = edit_bar.replace("**open_disabled**",'disabled="disabled"')
+	edit_bar = edit_bar.replace("**reset_disabled**",'disabled="disabled"')
+	edit_bar = edit_bar.replace("**save_disabled**",'disabled="disabled"')
+	edit_bar = edit_bar.replace("**undo_disabled**",'disabled="disabled"')
+	edit_bar = edit_bar.replace("**redo_disabled**",'disabled="disabled"')
+	edit_bar = edit_bar.replace('id="nav_open" class="nav_button"','id="nav_open" class="nav_button nav_button_inset"')
+	
+	
+	if admin == "0":
+		edit_bar = edit_bar.replace("**admin_disabled**",'disabled="disabled"')
+	else:
+		edit_bar = edit_bar.replace("**admin_disabled**",'')
+	
+	cpout += edit_bar
+	help = "help.html"
+	help = readfile(templatedir+help)
+	help_match = re.search(r'(<div id="help_open".*?</div>)',help,re.MULTILINE|re.DOTALL)
+	help = help_match.group(1)
+	cpout += help
+	
+	about = "about.html"
+	about = readfile(templatedir+about)
+	about = about.replace("**version**", _version.__version__)
+	cpout += about
+
+	cpout += "<h2>Current Documents</h2>"
+	cpout += '<p>List of documents you are authorized to view:</p>'
+	docs = get_docs_by_project(user)
+	if not docs:
+		cpout += "<p>No documents have been assigned for user name: <b>" + user + "</b></p>"
+	else:
+		cpout += '<select id="doclist" name="doclist" class="doclist" size="15">\n'
+		project_group=""
+		for doc in docs:
+			if project_group!=doc[1]:
+				if project_group !="":
+					cpout += '</optgroup>\n'
+				project_group = doc[1]
+				cpout += '<optgroup label="'+doc[1]+'">\n'
+			cpout += '\t<option value="'+doc[1]+"/"+doc[0]+'">'+doc[0]+'</option>\n'
+	
+		cpout += '</optgroup>\n</select>\b<br/>'
+		cpout += '''<button class="nav_button" onclick="do_open(document.getElementById('doclist').value);">Open file</button>'''
+	
+	
+	cpout += '''
+	</body>
+	</html>
+	'''
+	if mode != "server":
+		cpout = cpout.replace(".py","")
+	return cpout
 
 
-importdir = config['importdir']
+# Main script when running from Apache
+def open_main_server():
+	thisscript = os.environ.get('SCRIPT_NAME', '')
+	action = None
+	theform = cgi.FieldStorage()
+	scriptpath = os.path.dirname(os.path.realpath(__file__)) + os.sep
+	userdir = scriptpath + "users" + os.sep
+	action, userconfig = login(theform, userdir, thisscript, action)
+	user = userconfig["username"]
+	admin = userconfig["admin"]
+	kwargs={}
+	for key in theform:
+		kwargs[key] = theform[key].value
+	print open_main(user, admin, 'server', **kwargs)
 
 
-if "current_doc" in theform:
-	current_doc = theform["current_doc"].value
-	current_project = theform["current_project"].value
+if "/" in os.environ.get('SCRIPT_NAME', ''):
+	mode = "server"
 else:
-	current_doc = ""
-	current_project = ""
+	mode = "local"
 
-
-edit_bar = "edit_bar.html"
-edit_bar = readfile(templatedir+edit_bar)
-edit_bar = edit_bar.replace("**doc**",current_doc)
-edit_bar = edit_bar.replace("**project**",current_project)
-edit_bar = edit_bar.replace("**structure_disabled**",'')
-edit_bar = edit_bar.replace("**segment_disabled**",'')
-edit_bar = edit_bar.replace("**relations_disabled**",'')
-edit_bar = edit_bar.replace("**submit_target**",'structure.py')
-edit_bar = edit_bar.replace("**action_type**",'')
-edit_bar = edit_bar.replace("**open_disabled**",'disabled="disabled"')
-edit_bar = edit_bar.replace("**reset_disabled**",'disabled="disabled"')
-edit_bar = edit_bar.replace("**save_disabled**",'disabled="disabled"')
-edit_bar = edit_bar.replace("**undo_disabled**",'disabled="disabled"')
-edit_bar = edit_bar.replace("**redo_disabled**",'disabled="disabled"')
-edit_bar = edit_bar.replace('id="nav_open" class="nav_button"','id="nav_open" class="nav_button nav_button_inset"')
-
-
-if userconfig["admin"] == "0":
-	edit_bar = edit_bar.replace("**admin_disabled**",'disabled="disabled"')
-else:
-	edit_bar = edit_bar.replace("**admin_disabled**",'')
-
-print edit_bar
-help = "help.html"
-help = readfile(templatedir+help)
-help_match = re.search(r'(<div id="help_open".*?</div>)',help,re.MULTILINE|re.DOTALL)
-help = help_match.group(1)
-print help
-
-about = "about.html"
-about = readfile(templatedir+about)
-about = about.replace("**version**", _version.__version__)
-print about
-
-print "<h2>Current Documents</h2>"
-print '<p>List of documents you are authorized to view:</p>'
-docs = get_docs_by_project(user)
-if not docs:
-	print "<p>No documents have been assigned for user name: <b>" + user + "</b></p>"
-else:
-	print '<select id="doclist" name="doclist" class="doclist" size="15">\n'
-	project_group=""
-	for doc in docs:
-		if project_group!=doc[1]:
-			if project_group !="":
-				print '</optgroup>\n'
-			project_group = doc[1]
-			print '<optgroup label="'+doc[1]+'">\n'
-		print '\t<option value="'+doc[1]+"/"+doc[0]+'">'+doc[0]+'</option>\n'
-
-	print '</optgroup>\n</select>\b<br/>'
-	print '''<button class="nav_button" onclick="do_open(document.getElementById('doclist').value);">Open file</button>'''
-
-
-print '''
-</body>
-</html>
-'''
+if mode == "server":
+	open_main_server()

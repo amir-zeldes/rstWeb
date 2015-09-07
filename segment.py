@@ -22,155 +22,183 @@ import cgi
 import os
 from modules.logintools import login
 
-thisscript = os.environ.get('SCRIPT_NAME', '')
-action = None
+def segment_main(user, admin, mode, **kwargs):
+
+	cpout = ""
+	theform = kwargs
+
+	scriptpath = os.path.dirname(os.path.realpath(__file__)) + os.sep
+	userdir = scriptpath + "users" + os.sep
+
+	UTF8Writer = codecs.getwriter('utf8')
+	sys.stdout = UTF8Writer(sys.stdout)
+
+	cgitb.enable()
+
+	config = ConfigObj(userdir + 'config.ini')
+	templatedir = scriptpath + config['controltemplates'].replace("/",os.sep)
+	template = "main_header.html"
+	header = readfile(templatedir+template)
+	header = header.replace("**page_title**","Segmentation editor")
+	header = header.replace("**user**",user)
+	header = header.replace("**open_disabled**",'')
+
+
+	if admin == "0":
+		header = header.replace("**admin_disabled**",'disabled="disabled"')
+	else:
+		header = header.replace("**admin_disabled**",'')
+
+	cpout = ""
+	if mode == "server":
+		cpout += "Content-Type: text/html\n\n\n"
+		header = header.replace("**logout_control**",'(<a href="logout.py">log out</a>)')
+	else:
+		header = header.replace("**logout_control**",'')
+	cpout += header
+
+
+	if "current_doc" in theform:
+		current_doc = theform["current_doc"]
+		current_project = theform["current_project"]
+	else:
+		current_doc = ""
+		current_project = ""
+
+
+	edit_bar = "edit_bar.html"
+	edit_bar = readfile(templatedir+edit_bar)
+	edit_bar = edit_bar.replace("**doc**",current_doc)
+	edit_bar = edit_bar.replace("**project**",current_project)
+	edit_bar = edit_bar.replace("**structure_disabled**",'')
+	edit_bar = edit_bar.replace("**save_disabled**",'')
+	edit_bar = edit_bar.replace("**reset_disabled**",'')
+	edit_bar = edit_bar.replace("**segment_disabled**",'disabled="disabled"')
+	edit_bar = edit_bar.replace("**submit_target**",'segment.py')
+	edit_bar = edit_bar.replace("**action_type**",'seg_action')
+	edit_bar = edit_bar.replace("**serve_mode**",mode)
+	edit_bar = edit_bar.replace("**open_disabled**",'')
+	edit_bar = edit_bar.replace('id="nav_segment" class="nav_button"','id="nav_segment" class="nav_button nav_button_inset"')
+
+	if admin == "0":
+		edit_bar = edit_bar.replace("**admin_disabled**",'disabled="disabled"')
+	else:
+		edit_bar = edit_bar.replace("**admin_disabled**",'')
+
+	cpout += edit_bar
+
+	help = "help.html"
+	help = readfile(templatedir+help)
+	help_match = re.search(r'(<div.*?help_seg.*?</div>)',help,re.MULTILINE|re.DOTALL)
+	help = help_match.group(1)
+	cpout += help
+
+	about = "about.html"
+	about = readfile(templatedir+about)
+	about = about.replace("**version**", _version.__version__)
+	cpout += about
+
+	if current_doc =="":
+		cpout += '<p class="warn">No file found - please select a file to open</p>'
+		return cpout
+
+	cpout += '<input id="undo_log" type="hidden" value=""/>'
+	cpout += '<input id="redo_log" type="hidden" value=""/>'
+	cpout += '<input id="undo_state" type="hidden" value=""/>'
+
+	cpout += '''<div class="canvas">
+	<div id="inner_canvas">'''
+
+
+	if "reset" in theform or user=="demo":
+		if len(theform["reset"]) > 1 or user=="demo":
+			reset_rst_doc(current_doc,current_project,user)
+
+	if "seg_action" in theform:
+		if len(theform["seg_action"]) > 1:
+			action_log = theform["seg_action"]
+			if len(action_log) > 0:
+				actions = action_log.split(";")
+				for action in actions:
+					action_type = action.split(":")[0]
+					action_params = action.split(":")[1]
+					if action_type =="ins":
+						insert_seg(int(action_params.replace("tok","")),current_doc,current_project,user)
+					elif action_type =="del":
+						merge_seg_forward(int(action_params.replace("tok","")),current_doc,current_project,user)
+
+	segs={}
+
+
+	rows = get_rst_doc(current_doc,current_project,user)
+
+	cpout += '\t<script src="script/segment.js"></script>'
+	cpout += '<h2>Edit segmentation</h2>'
+	cpout += '\t<div id="control">'
+	cpout += '\t<p>Document: <b>'+current_doc+'</b> (project: <i>'+current_project+'</i>)</p>'
+	cpout += '\t<div id="segment_canvas">'
+
+	for row in rows:
+		if row[5] =="edu":
+			segs[int(row[0])] = SEGMENT(row[0],row[6])
+
+	seg_counter=0
+	tok_counter=0
+
+	segs = collections.OrderedDict(sorted(segs.items()))
+	first_seg = True
+	for seg_id in segs:
+		first_tok = True
+		seg = segs[seg_id]
+		seg_counter+=1
+		if first_seg:
+			first_seg = False
+		else:
+			cpout += '<div class="tok_space" id="tok'+str(tok_counter)+'" style="display:none" onclick="act('+"'ins:"+'tok'+str(tok_counter)+"'"+')">&nbsp;</div>'
+			cpout += '\t\t\t<div id="segend_post_tok'+str(tok_counter)+'" class="seg_end" onclick="act('+"'del:"+'tok'+str(tok_counter)+"'"+')">||</div>'
+			cpout += '\t\t</div>'
+		cpout += '\t\t<div id="seg'+ str(seg_counter) +'" class="seg">'
+		for token in seg.tokens:
+			tok_counter+=1
+			if first_tok:
+				first_tok = False
+			else:
+				cpout += '<div class="tok_space" id="tok'+str(tok_counter-1)+'" onclick="act('+"'ins:"+'tok'+str(tok_counter-1)+"'"+')">&nbsp;</div>'
+			cpout += '\t\t\t<div class="token" id="string_tok'+str(tok_counter)+'">' + token + '</div>'
+	cpout += '\t\t</div>'
+	cpout += '''\t</div></div>
+	</body>
+	</html>
+
+	'''
+	if mode != "server":
+		cpout = cpout.replace(".py","")
+	return cpout
+
+
+# Main script when running from Apache
+def segment_main_server():
+	thisscript = os.environ.get('SCRIPT_NAME', '')
+	action = None
+	theform = cgi.FieldStorage()
+	scriptpath = os.path.dirname(os.path.realpath(__file__)) + os.sep
+	userdir = scriptpath + "users" + os.sep
+	action, userconfig = login(theform, userdir, thisscript, action)
+	user = userconfig["username"]
+	admin = userconfig["admin"]
+	kwargs={}
+	for key in theform:
+		kwargs[key] = theform[key].value
+	print segment_main(user, admin, 'server', **kwargs)
+
+
 scriptpath = os.path.dirname(os.path.realpath(__file__)) + os.sep
 userdir = scriptpath + "users" + os.sep
-theform = cgi.FieldStorage()
-action, userconfig = login(theform, userdir, thisscript, action)
-user = userconfig["username"]
-
-UTF8Writer = codecs.getwriter('utf8')
-sys.stdout = UTF8Writer(sys.stdout)
-
-cgitb.enable()
-
-###GRAPHICAL PARAMETERS###
-top_spacing = 80
-layer_spacing = 60
-
-
 config = ConfigObj(userdir + 'config.ini')
-templatedir = scriptpath + config['controltemplates'].replace("/",os.sep)
-template = "main_header.html"
-header = readfile(templatedir+template)
-header = header.replace("**page_title**","Segmentation editor")
-header = header.replace("**user**",user)
-header = header.replace("**open_disabled**",'')
-
-
-if userconfig["admin"] == "0":
-	header = header.replace("**admin_disabled**",'disabled="disabled"')
+if "/" in os.environ.get('SCRIPT_NAME', ''):
+	mode = "server"
 else:
-	header = header.replace("**admin_disabled**",'')
+	mode = "local"
 
-
-importdir = config['importdir']
-
-
-print "Content-Type: text/html\n\n\n"
-print header
-
-
-if "current_doc" in theform:
-	current_doc = theform["current_doc"].value
-	current_project = theform["current_project"].value
-else:
-	current_doc = ""
-	current_project = ""
-
-
-edit_bar = "edit_bar.html"
-edit_bar = readfile(templatedir+edit_bar)
-edit_bar = edit_bar.replace("**doc**",current_doc)
-edit_bar = edit_bar.replace("**project**",current_project)
-edit_bar = edit_bar.replace("**structure_disabled**",'')
-edit_bar = edit_bar.replace("**save_disabled**",'')
-edit_bar = edit_bar.replace("**reset_disabled**",'')
-edit_bar = edit_bar.replace("**segment_disabled**",'disabled="disabled"')
-edit_bar = edit_bar.replace("**submit_target**",'segment.py')
-edit_bar = edit_bar.replace("**action_type**",'seg_action')
-edit_bar = edit_bar.replace("**open_disabled**",'')
-edit_bar = edit_bar.replace('id="nav_segment" class="nav_button"','id="nav_segment" class="nav_button nav_button_inset"')
-
-if userconfig["admin"] == "0":
-	edit_bar = edit_bar.replace("**admin_disabled**",'disabled="disabled"')
-else:
-	edit_bar = edit_bar.replace("**admin_disabled**",'')
-
-print edit_bar
-
-help = "help.html"
-help = readfile(templatedir+help)
-help_match = re.search(r'(<div.*?help_seg.*?</div>)',help,re.MULTILINE|re.DOTALL)
-help = help_match.group(1)
-print help
-
-about = "about.html"
-about = readfile(templatedir+about)
-about = about.replace("**version**", _version.__version__)
-print about
-
-if current_doc =="":
-	print '<p class="warn">No file found - please select a file to open</p>'
-	sys.exit()
-
-print '<input id="undo_log" type="hidden" value=""/>'
-print '<input id="redo_log" type="hidden" value=""/>'
-print '<input id="undo_state" type="hidden" value=""/>'
-
-print '''<div class="canvas">
-<div id="inner_canvas">'''
-
-
-if "reset" in theform or user=="demo":
-	if len(theform.getvalue("reset")) > 1 or user=="demo":
-		reset_rst_doc(current_doc,current_project,user)
-
-if "seg_action" in theform:
-	if len(theform.getvalue("seg_action")) > 1:
-		action_log = theform["seg_action"].value
-		if len(action_log) > 0:
-			actions = action_log.split(";")
-			for action in actions:
-				action_type = action.split(":")[0]
-				action_params = action.split(":")[1]
-				if action_type =="ins":
-					insert_seg(int(action_params.replace("tok","")),current_doc,current_project,user)
-				elif action_type =="del":
-					merge_seg_forward(int(action_params.replace("tok","")),current_doc,current_project,user)
-
-segs={}
-
-
-rows = get_rst_doc(current_doc,current_project,user)
-
-print '\t<script src="script/segment.js"></script>'
-print '<h2>Edit segmentation</h2>'
-print '\t<div id="control">'
-print '\t<p>Document: <b>'+current_doc+'</b> (project: <i>'+current_project+'</i>)</p>'
-print '\t<div id="segment_canvas">'
-
-for row in rows:
-	if row[5] =="edu":
-		segs[int(row[0])] = SEGMENT(row[0],row[6])
-
-seg_counter=0
-tok_counter=0
-
-segs = collections.OrderedDict(sorted(segs.items()))
-first_seg = True
-for seg_id in segs:
-	first_tok = True
-	seg = segs[seg_id]
-	seg_counter+=1
-	if first_seg:
-		first_seg = False
-	else:
-		print '<div class="tok_space" id="tok'+str(tok_counter)+'" style="display:none" onclick="act('+"'ins:"+'tok'+str(tok_counter)+"'"+')">&nbsp;</div>'
-		print '\t\t\t<div id="segend_post_tok'+str(tok_counter)+'" class="seg_end" onclick="act('+"'del:"+'tok'+str(tok_counter)+"'"+')">||</div>'
-		print '\t\t</div>'
-	print '\t\t<div id="seg'+ str(seg_counter) +'" class="seg">'
-	for token in seg.tokens:
-		tok_counter+=1
-		if first_tok:
-			first_tok = False
-		else:
-			print '<div class="tok_space" id="tok'+str(tok_counter-1)+'" onclick="act('+"'ins:"+'tok'+str(tok_counter-1)+"'"+')">&nbsp;</div>'
-		print '\t\t\t<div class="token" id="string_tok'+str(tok_counter)+'">' + token + '</div>'
-print '\t\t</div>'
-print '''\t</div></div>
-</body>
-</html>
-
-'''
+if mode == "server":
+	segment_main_server()
