@@ -8,6 +8,7 @@ html{width:100%}
     -webkit-user-select: none;
     -o-user-select: none;
     user-select: none;
+    z-index: 2;
     }
 
 .whisker{border-left: solid; border-right: solid; height:2px;display: table-cell;margin:0;border-collapse:collapse}
@@ -23,13 +24,16 @@ html{width:100%}
 
 /*.num_cont{position:absolute;width:78px;top:1;height:20px}*/
 .num_cont{position:absolute;width:78px;height:20px;padding-top:3px; z-index:40}
-.edu_num_cont{top:1;margin-top:1px;text-align:center;width:100%}
+.edu_num_cont{top:1;margin-top:1px;text-align:center;width:100%; z-index:200}
 
-.edu:hover, .group:hover{border-color: red;}
+.edu:hover{border-color: red;}
+.group:hover{border-color: red;}
 .num_cont:hover .num_id{border: 1px solid red;border-color: red;z-index:200}
 .group:hover .whisker{border-color: red;}
-.edu:hover .num_id{border: 1px solid red;border-color: red;z-index:200}
+.edu .num_id{z-index:200}
+.edu:hover .num_id{border: 1px solid red;border-color: red}
 .edu:hover .whisker{border-color: red;z-index:200}
+.group:hover .whisker{border-color: red;}
 
 .warn{color:red;font-weight:bold}
 select {font-size: 8pt; color:red; z-index:10; background-color: rgba(256, 256, 256, 0.85);}
@@ -63,7 +67,7 @@ font-size:10pt;
     margin: 0 auto;
     }
 
-.edit_bar{height:25px;
+.edit_bar{height:26px;
     z-index: 10;
     top: 60px;
     text-align:left;
@@ -90,8 +94,8 @@ h2 {	font-weight:bold;
 .minibtn:hover{background-color:#C0C0C0}
 
 
-.canvas{width:100%; height:100%}
-#inner_canvas{position:relative;overflow-x:scroll;height:100%;overflow-y:visible;
+.canvas{width:100%; position: absolute; top: 80px; bottom: 45px;}
+#inner_canvas{position:relative;overflow-x:auto;height:100%; min-height:80%;overflow-y:visible;
     -moz-user-select: -moz-none;
     -khtml-user-select: none;
     -webkit-user-select: none;
@@ -118,7 +122,7 @@ h2 {	font-weight:bold;
 .seg_end:before{content:"\a0\a0"}
 .seg_end:hover:before{content:"x"}
 
-.tab{position: absolute;left: 0px; top:85px; background-color:white;height: 700px; width: 500px;padding-left:5px}
+.tab{position: absolute;left: 0px; top:86px; background-color:white;height: 700px; width: 500px;padding-left:5px}
 .tab_btn{width:82px;top:85px;position:absolute;z-index:2;border-width:1px;border-color: black black black black; border-style: solid; text-align:center; border-top-left-radius: 6px; border-top-right-radius: 6px; cursor: pointer; background-color: buttonface; border-bottom-color: black}
 .tab_btn:after{content: "\a0"; width:8px; border-bottom-style: solid; border-bottom-width:1px;border-bottom-color: black; left: 82px;position:absolute;top:0px}
 button:hover:enabled, .nav_button:hover:enabled{  color: red; background: #f5f5f5; }
@@ -205,3 +209,8 @@ font-family: Verdana, sans-serif;
 .website{font-size:9pt}
 
 .dummy_minibtn{z-index:120;width:13px;height:13px;padding:0px;border:0px;font-size:9px; border:solid 1px}
+
+.struct_logo_frame{height:8px;overflow-y:hidden;padding-top:3px;display:inline-block;border-top:2px solid black; border-right: 2px dotted black;padding-right:1px; border-bottom:2px dashed black}
+.nav_button:hover:enabled div.struct_logo_frame{height:8px;overflow-y:hidden;padding-top:3px;display:inline-block;border-top:2px solid red; border-right: 2px dotted red;padding-right:1px; border-bottom:2px dashed red}
+
+.disabled_tab{color:gray;cursor:default!important}

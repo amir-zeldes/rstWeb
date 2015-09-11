@@ -18,7 +18,8 @@ function open_segment(){
             return;
         }
     }
-    document.getElementById("edit_form").action="segment.py";
+    document.getElementById("edit_form").action="segment";
+    if(document.getElementById("serve_mode").value=="server"){document.getElementById("edit_form").action="segment.py";}
     document.getElementById("edit_form").submit();
 }
 
@@ -29,7 +30,8 @@ function open_structure(){
             return;
         }
     }
-    document.getElementById("edit_form").action="structure.py";
+    document.getElementById("edit_form").action="structure";
+    if(document.getElementById("serve_mode").value=="server"){document.getElementById("edit_form").action="structure.py";}
     document.getElementById("edit_form").submit();
 }
 
@@ -40,7 +42,12 @@ function open_open(){
             return;
         }
     }
-    document.getElementById("edit_form").action="open.py";
+    if(document.getElementById("serve_mode").value=="server"){
+		document.getElementById("edit_form").action="open.py";
+	}
+	else{
+		document.getElementById("edit_form").action="open";	
+	}
     document.getElementById("edit_form").submit();
 }
 
@@ -51,7 +58,8 @@ function open_admin(){
             return;
         }
     }
-    document.getElementById("edit_form").action="admin.py";
+    document.getElementById("edit_form").action="admin";
+    if(document.getElementById("serve_mode").value=="server"){document.getElementById("edit_form").action="admin.py";}
     document.getElementById("edit_form").submit();
 }
 
