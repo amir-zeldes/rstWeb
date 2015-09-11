@@ -8,6 +8,7 @@ html{width:100%}
     -webkit-user-select: none;
     -o-user-select: none;
     user-select: none;
+    z-index: 2;
     }
 
 .whisker{border-left: solid; border-right: solid; height:2px;display: table-cell;margin:0;border-collapse:collapse}
@@ -23,13 +24,16 @@ html{width:100%}
 
 /*.num_cont{position:absolute;width:78px;top:1;height:20px}*/
 .num_cont{position:absolute;width:78px;height:20px;padding-top:3px; z-index:40}
-.edu_num_cont{top:1;margin-top:1px;text-align:center;width:100%}
+.edu_num_cont{top:1;margin-top:1px;text-align:center;width:100%; z-index:200}
 
-.edu:hover, .group:hover{border-color: red;}
+.edu:hover{border-color: red;}
+.group:hover{border-color: red;}
 .num_cont:hover .num_id{border: 1px solid red;border-color: red;z-index:200}
 .group:hover .whisker{border-color: red;}
-.edu:hover .num_id{border: 1px solid red;border-color: red;z-index:200}
+.edu .num_id{z-index:200}
+.edu:hover .num_id{border: 1px solid red;border-color: red}
 .edu:hover .whisker{border-color: red;z-index:200}
+.group:hover .whisker{border-color: red;}
 
 .warn{color:red;font-weight:bold}
 select {font-size: 8pt; color:red; z-index:10; background-color: rgba(256, 256, 256, 0.85);}
