@@ -55,7 +55,7 @@ function act(action){
         nodes = parse_data();
         append_undo("rl:" + params[0] + "," + nodes["n"+params[0]].relname);
         if (nodes["n"+params[0]].parent != "n0"){
-            if (nodes[nodes["n"+params[0]].parent].kind=="multinuc" && nodes[nodes["n"+params[0]].parent].parent == "n0" && get_rel_type(params[1])=="rst" && count_multinuc_children(nodes["n"+params[0]].parent,nodes)<2){
+            if (nodes[nodes["n"+params[0]].parent].kind=="multinuc" && nodes[nodes["n"+params[0]].parent].parent == "n0" && get_rel_type(params[1])=="rst" && count_multinuc_children(nodes["n"+params[0]].parent,nodes)<2 && get_rel_type(nodes["n"+params[0]].relname)=="multinuc"){
             //attempted to change last multinuc child of a root node to RST - abort
                 alert("Unable to change last child of unlinked multinuc to satellite relation!");
                 enable_buttons();
