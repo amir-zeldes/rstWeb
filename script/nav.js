@@ -42,8 +42,12 @@ function open_open(){
             return;
         }
     }
-    document.getElementById("edit_form").action="open";
-    if(document.getElementById("serve_mode").value=="server"){document.getElementById("edit_form").action="open.py";}
+    if(document.getElementById("serve_mode").value=="server"){
+		document.getElementById("edit_form").action="open.py";
+	}
+	else{
+		document.getElementById("edit_form").action="open";	
+	}
     document.getElementById("edit_form").submit();
 }
 
