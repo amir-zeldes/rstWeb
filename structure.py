@@ -15,6 +15,7 @@ import codecs
 import sys
 import cgi
 import os
+import datetime
 import _version
 from modules.configobj import ConfigObj
 from modules.pathutils import *
@@ -55,9 +56,11 @@ def structure_main(user, admin, mode, **kwargs):
 	if "current_doc" in theform:
 		current_doc = theform["current_doc"]
 		current_project = theform["current_project"]
+		current_guidelines = get_guidelines_url(current_project)
 	else:
 		current_doc = ""
 		current_project = ""
+		current_guidelines = ""
 
 	edit_bar = "edit_bar.html"
 	edit_bar = readfile(templatedir+edit_bar)
@@ -66,6 +69,7 @@ def structure_main(user, admin, mode, **kwargs):
 	edit_bar = edit_bar.replace("**structure_disabled**",'disabled="disabled"')
 	edit_bar = edit_bar.replace("**segment_disabled**",'')
 	edit_bar = edit_bar.replace("**relations_disabled**",'')
+	edit_bar = edit_bar.replace("**current_guidelines**",current_guidelines)
 	if mode == "server":
 		edit_bar = edit_bar.replace("**submit_target**",'structure.py')
 	else:
@@ -93,6 +97,8 @@ def structure_main(user, admin, mode, **kwargs):
 	about = about.replace("**version**", _version.__version__)
 	cpout += about
 
+	if current_guidelines != "":
+		cpout += '<script>enable_guidelines();</script>'
 	cpout += '<script src="./script/structure.js"></script>'
 
 	if current_doc =="":
@@ -128,19 +134,26 @@ def structure_main(user, admin, mode, **kwargs):
 					action_type = action.split(":")[0]
 					action_params = action.split(":")[1]
 					params = action_params.split(",")
-					if action_type =="up":
+					if action_type == "up":
 						update_parent(params[0],params[1],current_doc,current_project,user)
-					elif action_type =="sp":
+					elif action_type == "sp":
 						insert_parent(params[0],"span","span",current_doc,current_project,user)
-					elif action_type =="mn":
+					elif action_type == "mn":
 						insert_parent(params[0],def_multirel,"multinuc",current_doc,current_project,user)
-					elif action_type =="rl":
+					elif action_type == "rl":
 						update_rel(params[0],params[1],current_doc,current_project,user)
 					else:
 						cpout += '<script>alert("the action was: " + theform["action"]);</script>'
 
-	if "reset" in theform or user=="demo":
-		if len(theform["reset"]) > 1 or user=="demo":
+	if "logging" in theform:
+		if len(theform["logging"]) > 1:
+			if get_setting("logging") == "on":
+				logging = theform["logging"]
+				if len(logging) > 0:
+					update_log(current_doc,current_project,user,logging,"structure",str(datetime.datetime.now()))
+
+	if "reset" in theform or user == "demo":
+		if len(theform["reset"]) > 1 or user == "demo":
 			reset_rst_doc(current_doc,current_project,user)
 
 	nodes={}
@@ -150,7 +163,7 @@ def structure_main(user, admin, mode, **kwargs):
 			relkind = rel_kinds[row[7]]
 		else:
 			relkind = "span"
-		if row[5] =="edu":
+		if row[5] == "edu":
 			nodes[row[0]] = NODE(row[0],row[1],row[2],row[3],row[4],row[5],row[6],row[7],relkind)
 		else:
 			nodes[row[0]] = NODE(row[0],0,0,row[3],row[4],row[5],row[6],row[7],relkind)
@@ -244,6 +257,7 @@ def structure_main(user, admin, mode, **kwargs):
 	cpout += '<input id="undo_log" type="hidden" value=""/>'
 	cpout += '<input id="redo_log" type="hidden" value=""/>'
 	cpout += '<input id="undo_state" type="hidden" value=""/>'
+	cpout += '<input id="logging" type="hidden" value=""/>'
 
 	cpout += '''	<script src="./script/jquery.jsPlumb-1.7.5-min.js"></script>
 
