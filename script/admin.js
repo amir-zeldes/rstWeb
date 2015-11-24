@@ -82,11 +82,11 @@ function admin(action){
             document.getElementById("sel_tab").value = "users";
 			break;
 		case "delete_project":
-            if ($('#del_project_select').length == 0) {
+            if ($('#project_select').length == 0) {
                 alert("No projects available!");
                 return;
             }
-		    projects_to_delete = build_from_select("del_project_select")
+		    projects_to_delete = build_from_select("project_select")
             if (projects_to_delete==""){
                 alert("No projects selected for deletion!");
                 return;
@@ -96,6 +96,19 @@ function admin(action){
                 return;
             }
             document.getElementById("del_project").value = projects_to_delete;
+            document.getElementById("sel_tab").value = "project";
+			break;
+		case "guidelines_url":
+            if ($('#project_select').length == 0) {
+                alert("No projects available!");
+                return;
+            }
+		    projects_to_edit = build_from_select("project_select")
+            if (projects_to_edit==""){
+                alert("No projects selected to add guidelines!");
+                return;
+            }
+            document.getElementById("guidelines_url").value = projects_to_edit + "::" + document.getElementById("guidelines_url_input").value;
             document.getElementById("sel_tab").value = "project";
 			break;
 		case "assign_user":
@@ -188,6 +201,15 @@ function admin(action){
             }
             document.getElementById("wipe").value = "wipe";
             document.getElementById("sel_tab").value = "database";
+			break;
+        case "switch_logging":
+            document.getElementById("switch_logging").value = "switch_logging";
+            document.getElementById("sel_tab").value = "database";
+			break;
+        case "update_schema":
+            document.getElementById("update_schema").value = "update_schema";
+            document.getElementById("sel_tab").value = "database";
+			break;
 		default:
 			break;
 	}

@@ -108,6 +108,7 @@ function do_reset(){
     disable_buttons();
     $("#nav_reset").addClass("nav_button_inset");
     document.getElementById('reset').value='reset';
+    document.getElementById('logging').value += 'reset;';
     document.getElementById('edit_form').submit()
 }
 
@@ -202,7 +203,6 @@ function redo(){
     document.getElementById("undo_state").value = "redo";
     action = pop_redo();
     act(action);
-    //recalculate_depth();
 
 }
 
@@ -235,3 +235,12 @@ function enable_buttons(){
     $(".nav_button").prop("disabled",false);
 }
 
+function enable_guidelines(url){
+    if ((document.getElementById("current_guidelines").value).length > 1 && document.getElementById("current_guidelines").value != "**current_guidelines**"){
+        $("#guidelines").prop("disabled",false);
+    }
+}
+
+function show_guidelines(){
+    window.open(document.getElementById("current_guidelines").value,'_blank');
+}

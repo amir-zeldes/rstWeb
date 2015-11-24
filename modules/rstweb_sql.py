@@ -27,6 +27,8 @@ def setup_db():
 	cur.execute("DROP TABLE IF EXISTS perms")
 	cur.execute("DROP TABLE IF EXISTS users")
 	cur.execute("DROP TABLE IF EXISTS projects")
+	cur.execute("DROP TABLE IF EXISTS logging")
+	cur.execute("DROP TABLE IF EXISTS settings")
 	conn.commit()
 
 	# Create tables
@@ -39,15 +41,73 @@ def setup_db():
 	cur.execute('''CREATE TABLE IF NOT EXISTS users
 	             (user text,  UNIQUE (user) ON CONFLICT REPLACE)''')
 	cur.execute('''CREATE TABLE IF NOT EXISTS projects
-	             (project text, UNIQUE (project) ON CONFLICT REPLACE)''')
+	             (project text, guideline_url text, UNIQUE (project) ON CONFLICT REPLACE)''')
+	cur.execute('''CREATE TABLE IF NOT EXISTS logging
+	             (doc text, project text, user text, actions text, mode text, timestamp text)''')
+	cur.execute('''CREATE TABLE IF NOT EXISTS settings
+	             (setting text, svalue text, UNIQUE (setting) ON CONFLICT REPLACE)''')
 
-
-	# Save (commit) the changes
 	conn.commit()
-
-	# We can also close the connection if we are done with it.
-	# Just be sure any changes have been committed or they will be lost.
 	conn.close()
+
+	initialize_settings()
+
+def update_schema():
+	dbpath = os.path.dirname(os.path.realpath(__file__)) + os.sep +".."+os.sep+"rstweb.db"
+	conn = sqlite3.connect(dbpath)
+	cur = conn.cursor()
+
+	# Create tables
+	cur.execute('''CREATE TABLE IF NOT EXISTS rst_nodes
+	             (id text, left real, right real, parent text, depth real, kind text, contents text, relname text, doc text, project text, user text, UNIQUE (id, doc, project, user) ON CONFLICT REPLACE)''')
+	cur.execute('''CREATE TABLE IF NOT EXISTS rst_relations
+	             (relname text, reltype text, doc text, project text, UNIQUE (relname, reltype, doc, project) ON CONFLICT REPLACE)''')
+	cur.execute('''CREATE TABLE IF NOT EXISTS docs
+	             (doc text, project text, user text,  UNIQUE (doc, project, user) ON CONFLICT REPLACE)''')
+	cur.execute('''CREATE TABLE IF NOT EXISTS users
+	             (user text,  UNIQUE (user) ON CONFLICT REPLACE)''')
+	cur.execute('''CREATE TABLE IF NOT EXISTS projects
+	             (project text, guideline_url text, UNIQUE (project) ON CONFLICT REPLACE)''')
+	cur.execute('''CREATE TABLE IF NOT EXISTS logging
+	             (doc text, project text, user text, actions text, mode text, timestamp text)''')
+	cur.execute('''CREATE TABLE IF NOT EXISTS settings
+	             (setting text, svalue text, UNIQUE (setting) ON CONFLICT REPLACE)''')
+
+
+	schema = get_schema()
+	if schema < 2:
+		cur.execute('ALTER TABLE projects ADD COLUMN guideline_url text')
+
+	conn.commit()
+	conn.close()
+
+	set_schema('2')
+
+
+	initialize_settings()
+
+
+def get_schema():
+	dbpath = os.path.dirname(os.path.realpath(__file__)) + os.sep +".."+os.sep+"rstweb.db"
+	conn = sqlite3.connect(dbpath)
+	with conn:
+		cur = conn.cursor()
+		cur.execute('PRAGMA user_version')
+		return cur.fetchall()[0][0]
+
+
+def set_schema(version):
+	dbpath = os.path.dirname(os.path.realpath(__file__)) + os.sep +".."+os.sep+"rstweb.db"
+	conn = sqlite3.connect(dbpath)
+	with conn:
+		cur = conn.cursor()
+		pragma_stmt = 'PRAGMA user_version=' +str(version)
+		cur.execute(pragma_stmt)
+
+def initialize_settings():
+	# Initialize settings to default values
+	save_setting("logging", "off")
+	set_schema('2')
 
 
 def import_document(filename, project, user):
@@ -372,7 +432,7 @@ def get_tok_map(doc,project,user):
 	all_tokens = {}
 	token_counter = 0
 	for row in rows:
-		edu_text = row[1]
+		edu_text = row[1].strip()
 		edu_tokens = edu_text.split(" ")
 		for token in edu_tokens:
 			token_counter += 1
@@ -404,16 +464,17 @@ def get_split_text(tok_num,doc,project,user):
 	rows = generic_query("SELECT id, contents FROM rst_nodes WHERE kind='edu' and doc=? and project=? and user=? ORDER BY CAST(id AS int)",(doc,project,user))
 	token_counter = 0
 	do_return = False
+	final = []
 	part1 = ""
 	part2 = ""
 	for row in rows:
 		if do_return:
 			do_return = False
-			final = [part1,part2]
+			final = [part1.strip(),part2.strip()]
 		else:
 			part1 = ""
 			part2 = ""
-		edu_text = row[1]
+		edu_text = row[1].strip()
 		edu_tokens = edu_text.split(" ")
 		for token in edu_tokens:
 			token_counter += 1
@@ -423,6 +484,8 @@ def get_split_text(tok_num,doc,project,user):
 				part2+=token + " "
 			if tok_num == token_counter:
 				do_return = True
+	if do_return:
+		final = [part1.strip(),part2.strip()]
 
 	return final
 
@@ -491,3 +554,35 @@ def get_node_lr(node_id,doc,project,user):
 def delete_docs_for_user(user):
 	generic_query("DELETE FROM rst_nodes WHERE user=?",(user,))
 	generic_query("DELETE FROM docs WHERE user=?",(user,))
+
+def update_log(doc,project,user,logging,mode,time):
+	actions = logging.split(";")
+	for action in actions:
+		if len(action) > 1:
+			generic_query("INSERT INTO logging VALUES (?,?,?,?,?,?)",(doc,project,user,action,mode,time))
+
+def get_setting(setting):
+	schema = get_schema()
+	if schema > 1:
+		return generic_query("SELECT svalue FROM settings where setting=?",(setting,))[0][0]
+	else:
+		return ""
+
+def save_setting(setting, svalue):
+	schema = get_schema()
+	if schema > 1:
+		generic_query("INSERT INTO settings VALUES (?,?)",(setting,svalue))
+
+def set_guidelines_url(project,guideline_url):
+	generic_query("UPDATE projects SET guideline_url=? where project=?",(guideline_url,project))
+
+def get_guidelines_url(project):
+	schema = get_schema()
+	if schema < 2:
+		return ""
+	else:
+		guidelines =  generic_query("select guideline_url FROM projects where project=?",(project,))[0][0]
+		if guidelines is None:
+			return ""
+		else:
+			return guidelines

@@ -4,6 +4,8 @@
         <input id="current_project" name="current_project" type="hidden" value="**project**"/>
         <input id="serve_mode" name="serve_mode" type="hidden" value="**serve_mode**"/>
         <input id="**action_type**" name="**action_type**" type="hidden" value=""/>
+        <input id="current_guidelines" name="current_guidelines" type="hidden" value="**current_guidelines**"/>
+        <input id="logging" name="logging" type="hidden" value=""/>
         <input id="reset" name="reset" type="hidden" value=""/>
         <input id="dirty" name="dirty" type="hidden" value=""/>
     </form>
@@ -20,6 +22,7 @@
     <span class="divider">|</span>
             <button id="nav_admin" class="nav_button" onclick="open_admin();" **admin_disabled**><i class="fa fa-shield" title="Administration"></i> admin</button>
     <span class="divider">|</span>
+            <button id="guidelines" class="nav_button" onclick="show_guidelines();" disabled="disabled"><i class="fa fa-book" title="guidelines"></i> guidelines</button>
             <button id="nav_help" class="nav_button" onclick="show_help();"><i class="fa fa-question-circle" title="Help"></i> help</button>
             <button id="nav_about" class="nav_button" onclick="show_about();"><i class="fa fa-info-circle" title="About"></i> about</button>
 </div>

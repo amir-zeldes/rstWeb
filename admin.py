@@ -108,7 +108,7 @@ def admin_main(user, admin, mode, **kwargs):
 		if len(new_project)>0:
 			create_project(new_project)
 
-	project_list = get_all_projects()
+	all_project_list = get_all_projects()
 
 	if "doclist" in theform:
 		current_doc = theform["doclist"]
@@ -124,6 +124,8 @@ def admin_main(user, admin, mode, **kwargs):
 		<input type="hidden" name="delete_user" id="delete_user" value=""/>
 		<input type="hidden" name="export" id="export" value=""/>
 		<input type="hidden" name="wipe" id="wipe" value=""/>
+		<input type="hidden" name="switch_logging" id="switch_logging" value=""/>
+		<input type="hidden" name="update_schema" id="update_schema" value=""/>
 		<input type="hidden" name="imp_project" id="imp_project" value=""/>
 		<input type="hidden" name="import_file_type" id="import_file_type" value=""/>
 		<input type="hidden" name="doclist" id="doclist" value="'''
@@ -136,6 +138,7 @@ def admin_main(user, admin, mode, **kwargs):
 		<input type="hidden" name="unassign_user" id="unassign_user" value=""/>
 		<input type="hidden" name="new_user_data" id="new_user_data" value=""/>
 		<input type="hidden" name="del_project" id="del_project" value=""/>
+		<input type="hidden" name="guidelines_url" id="guidelines_url" value=""/>
 		<input id="file" type="file" name="file"/>
 	</form>
 	<script src="./script/admin.js"></script>
@@ -161,10 +164,25 @@ def admin_main(user, admin, mode, **kwargs):
 			else:
 				delete_project(projects_to_delete)
 
-	all_project_list = get_all_projects()
+	url_message = ""
+	if "guidelines_url" in theform:
+		if "::" in theform["guidelines_url"]:
+			project_list, guideline_url = theform["guidelines_url"].split("::")
+			if len(project_list)>0:
+				schema = get_schema()
+				if schema < 2:
+					update_schema()
+				if isinstance(project_list,list):
+					for project in project_list:
+						set_guidelines_url(project,guideline_url)
+				else:
+					set_guidelines_url(project_list,guideline_url)
+				url_message = '<p class="warn">Added the URL ' + guideline_url + " to the selected projects</p>"
+
+
 	cpout += '<p>Existing projects:</p>'
 	if all_project_list:
-		cpout += '<select class="doclist" id="del_project_select" size="5" multiple="multiple">\n'
+		cpout += '<select class="doclist" id="project_select" size="5" multiple="multiple">\n'
 		for project in all_project_list:
 			cpout += '\t<option value="' + project[0] +'">' +  project[0] + "</option>"
 		cpout += '</select>\n'
@@ -172,6 +190,11 @@ def admin_main(user, admin, mode, **kwargs):
 		cpout += '<p class="warn">No projects found!</p>'
 
 	cpout += '''<p>
+		<p>Add guidlines URL to selected project:</p><p><input id="guidelines_url_input"/></p>
+		<button onclick="admin('guidelines_url')">Add URL</button>
+		''' + url_message + '''
+		<p>Delete selected projects:</p>
+
 		<button onclick="admin('delete_project')">Delete Selected</button></p>
 	</div>'''
 
@@ -187,10 +210,13 @@ def admin_main(user, admin, mode, **kwargs):
 	'''
 
 
-	if project_list:
+	if all_project_list:
 		cpout += '<select class="doclist" id="imp_project_select">\n'
-		for project in project_list:
-			cpout += '\t<option value="' + project[0] +'">' +  project[0] + "</option>"
+		if isinstance(all_project_list,list):
+			for project in all_project_list:
+				cpout += '\t<option value="' + project[0] +'">' +  project[0] + "</option>"
+		else:
+			cpout += '\t<option value="' + all_project_list +'">' +  all_project_list + "</option>"
 		cpout += '</select>\n'
 	else:
 		cpout += "<p>No projects found with permissons for user: "+ user + "</p>"
@@ -438,6 +464,39 @@ def admin_main(user, admin, mode, **kwargs):
 
 
 	cpout += '</div><div class="tab_btn" id="database_btn" onclick="open_tab('+"'"+"database"+"'"+');">Database</div><div id="database" class="tab">'
+	cpout += '''<h2>Logging</h2>
+	<p>Turn detailed action logging on/off.</p>'''
+
+	try:
+		logging_state = get_setting("logging")
+	except IndexError:
+		logging_state="off"
+
+	if "switch_logging" in theform:
+		if theform["switch_logging"] == "switch_logging":
+
+			if logging_state == "on":
+				logging_state = "off"
+			else:
+				logging_state = "on"
+			save_setting("logging",logging_state)
+
+	if logging_state == "on":
+		opposite_logging = "off"
+	else:
+		opposite_logging = "on"
+
+	cpout += '''<button onclick="admin('switch_logging')">Turn '''+ opposite_logging +'''</button>'''
+
+	cpout += '''<h2>Update schema</h2>
+	<p>Update the schema without losing data between major schema upgrades.</p>'''
+
+	if "update_schema" in theform:
+		if theform["update_schema"] == "update_schema":
+			update_schema()
+
+	cpout += '''<button onclick="admin('update_schema')">Update</button>'''
+
 	cpout += '''<h2>Initialize the Database</h2>
 	<p>Wipe and restore database structure.</p>
 	<p class="warn">Warning:</p> <p>this will delete all imported documents and all edits from the database.</p>
@@ -452,11 +511,7 @@ def admin_main(user, admin, mode, **kwargs):
 	cpout += '''
 	</div>
 	<script>
-
 		open_tab(document.getElementById("sel_tab").value);
-
-
-
 	</script>'''
 
 	if "sel_tab" in theform:

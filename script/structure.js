@@ -26,12 +26,27 @@ function act(action){
             document.getElementById("redo_log").value =""; //new non-undo, non-redo action, reset redo_log
         }
     }
+
     var action_type = action.split(":")[0];
     var action_params = action.split(":")[1];
     var params = action_params.split(",");
+    nodes = parse_data();
+
+    document.getElementById("logging").value += action;
+    if (action_type == 'mn' || action_type == 'sp'){
+        new_id = get_max_node_id(nodes) + 1;
+        document.getElementById("logging").value += "," + new_id
+    }
+    if (document.getElementById("undo_state").value == ""){
+        log_undo = "normal";
+    }
+    else{
+        log_undo = document.getElementById("undo_state").value;
+    }
+    document.getElementById("logging").value += "," + log_undo + ";";
+
     def_multirel = get_def_multirel();
     if (action_type =="up" || action_type =="qup"){
-        nodes = parse_data();
         if (params[1]!="0"){
             if (nodes["n"+params[0]].parent != "n0"){
                 if (nodes[nodes["n"+params[0]].parent].kind == "multinuc"){ //if previous parent was a multinuc, also note relation
@@ -44,15 +59,14 @@ function act(action){
         nodes = parse_data();
     }
     else if (action_type =="sp"){
-        append_undo("xx:" +  (get_max_node_id(parse_data()) + 1) + "," + params[0]);
+        append_undo("xx:" +  (get_max_node_id(nodes) + 1) + "," + params[0]);
         insert_parent("n"+params[0],"span","span");
     }
     else if (action_type =="mn"){
-        append_undo("xx:" +  (get_max_node_id(parse_data()) + 1) + "," + params[0]);
+        append_undo("xx:" +  (get_max_node_id(nodes) + 1) + "," + params[0]);
         insert_parent("n"+params[0],def_multirel,"multinuc");
     }
     else if (action_type =="rl" || action_type=="qrl"){ //explicit relation change or quiet relation change in undo
-        nodes = parse_data();
         append_undo("rl:" + params[0] + "," + nodes["n"+params[0]].relname);
         if (nodes["n"+params[0]].parent != "n0"){
             if (nodes[nodes["n"+params[0]].parent].kind=="multinuc" && nodes[nodes["n"+params[0]].parent].parent == "n0" && get_rel_type(params[1])=="rst" && count_multinuc_children(nodes["n"+params[0]].parent,nodes)<2 && get_rel_type(nodes["n"+params[0]].relname)=="multinuc"){
@@ -70,7 +84,6 @@ function act(action){
         create_node_div(params[0],0,params[1],params[1],"0.5")
     }
     else if (action_type=="xx"){ //kill span or multinuc as undo of sp: or mn:
-        nodes = parse_data();
         rel_to_parent = nodes["n"+params[0]].relname;
         new_parent_id = nodes["n"+params[0]].parent;
 
@@ -400,13 +413,17 @@ function delete_node(node_id,nodes){
 }
 
 function get_depth(orig_node, probe_node, nodes){
-	if (nodes[probe_node].parent != "n0"){
-		parent_id = nodes[probe_node].parent;
-		if (nodes[parent_id].kind != "edu" && (nodes[probe_node].relname == "span" || nodes[parent_id].kind == "multinuc" && nodes[probe_node].reltype == "multinuc")){
-			nodes[orig_node].depth += 1;
-		}
-		get_depth(orig_node, parent_id, nodes);
-	}
+    if (typeof nodes[probe_node] != 'undefined'){
+        if (nodes[probe_node].parent != "n0"){
+            parent_id = nodes[probe_node].parent;
+            if (typeof nodes[parent_id] != 'undefined'){
+                if (nodes[parent_id].kind != "edu" && (nodes[probe_node].relname == "span" || nodes[parent_id].kind == "multinuc" && nodes[probe_node].reltype == "multinuc")){
+                    nodes[orig_node].depth += 1;
+                }
+            }
+            get_depth(orig_node, parent_id, nodes);
+        }
+    }
 }
 
 function recalculate_depth(nodes){
@@ -430,7 +447,7 @@ function recalculate_depth(nodes){
         if (nodes[node_id].parent=="n0"){
             detach_source(element_id.replace("l",""));
         }
-        else{
+        else if (typeof nodes[nodes[node_id].parent] != 'undefined'){
             parent_kind = nodes[nodes[node_id].parent].kind;
             reltype = nodes[node_id].reltype;
             if (parent_kind == "edu"){
@@ -440,6 +457,9 @@ function recalculate_depth(nodes){
             {
                 parent_element_id = "g" + nodes[node_id].parent.replace("n","");
             }
+        }
+        else{
+            continue;
         }
 
         //Check if a new parent was initiated programmatically and needs the connection to be rendered
@@ -519,7 +539,7 @@ function recalculate_depth(nodes){
 }
 
 function get_left_right(node_id, nodes, min_left, max_right){
-	if (nodes[node_id].parent != "n0" && node_id != "n0"){
+	if (nodes[node_id].parent != "n0" && node_id != "n0" && typeof nodes[nodes[node_id].parent] != 'undefined'){
 		parent = nodes[nodes[node_id].parent];
 		if (min_left > nodes[node_id].left || min_left == 0){
 			if (nodes[node_id].left != 0){
@@ -568,7 +588,7 @@ function get_anchor_points(nodes){
         if (node.kind=="edu"){
             anchors[node_ref]= "0.5";
         }
-        if (node.parent!="n0"){
+        if (node.parent!="n0" && typeof nodes[node.parent] != 'undefined'){
             parent = nodes[node.parent];
             parent_wid = (parent.right- parent.left+1) * 100 - 4;
             child_wid = (node.right- node.left+1) * 100 - 4;

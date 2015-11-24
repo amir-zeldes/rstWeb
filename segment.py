@@ -21,6 +21,7 @@ from modules.pathutils import *
 import cgi
 import os
 from modules.logintools import login
+import datetime
 
 def segment_main(user, admin, mode, **kwargs):
 
@@ -61,9 +62,11 @@ def segment_main(user, admin, mode, **kwargs):
 	if "current_doc" in theform:
 		current_doc = theform["current_doc"]
 		current_project = theform["current_project"]
+		current_guidelines = get_guidelines_url(current_project)
 	else:
 		current_doc = ""
 		current_project = ""
+		current_guidelines = ""
 
 
 	edit_bar = "edit_bar.html"
@@ -76,6 +79,7 @@ def segment_main(user, admin, mode, **kwargs):
 	edit_bar = edit_bar.replace("**segment_disabled**",'disabled="disabled"')
 	edit_bar = edit_bar.replace("**submit_target**",'segment.py')
 	edit_bar = edit_bar.replace("**action_type**",'seg_action')
+	edit_bar = edit_bar.replace("**current_guidelines**",current_guidelines)
 	edit_bar = edit_bar.replace("**serve_mode**",mode)
 	edit_bar = edit_bar.replace("**open_disabled**",'')
 	edit_bar = edit_bar.replace('id="nav_segment" class="nav_button"','id="nav_segment" class="nav_button nav_button_inset"')
@@ -114,6 +118,12 @@ def segment_main(user, admin, mode, **kwargs):
 		if len(theform["reset"]) > 1 or user=="demo":
 			reset_rst_doc(current_doc,current_project,user)
 
+	if "logging" in theform:
+		if len(theform["logging"]) > 1:
+			logging = theform["logging"]
+			if len(logging) > 0:
+				update_log(current_doc,current_project,user,logging,"segment",str(datetime.datetime.now()))
+
 	if "seg_action" in theform:
 		if len(theform["seg_action"]) > 1:
 			action_log = theform["seg_action"]
@@ -131,6 +141,9 @@ def segment_main(user, admin, mode, **kwargs):
 
 
 	rows = get_rst_doc(current_doc,current_project,user)
+
+	if current_guidelines != "":
+		cpout += '<script>enable_guidelines();</script>'
 
 	cpout += '\t<script src="script/segment.js"></script>'
 	cpout += '<h2>Edit segmentation</h2>'

@@ -21,6 +21,18 @@ function act(action){
 
     var action_type = action.split(":")[0];
     var action_params = action.split(":")[1];
+
+    action_seg = $('#'+action_params).parent().attr("id")
+    document.getElementById("logging").value += action + "," + action_seg.replace("seg","");
+    if (document.getElementById("undo_state").value == ""){
+        log_undo = "normal";
+    }
+    else{
+        log_undo = document.getElementById("undo_state").value;
+    }
+    document.getElementById("logging").value += "," + log_undo + ";";
+
+
     if (action_type =="ins"){
         insert_segment(action_params);
         append_undo("del:"+action_params);
