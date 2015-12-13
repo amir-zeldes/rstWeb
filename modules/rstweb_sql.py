@@ -578,7 +578,7 @@ def set_guidelines_url(project,guideline_url):
 
 def get_guidelines_url(project):
 	schema = get_schema()
-	if schema < 2:
+	if schema < 2 or project == "":
 		return ""
 	else:
 		guidelines =  generic_query("select guideline_url FROM projects where project=?",(project,))[0][0]
