@@ -7,7 +7,7 @@
 
 
 document.getElementById("file").style.top = "143px";
-document.getElementById("file").style.left = "220px";
+document.getElementById("file").style.left = "240px";
 document.getElementById("file").style.position = "absolute";
 
 function open_tab(tab_id){
