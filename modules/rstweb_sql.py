@@ -81,9 +81,6 @@ def update_schema():
 	conn.commit()
 	conn.close()
 
-	set_schema('2')
-
-
 	initialize_settings()
 
 
@@ -107,7 +104,9 @@ def set_schema(version):
 def initialize_settings():
 	# Initialize settings to default values
 	save_setting("logging", "off")
-	set_schema('2')
+	save_setting("use_span_buttons", "True")
+	save_setting("use_multinuc_buttons", "True")
+	set_schema('3')
 
 
 def import_document(filename, project, user):

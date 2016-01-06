@@ -206,6 +206,14 @@ function admin(action){
             document.getElementById("switch_logging").value = "switch_logging";
             document.getElementById("sel_tab").value = "database";
 			break;
+        case "switch_span_buttons":
+            document.getElementById("switch_span_buttons").value = "switch_span_buttons";
+            document.getElementById("sel_tab").value = "database";
+			break;
+        case "switch_multinuc_buttons":
+            document.getElementById("switch_multinuc_buttons").value = "switch_multinuc_buttons";
+            document.getElementById("sel_tab").value = "database";
+			break;
         case "update_schema":
             document.getElementById("update_schema").value = "update_schema";
             document.getElementById("sel_tab").value = "database";

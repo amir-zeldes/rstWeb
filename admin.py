@@ -125,6 +125,8 @@ def admin_main(user, admin, mode, **kwargs):
 		<input type="hidden" name="export" id="export" value=""/>
 		<input type="hidden" name="wipe" id="wipe" value=""/>
 		<input type="hidden" name="switch_logging" id="switch_logging" value=""/>
+		<input type="hidden" name="switch_span_buttons" id="switch_span_buttons" value=""/>
+		<input type="hidden" name="switch_multinuc_buttons" id="switch_multinuc_buttons" value=""/>
 		<input type="hidden" name="update_schema" id="update_schema" value=""/>
 		<input type="hidden" name="imp_project" id="imp_project" value=""/>
 		<input type="hidden" name="import_file_type" id="import_file_type" value=""/>
@@ -506,6 +508,46 @@ def admin_main(user, admin, mode, **kwargs):
 		opposite_logging = "on"
 
 	cpout += '''<button onclick="admin('switch_logging')">Turn '''+ opposite_logging +'''</button>'''
+
+	cpout += '''<h2>Disable spans or multinucs</h2>
+	<p>Turn on/off add span and multinuc buttons (for non-RST annotation).</p>'''
+
+	try:
+		span_state = get_setting("use_span_buttons")
+		multinuc_state = get_setting("use_multinuc_buttons")
+	except IndexError:
+		span_state="True"
+		multinuc_state="True"
+
+	if "switch_span_buttons" in theform:
+		if int(get_schema()) < 3:
+			update_schema()
+		if theform["switch_span_buttons"] == "switch_span_buttons":
+			if span_state == "True":
+				span_state = "False"
+			else:
+				span_state = "True"
+			save_setting("use_span_buttons",span_state)
+	if span_state == "True":
+		opposite_span = "Disable"
+	else:
+		opposite_span = "Enable"
+	if "switch_multinuc_buttons" in theform:
+		if int(get_schema()) < 3:
+			update_schema()
+		if theform["switch_multinuc_buttons"] == "switch_multinuc_buttons":
+			if multinuc_state == "True":
+				multinuc_state = "False"
+			else:
+				multinuc_state = "True"
+			save_setting("use_multinuc_buttons",multinuc_state)
+	if multinuc_state == "True":
+		opposite_multinuc = "Disable"
+	else:
+		opposite_multinuc = "Enable"
+
+	cpout += '''<button onclick="admin('switch_span_buttons')">'''+ opposite_span +''' span buttons</button><br/><br/>'''
+	cpout += '''<button onclick="admin('switch_multinuc_buttons')">'''+ opposite_multinuc +''' multinuc buttons</button>'''
 
 	cpout += '''<h2>Update schema</h2>
 	<p>Update the schema without losing data between major schema upgrades.</p>'''
