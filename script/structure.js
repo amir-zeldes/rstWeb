@@ -759,6 +759,19 @@ lg.style.top = (top_spacing + layer_spacing+depth*layer_spacing) + "px";
 lg.style.width =(width *100 -4) + "px";
 lg.innerHTML = '<div id="wsk'+id+'" class="whisker" style="width:'+(width *100 -4) + 'px;"></div></div>';
 
+if (document.getElementById("use_span_buttons").value=="True"){
+    use_span_buttons = true;
+}
+else{
+    use_span_buttons = false;
+}
+if (document.getElementById("use_multinuc_buttons").value=="True"){
+    use_multinuc_buttons = true;
+}
+else{
+    use_multinuc_buttons = false;
+}
+
 var g = document.createElement("div");
 g.setAttribute("id", "g" + id);
 g.className = "num_cont";
@@ -766,7 +779,16 @@ g.style.left = (anchor)+"px";
 g.style.top = (4+top_spacing + layer_spacing+depth*layer_spacing)+'px';
 g.style.position = 'absolute';
 g.style.zIndex = (200-(right-left)).toString();
-g.innerHTML = '<table class="btn_tb"><tr><td rowspan="2"><button id="unlink_'+ id+'" class="minibtn" onclick="act('+"'up:"+id+",0'"+');">X</button></td><td rowspan="2"><span class="num_id">'+left+"-"+right+'</span></td><td><button id="aspan_'+ id+'" class="minibtn" onclick="act('+"'sp:"+id+"'"+');">T</button></td></tr><tr><td><button id="amulti_'+ id+'" class="minibtn" onclick="act('+"'mn:"+id+"'"+');">Λ</button></td></tr></table>';
+innerHTML_string = '<table class="btn_tb"><tr><td rowspan="2"><button id="unlink_'+ id+'" class="minibtn" onclick="act('+"'up:"+id+",0'"+');">X</button></td><td rowspan="2"><span class="num_id">'+left+"-"+right+'</span></td>';
+if (use_span_buttons){
+    innerHTML_string += '<td><button id="aspan_'+ id+'" class="minibtn" onclick="act('+"'sp:"+id+"'"+');">T</button></td>';
+}
+innerHTML_string += '</tr>';
+if (use_multinuc_buttons){
+    innerHTML_string += '<tr><td><button id="amulti_'+ id+'" class="minibtn" onclick="act('+"'mn:"+id+"'"+');">Λ</button></td></tr>';
+}
+innerHTML_string += '</table>';
+g.innerHTML = innerHTML_string;
 
 document.getElementById("inner_canvas").appendChild(lg);
 document.getElementById("inner_canvas").appendChild(g);

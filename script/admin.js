@@ -7,7 +7,7 @@
 
 
 document.getElementById("file").style.top = "143px";
-document.getElementById("file").style.left = "220px";
+document.getElementById("file").style.left = "240px";
 document.getElementById("file").style.position = "absolute";
 
 function open_tab(tab_id){
@@ -204,6 +204,14 @@ function admin(action){
 			break;
         case "switch_logging":
             document.getElementById("switch_logging").value = "switch_logging";
+            document.getElementById("sel_tab").value = "database";
+			break;
+        case "switch_span_buttons":
+            document.getElementById("switch_span_buttons").value = "switch_span_buttons";
+            document.getElementById("sel_tab").value = "database";
+			break;
+        case "switch_multinuc_buttons":
+            document.getElementById("switch_multinuc_buttons").value = "switch_multinuc_buttons";
             document.getElementById("sel_tab").value = "database";
 			break;
         case "update_schema":

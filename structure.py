@@ -221,16 +221,37 @@ def structure_main(user, admin, mode, **kwargs):
 		node = nodes[key]
 		pix_anchors[node.id] = str(int(3+node.left * 100 -100 - 39 + float(anchors[node.id])*((node.right- node.left+1) * 100 - 4)))
 
+	# Check that span and multinuc buttons should be used (if the interface is not used for RST, they may be disabled)
+	if int(get_schema()) > 2:
+		use_span_buttons = True if get_setting("use_span_buttons") == "True" else False
+		use_multinuc_buttons = True if get_setting("use_multinuc_buttons") == "True" else False
+	else:
+		use_span_buttons = True
+		use_multinuc_buttons = True
+
 	for key in nodes:
 		node = nodes[key]
-		if node.kind!="edu":
+		if node.kind != "edu":
 			g_wid = str(int((node.right- node.left+1) *100 -4 ))
 			cpout += '<div id="lg'+ node.id +'" class="group" style="left: ' +str(int(node.left*100 - 100))+ '; width: ' + g_wid + '; top:'+ str(int(top_spacing + layer_spacing+node.depth*layer_spacing)) +'px; z-index:1"><div id="wsk'+node.id+'" class="whisker" style="width:'+g_wid+';"></div></div>'
-			cpout += '<div id="g'+ node.id +'" class="num_cont" style="position: absolute; left:' + pix_anchors[node.id] +'px; top:'+ str(int(4+ top_spacing + layer_spacing+node.depth*layer_spacing))+'px; z-index:'+str(int(200-(node.right-node.left)))+'"><table class="btn_tb"><tr><td rowspan="2"><button id="unlink_'+ node.id+'"  title="unlink this node" class="minibtn" onclick="act('+"'up:"+node.id+",0'"+');">X</button></td><td rowspan="2"><span class="num_id">'+str(int(node.left))+"-"+str(int(node.right))+'</span></td><td><button id="aspan_'+ node.id+'" title="add span above" class="minibtn" onclick="act('+"'sp:"+node.id+"'"+');">T</button></td></tr><tr><td><button id="amulti_'+ node.id+'" title="add multinuc above" class="minibtn" onclick="act('+"'mn:"+node.id+"'"+');">' + "Λ".decode("utf-8") + '</button></td></tr></table></div><br/>'
+			cpout += '<div id="g'+ node.id +'" class="num_cont" style="position: absolute; left:' + pix_anchors[node.id] +'px; top:'+ str(int(4+ top_spacing + layer_spacing+node.depth*layer_spacing))+'px; z-index:'+str(int(200-(node.right-node.left)))+'"><table class="btn_tb"><tr><td rowspan="2"><button id="unlink_'+ node.id+'"  title="unlink this node" class="minibtn" onclick="act('+"'up:"+node.id+",0'"+');">X</button></td><td rowspan="2"><span class="num_id">'+str(int(node.left))+"-"+str(int(node.right))+'</span></td>'
+			if use_span_buttons:
+				cpout += '<td><button id="aspan_'+ node.id+'" title="add span above" class="minibtn" onclick="act('+"'sp:"+node.id+"'"+');">T</button></td>'
+			cpout += '</tr>'
+			if use_multinuc_buttons:
+				cpout += '<tr><td><button id="amulti_'+ node.id+'" title="add multinuc above" class="minibtn" onclick="act('+"'mn:"+node.id+"'"+');">' + "Λ".decode("utf-8") + '</button></td></tr>'
+			cpout += '</table></div><br/>'
 
 		elif node.kind=="edu":
 			cpout += '<div id="edu'+str(node.id)+'" class="edu" title="'+str(node.id)+'" style="left:'+str(int(node.id)*100 - 100) +'; top:'+str(int(top_spacing +layer_spacing+node.depth*layer_spacing))+'; width: 96px">'
-			cpout += '<div id="wsk'+node.id+'" class="whisker" style="width:96px;"></div><div class="edu_num_cont"><table class="btn_tb"><tr><td rowspan="2"><button id="unlink_'+ node.id+'" title="unlink this node" class="minibtn" onclick="act('+"'up:"+node.id+",0'"+');">X</button></td><td rowspan="2"><span class="num_id">&nbsp;'+str(int(node.left))+'&nbsp;</span></td><td><button id="aspan_'+ node.id+'" title="add span above" class="minibtn" onclick="act('+"'sp:"+node.id+"'"+');">T</button></td></tr><tr><td><button id="amulti_'+ node.id+'" title="add multinuc above" class="minibtn" onclick="act('+"'mn:"+node.id+"'"+');">' + "Λ".decode("utf-8") + '</button></td></tr></table></div>'+node.text+'</div>'
+			cpout += '<div id="wsk'+node.id+'" class="whisker" style="width:96px;"></div><div class="edu_num_cont"><table class="btn_tb"><tr><td rowspan="2"><button id="unlink_'+ node.id+'" title="unlink this node" class="minibtn" onclick="act('+"'up:"+node.id+",0'"+');">X</button></td><td rowspan="2"><span class="num_id">&nbsp;'+str(int(node.left))+'&nbsp;</span></td>'
+			if use_span_buttons:
+				cpout += '<td><button id="aspan_'+ node.id+'" title="add span above" class="minibtn" onclick="act('+"'sp:"+node.id+"'"+');">T</button></td>'
+			cpout += '</tr>'
+			if use_multinuc_buttons:
+				cpout += '<tr><td><button id="amulti_'+ node.id+'" title="add multinuc above" class="minibtn" onclick="act('+"'mn:"+node.id+"'"+');">' + "Λ".decode("utf-8") + '</button></td></tr>'
+			cpout += '</table></div>'+node.text+'</div>'
+
 
 	max_right = get_max_right(current_doc,current_project,user)
 
@@ -252,12 +273,15 @@ def structure_main(user, admin, mode, **kwargs):
 	hidden_val = hidden_val[0:len(hidden_val)-1]
 	cpout += 'value="' + hidden_val + '"/>'
 
+
 	cpout += '<input id="def_multi_rel" type="hidden" value="' + get_def_rel("multinuc",current_doc,current_project) +'"/>'
 	cpout += '<input id="def_rst_rel" type="hidden" value="' + get_def_rel("rst",current_doc,current_project) +'"/>'
 	cpout += '<input id="undo_log" type="hidden" value=""/>'
 	cpout += '<input id="redo_log" type="hidden" value=""/>'
 	cpout += '<input id="undo_state" type="hidden" value=""/>'
 	cpout += '<input id="logging" type="hidden" value=""/>'
+	cpout += '<input id="use_span_buttons" type="hidden" value="'+str(use_span_buttons)+'"/>'
+	cpout += '<input id="use_multinuc_buttons" type="hidden" value="'+str(use_multinuc_buttons)+'"/>'
 
 	cpout += '''	<script src="./script/jquery.jsPlumb-1.7.5-min.js"></script>
 

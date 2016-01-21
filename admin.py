@@ -125,6 +125,8 @@ def admin_main(user, admin, mode, **kwargs):
 		<input type="hidden" name="export" id="export" value=""/>
 		<input type="hidden" name="wipe" id="wipe" value=""/>
 		<input type="hidden" name="switch_logging" id="switch_logging" value=""/>
+		<input type="hidden" name="switch_span_buttons" id="switch_span_buttons" value=""/>
+		<input type="hidden" name="switch_multinuc_buttons" id="switch_multinuc_buttons" value=""/>
 		<input type="hidden" name="update_schema" id="update_schema" value=""/>
 		<input type="hidden" name="imp_project" id="imp_project" value=""/>
 		<input type="hidden" name="import_file_type" id="import_file_type" value=""/>
@@ -139,7 +141,7 @@ def admin_main(user, admin, mode, **kwargs):
 		<input type="hidden" name="new_user_data" id="new_user_data" value=""/>
 		<input type="hidden" name="del_project" id="del_project" value=""/>
 		<input type="hidden" name="guidelines_url" id="guidelines_url" value=""/>
-		<input id="file" type="file" name="file"/>
+		<input id="file" type="file" name="file" multiple="multiple"/>
 	</form>
 	<script src="./script/admin.js"></script>
 	<script src="./script/jquery-1.11.3.min.js"></script>
@@ -204,9 +206,9 @@ def admin_main(user, admin, mode, **kwargs):
 	cpout += '''
 	<div class="tab_btn" id="import_btn" onclick="open_tab('import');">Import</div><div id="import" class="tab">
 	<h2>Import a Document</h2>
-	<p>1. Upload .rs3 or plain text file: </p>
+	<p>1. Upload .rs3 or plain text file(s): </p>
 	<p>2. Choose file type: <select id="import_file_type_select" class="doclist"><option value="rs3">rs3</option><option value="plain">plain text (EDU per line)</option></select> </p>
-	<p>3. Import document into this project:
+	<p>3. Import document(s) into this project:
 	'''
 
 
@@ -230,21 +232,40 @@ def admin_main(user, admin, mode, **kwargs):
 	if "file" in theform and "imp_project" in theform:
 		fileitem = theform['file']
 		imp_project = theform["imp_project"]
-		if fileitem.filename and len(imp_project) > 0: # Test if the file was uploaded and a project selection exists
-			#  strip leading path from file name to avoid directory traversal attacks
-			fn = os.path.basename(fileitem.filename)
-			open(importdir + fn, 'wb').write(fileitem.file.read())
-			message = 'The file "' + fn + '" was uploaded successfully'
-			if theform['import_file_type'] == "rs3":
-				fail = import_document(importdir + fn,imp_project,user)
-			elif theform['import_file_type'] == "plain":
-				if len(def_relfile) > 0:
-					rel_hash = read_relfile(def_relfile)
+		if isinstance(fileitem,list):
+			message = ""
+			for filelist_item in fileitem:
+				if filelist_item.filename and len(imp_project) > 0: # Test if the file was uploaded and a project selection exists
+					#  strip leading path from file name to avoid directory traversal attacks
+					fn = os.path.basename(filelist_item.filename)
+					open(importdir + fn, 'wb').write(filelist_item.file.read())
+					message += 'The file "' + fn + '" was uploaded successfully<br/>'
+					if theform['import_file_type'] == "rs3":
+						fail = import_document(importdir + fn,imp_project,user)
+					elif theform['import_file_type'] == "plain":
+						if len(def_relfile) > 0:
+							rel_hash = read_relfile(def_relfile)
+						else:
+							rel_hash = {}
+						fail = import_plaintext(importdir + fn,imp_project,user,rel_hash)
 				else:
-					rel_hash = {}
-				fail = import_plaintext(importdir + fn,imp_project,user,rel_hash)
+					message = 'No file was uploaded'
 		else:
-			message = 'No file was uploaded'
+			if fileitem.filename and len(imp_project) > 0: # Test if the file was uploaded and a project selection exists
+				#  strip leading path from file name to avoid directory traversal attacks
+				fn = os.path.basename(fileitem.filename)
+				open(importdir + fn, 'wb').write(fileitem.file.read())
+				message = 'The file "' + fn + '" was uploaded successfully'
+				if theform['import_file_type'] == "rs3":
+					fail = import_document(importdir + fn,imp_project,user)
+				elif theform['import_file_type'] == "plain":
+					if len(def_relfile) > 0:
+						rel_hash = read_relfile(def_relfile)
+					else:
+						rel_hash = {}
+					fail = import_plaintext(importdir + fn,imp_project,user,rel_hash)
+			else:
+				message = 'No file was uploaded'
 
 		if isinstance(fail,basestring):
 			message = fail
@@ -487,6 +508,46 @@ def admin_main(user, admin, mode, **kwargs):
 		opposite_logging = "on"
 
 	cpout += '''<button onclick="admin('switch_logging')">Turn '''+ opposite_logging +'''</button>'''
+
+	cpout += '''<h2>Disable spans or multinucs</h2>
+	<p>Turn on/off add span and multinuc buttons (for non-RST annotation).</p>'''
+
+	try:
+		span_state = get_setting("use_span_buttons")
+		multinuc_state = get_setting("use_multinuc_buttons")
+	except IndexError:
+		span_state="True"
+		multinuc_state="True"
+
+	if "switch_span_buttons" in theform:
+		if int(get_schema()) < 3:
+			update_schema()
+		if theform["switch_span_buttons"] == "switch_span_buttons":
+			if span_state == "True":
+				span_state = "False"
+			else:
+				span_state = "True"
+			save_setting("use_span_buttons",span_state)
+	if span_state == "True":
+		opposite_span = "Disable"
+	else:
+		opposite_span = "Enable"
+	if "switch_multinuc_buttons" in theform:
+		if int(get_schema()) < 3:
+			update_schema()
+		if theform["switch_multinuc_buttons"] == "switch_multinuc_buttons":
+			if multinuc_state == "True":
+				multinuc_state = "False"
+			else:
+				multinuc_state = "True"
+			save_setting("use_multinuc_buttons",multinuc_state)
+	if multinuc_state == "True":
+		opposite_multinuc = "Disable"
+	else:
+		opposite_multinuc = "Enable"
+
+	cpout += '''<button onclick="admin('switch_span_buttons')">'''+ opposite_span +''' span buttons</button><br/><br/>'''
+	cpout += '''<button onclick="admin('switch_multinuc_buttons')">'''+ opposite_multinuc +''' multinuc buttons</button>'''
 
 	cpout += '''<h2>Update schema</h2>
 	<p>Update the schema without losing data between major schema upgrades.</p>'''
