@@ -23,6 +23,7 @@ def read_rst(filename, rel_hash):
 
 	nodes = []
 	ordered_id = {}
+	schemas = []
 	default_rst = ""
 
 	# Get relation names and their types, append type suffix to disambiguate
@@ -30,9 +31,12 @@ def read_rst(filename, rel_hash):
 	item_list = xmldoc.getElementsByTagName("rel")
 	for rel in item_list:
 		relname = re.sub(r"[:;,]","",rel.attributes["name"].value)
-		rel_hash[relname+"_"+rel.attributes["type"].value[0:1]] = rel.attributes["type"].value
-		if rel.attributes["type"].value == "rst" and default_rst=="":
-			default_rst = relname+"_"+rel.attributes["type"].value[0:1]
+		if rel.hasAttribute("type"):
+			rel_hash[relname+"_"+rel.attributes["type"].value[0:1]] = rel.attributes["type"].value
+			if rel.attributes["type"].value == "rst" and default_rst=="":
+				default_rst = relname+"_"+rel.attributes["type"].value[0:1]
+		else:  # This is a schema relation
+			schemas.append(relname)
 
 
 	item_list = xmldoc.getElementsByTagName("segment")
@@ -72,7 +76,12 @@ def read_rst(filename, rel_hash):
 			relname = segment.attributes["relname"].value
 		else:
 			relname = default_rst
-		relname = re.sub(r"[:;,]","",relname) #remove characters used for undo logging, not allowed in rel names
+
+		# Tolerate schemas, but no real support yet:
+		if relname in schemas:
+			relname = "span"
+
+			relname = re.sub(r"[:;,]","",relname) #remove characters used for undo logging, not allowed in rel names
 		# Note that in RSTTool, a multinuc child with a multinuc compatible relation is always interpreted as multinuc
 		if parent in element_types:
 			if element_types[parent] == "multinuc" and relname+"_m" in rel_hash:
@@ -94,6 +103,10 @@ def read_rst(filename, rel_hash):
 			parent = "0"
 		if group.attributes.length == 4:
 			relname = group.attributes["relname"].value
+			# Tolerate schemas by treating as spans
+			if relname in schemas:
+				relname = "span"
+				
 			relname = re.sub(r"[:;,]","",relname) #remove characters used for undo logging, not allowed in rel names
 			# Note that in RSTTool, a multinuc child with a multinuc compatible relation is always interpreted as multinuc
 			if parent in element_types:
