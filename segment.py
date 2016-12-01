@@ -113,22 +113,30 @@ def segment_main(user, admin, mode, **kwargs):
 	cpout += '''<div class="canvas">
 	<div id="inner_canvas">'''
 
+	timestamp = ""
+	if "timestamp" in theform:
+		if len(theform["timestamp"]) > 1:
+			timestamp = theform["timestamp"]
+
+	refresh = check_refresh(user, timestamp)
 
 	if "reset" in theform or user=="demo":
 		if len(theform["reset"]) > 1 or user=="demo":
 			reset_rst_doc(current_doc,current_project,user)
 
-	if "logging" in theform:
+	if "logging" in theform and not refresh:
 		if len(theform["logging"]) > 1:
-			logging = theform["logging"]
-			if len(logging) > 0:
-				update_log(current_doc,current_project,user,logging,"segment",str(datetime.datetime.now()))
+			if get_setting("logging") == "on":
+				logging = theform["logging"]
+				if len(logging) > 0:
+					update_log(current_doc,current_project,user,logging,"segment",str(datetime.datetime.now()))
 
-	if "seg_action" in theform:
+	if "seg_action" in theform and not refresh:
 		if len(theform["seg_action"]) > 1:
 			action_log = theform["seg_action"]
 			if len(action_log) > 0:
 				actions = action_log.split(";")
+				set_timestamp(user,timestamp)
 				for action in actions:
 					action_type = action.split(":")[0]
 					action_params = action.split(":")[1]
