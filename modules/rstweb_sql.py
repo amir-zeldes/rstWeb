@@ -39,7 +39,7 @@ def setup_db():
 	cur.execute('''CREATE TABLE IF NOT EXISTS docs
 	             (doc text, project text, user text,  UNIQUE (doc, project, user) ON CONFLICT REPLACE)''')
 	cur.execute('''CREATE TABLE IF NOT EXISTS users
-	             (user text,  UNIQUE (user) ON CONFLICT REPLACE)''')
+	             (user text, timestamp text, UNIQUE (user) ON CONFLICT REPLACE)''')
 	cur.execute('''CREATE TABLE IF NOT EXISTS projects
 	             (project text, guideline_url text, UNIQUE (project) ON CONFLICT REPLACE)''')
 	cur.execute('''CREATE TABLE IF NOT EXISTS logging
@@ -65,7 +65,7 @@ def update_schema():
 	cur.execute('''CREATE TABLE IF NOT EXISTS docs
 	             (doc text, project text, user text,  UNIQUE (doc, project, user) ON CONFLICT REPLACE)''')
 	cur.execute('''CREATE TABLE IF NOT EXISTS users
-	             (user text,  UNIQUE (user) ON CONFLICT REPLACE)''')
+	             (user text, timestamp text, UNIQUE (user) ON CONFLICT REPLACE)''')
 	cur.execute('''CREATE TABLE IF NOT EXISTS projects
 	             (project text, guideline_url text, UNIQUE (project) ON CONFLICT REPLACE)''')
 	cur.execute('''CREATE TABLE IF NOT EXISTS logging
@@ -75,8 +75,10 @@ def update_schema():
 
 
 	schema = get_schema()
-	if schema < 2:
+	if schema < 2:  # versions below 2 do not have guideline_url
 		cur.execute('ALTER TABLE projects ADD COLUMN guideline_url text')
+	if schema < 4:  # versions below 4 do not have last save timestamp to prevent resubmit on browser refresh
+		cur.execute('ALTER TABLE users ADD COLUMN timestamp text')
 
 	conn.commit()
 	conn.close()
@@ -101,12 +103,42 @@ def set_schema(version):
 		pragma_stmt = 'PRAGMA user_version=' +str(version)
 		cur.execute(pragma_stmt)
 
+
 def initialize_settings():
 	# Initialize settings to default values
 	save_setting("logging", "off")
 	save_setting("use_span_buttons", "True")
 	save_setting("use_multinuc_buttons", "True")
-	set_schema('3')
+	set_schema('4')
+
+
+def check_refresh(user, timestamp):
+
+	schema = get_schema()
+	if schema < 4:
+		return False
+
+	if timestamp == "":
+		return False
+	else:
+		last_stamp = generic_query("select timestamp from users where user=?",(user,))
+		if len(last_stamp) < 1:
+			return False
+		else:
+			last_stamp = last_stamp[0][0]
+			if last_stamp == "":
+				return False
+			else:
+				if last_stamp == timestamp:
+					return True
+	return False
+
+
+def set_timestamp(user, timestamp):
+	schema = get_schema()
+	if schema >= 4:
+		if timestamp != "" and user != "":
+			generic_query("INSERT or REPLACE INTO users ('user','timestamp') VALUES (?,?)",(user,timestamp))
 
 
 def import_document(filename, project, user):
@@ -372,7 +404,7 @@ def export_document(doc, project,exportdir):
 '''
 		for rel in rels:
 			relname_string = re.sub(r'_[rm]$','',rel[0])
-			rst_out += '\t\t\t<rel name="' + relname_string +'" type="' + rel[1] + '" />\n'
+			rst_out += '\t\t\t<rel name="' + relname_string +'" type="' + rel[1] + '"/>\n'
 
 		rst_out += '''\t\t</relations>
 	</header>
@@ -380,12 +412,18 @@ def export_document(doc, project,exportdir):
 '''
 		for node in nodes:
 			if node[5] == "edu":
+				if len(node[7]) > 0:
+					relname_string = re.sub(r'_[rm]$','',node[7])
+				else:
+					relname_string = ""
 				if node[3] == "0":
 					parent_string = ""
+					relname_string = ""
 				else:
 					parent_string = 'parent="'+node[3]+'" '
-				relname_string = re.sub(r'_[rm]$','',node[7])
-				rst_out += '\t\t<segment id="'+node[0]+'" '+ parent_string +'relname="'+relname_string+'">'+node[6]+'</segment>\n'
+				if len(relname_string) > 0:
+					relname_string = 'relname="' + relname_string
+				rst_out += '\t\t<segment id="'+node[0]+'" '+ parent_string + relname_string+'">'+node[6]+'</segment>\n'
 		for node in nodes:
 			if node[5] != "edu":
 				if len(node[7]):
@@ -395,8 +433,11 @@ def export_document(doc, project,exportdir):
 					relname_string = ""
 				if node[3] == "0":
 					parent_string = ""
+					relname_string = ""
 				else:
-					parent_string = 'parent="'+node[3]+'" '
+					parent_string = 'parent="'+node[3]+'"'
+				if len(relname_string) > 0:
+					parent_string += ' '
 				rst_out += '\t\t<group id="'+node[0]+'" type="'+node[5]+'" ' + parent_string + relname_string+'/>\n'
 
 		rst_out += '''  </body>
@@ -585,3 +626,20 @@ def get_guidelines_url(project):
 			return ""
 		else:
 			return guidelines
+
+def clean_floating_nodes(doc, project, user):
+	sql = """SELECT id
+FROM rst_nodes
+WHERE id NOT IN (SELECT parent FROM rst_nodes where not parent = 0 AND doc=? AND project=? AND user=?) AND
+NOT kind = 'edu' AND
+doc=? AND project=? AND user=?;"""
+
+	floating = generic_query(sql,(doc,project,user,doc,project,user))
+	if len(floating) > 0:
+		ids_to_del = []
+		for floater in floating:
+			ids_to_del.append(str(floater[0]))
+
+		id_string = ",".join(ids_to_del)
+		del_query = "DELETE from rst_nodes where ID in ("+ id_string +") and doc=? and project=? and user=?;"
+		generic_query(del_query,(doc,project,user))

@@ -8,7 +8,9 @@
 function save(){
     disable_buttons();
     $("#nav_save").addClass("nav_button_inset");
+    document.getElementById("timestamp").value = Date();
     document.getElementById("edit_form").submit();
+
 }
 
 function open_segment(){

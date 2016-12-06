@@ -124,12 +124,23 @@ def structure_main(user, admin, mode, **kwargs):
 			rel_kinds[rel[0]] = "rst"
 	multi_options += "<option value='"+def_rstrel+"'>(satellite...)</option>"
 
+	# Remove floating non-terminal nodes if found
+	# (e.g. due to browsing back and re-submitting old actions or other data corruption)
+	clean_floating_nodes(current_doc, current_project, user)
 
-	if "action" in theform:
+	timestamp = ""
+	if "timestamp" in theform:
+		if len(theform["timestamp"]) > 1:
+			timestamp = theform["timestamp"]
+
+	refresh = check_refresh(user, timestamp)
+
+	if "action" in theform and not refresh:
 		if len(theform["action"]) > 1:
 			action_log = theform["action"]
 			if len(action_log) > 0:
 				actions = action_log.split(";")
+				set_timestamp(user,timestamp)
 				for action in actions:
 					action_type = action.split(":")[0]
 					action_params = action.split(":")[1]
@@ -145,7 +156,7 @@ def structure_main(user, admin, mode, **kwargs):
 					else:
 						cpout += '<script>alert("the action was: " + theform["action"]);</script>'
 
-	if "logging" in theform:
+	if "logging" in theform and not refresh:
 		if len(theform["logging"]) > 1:
 			if get_setting("logging") == "on":
 				logging = theform["logging"]
