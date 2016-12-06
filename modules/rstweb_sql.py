@@ -404,7 +404,7 @@ def export_document(doc, project,exportdir):
 '''
 		for rel in rels:
 			relname_string = re.sub(r'_[rm]$','',rel[0])
-			rst_out += '\t\t\t<rel name="' + relname_string +'" type="' + rel[1] + '" />\n'
+			rst_out += '\t\t\t<rel name="' + relname_string +'" type="' + rel[1] + '"/>\n'
 
 		rst_out += '''\t\t</relations>
 	</header>
@@ -412,12 +412,18 @@ def export_document(doc, project,exportdir):
 '''
 		for node in nodes:
 			if node[5] == "edu":
+				if len(node[7]) > 0:
+					relname_string = re.sub(r'_[rm]$','',node[7])
+				else:
+					relname_string = ""
 				if node[3] == "0":
 					parent_string = ""
+					relname_string = ""
 				else:
 					parent_string = 'parent="'+node[3]+'" '
-				relname_string = re.sub(r'_[rm]$','',node[7])
-				rst_out += '\t\t<segment id="'+node[0]+'" '+ parent_string +'relname="'+relname_string+'">'+node[6]+'</segment>\n'
+				if len(relname_string) > 0:
+					relname_string = 'relname="' + relname_string
+				rst_out += '\t\t<segment id="'+node[0]+'" '+ parent_string + relname_string+'">'+node[6]+'</segment>\n'
 		for node in nodes:
 			if node[5] != "edu":
 				if len(node[7]):
@@ -427,8 +433,11 @@ def export_document(doc, project,exportdir):
 					relname_string = ""
 				if node[3] == "0":
 					parent_string = ""
+					relname_string = ""
 				else:
-					parent_string = 'parent="'+node[3]+'" '
+					parent_string = 'parent="'+node[3]+'"'
+				if len(relname_string) > 0:
+					parent_string += ' '
 				rst_out += '\t\t<group id="'+node[0]+'" type="'+node[5]+'" ' + parent_string + relname_string+'/>\n'
 
 		rst_out += '''  </body>
