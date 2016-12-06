@@ -192,7 +192,7 @@ def admin_main(user, admin, mode, **kwargs):
 		cpout += '<p class="warn">No projects found!</p>'
 
 	cpout += '''<p>
-		<p>Add guidlines URL to selected project:</p><p><input id="guidelines_url_input"/></p>
+		<p>Add guidelines URL to selected project:</p><p><input id="guidelines_url_input"/></p>
 		<button onclick="admin('guidelines_url')">Add URL</button>
 		''' + url_message + '''
 		<p>Delete selected projects:</p>
