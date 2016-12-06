@@ -113,6 +113,10 @@ def segment_main(user, admin, mode, **kwargs):
 	cpout += '''<div class="canvas">
 	<div id="inner_canvas">'''
 
+	# Remove floating non-terminal nodes if found
+	# (e.g. due to browsing back and re-submitting old actions or other data corruption)
+	clean_floating_nodes(current_doc, current_project, user)
+
 	timestamp = ""
 	if "timestamp" in theform:
 		if len(theform["timestamp"]) > 1:

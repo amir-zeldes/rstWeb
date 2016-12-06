@@ -124,6 +124,10 @@ def structure_main(user, admin, mode, **kwargs):
 			rel_kinds[rel[0]] = "rst"
 	multi_options += "<option value='"+def_rstrel+"'>(satellite...)</option>"
 
+	# Remove floating non-terminal nodes if found
+	# (e.g. due to browsing back and re-submitting old actions or other data corruption)
+	clean_floating_nodes(current_doc, current_project, user)
+
 	timestamp = ""
 	if "timestamp" in theform:
 		if len(theform["timestamp"]) > 1:

@@ -626,3 +626,20 @@ def get_guidelines_url(project):
 			return ""
 		else:
 			return guidelines
+
+def clean_floating_nodes(doc, project, user):
+	sql = """SELECT id
+FROM rst_nodes
+WHERE id NOT IN (SELECT parent FROM rst_nodes where not parent = 0 AND doc=? AND project=? AND user=?) AND
+NOT kind = 'edu' AND
+doc=? AND project=? AND user=?;"""
+
+	floating = generic_query(sql,(doc,project,user,doc,project,user))
+	if len(floating) > 0:
+		ids_to_del = []
+		for floater in floating:
+			ids_to_del.append(str(floater[0]))
+
+		id_string = ",".join(ids_to_del)
+		del_query = "DELETE from rst_nodes where ID in ("+ id_string +") and doc=? and project=? and user=?;"
+		generic_query(del_query,(doc,project,user))
