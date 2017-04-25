@@ -393,58 +393,63 @@ def generic_query(sql,params):
 
 
 def export_document(doc, project,exportdir):
-	rels = get_rst_rels(doc,project)
 	doc_users = get_users(doc,project)
 	for user in doc_users:
 		this_user = user[0]
-		nodes = get_rst_doc(doc,project,this_user)
-		rst_out = '''<rst>
-	<header>
-		<relations>
-'''
-		for rel in rels:
-			relname_string = re.sub(r'_[rm]$','',rel[0])
-			rst_out += '\t\t\t<rel name="' + relname_string +'" type="' + rel[1] + '"/>\n'
-
-		rst_out += '''\t\t</relations>
-	</header>
-	<body>
-'''
-		for node in nodes:
-			if node[5] == "edu":
-				if len(node[7]) > 0:
-					relname_string = re.sub(r'_[rm]$','',node[7])
-				else:
-					relname_string = ""
-				if node[3] == "0":
-					parent_string = ""
-					relname_string = ""
-				else:
-					parent_string = 'parent="'+node[3]+'" '
-				if len(relname_string) > 0:
-					relname_string = 'relname="' + relname_string
-				rst_out += '\t\t<segment id="'+node[0]+'" '+ parent_string + relname_string+'">'+node[6]+'</segment>\n'
-		for node in nodes:
-			if node[5] != "edu":
-				if len(node[7]):
-					relname_string = re.sub(r'_[rm]$','',node[7])
-					relname_string = 'relname="'+relname_string+'"'
-				else:
-					relname_string = ""
-				if node[3] == "0":
-					parent_string = ""
-					relname_string = ""
-				else:
-					parent_string = 'parent="'+node[3]+'"'
-				if len(relname_string) > 0:
-					parent_string += ' '
-				rst_out += '\t\t<group id="'+node[0]+'" type="'+node[5]+'" ' + parent_string + relname_string+'/>\n'
-
-		rst_out += '''  </body>
-</rst>'''
+		rst_out = get_export_string(doc, project, this_user)
 		filename = project + "_" + doc + "_" + this_user + ".rs3"
 		f = codecs.open(exportdir + filename, 'w','utf-8')
 		f.write(rst_out)
+
+
+def get_export_string(doc, project, user):
+	rels = get_rst_rels(doc,project)
+	nodes = get_rst_doc(doc,project,user)
+	rst_out = '''<rst>
+<header>
+	<relations>
+'''
+	for rel in rels:
+		relname_string = re.sub(r'_[rm]$','',rel[0])
+		rst_out += '\t\t\t<rel name="' + relname_string +'" type="' + rel[1] + '"/>\n'
+
+	rst_out += '''\t\t</relations>
+</header>
+<body>
+'''
+	for node in nodes:
+		if node[5] == "edu":
+			if len(node[7]) > 0:
+				relname_string = re.sub(r'_[rm]$','',node[7])
+			else:
+				relname_string = ""
+			if node[3] == "0":
+				parent_string = ""
+				relname_string = ""
+			else:
+				parent_string = 'parent="'+node[3]+'" '
+			if len(relname_string) > 0:
+				relname_string = 'relname="' + relname_string
+			rst_out += '\t\t<segment id="'+node[0]+'" '+ parent_string + relname_string+'">'+node[6]+'</segment>\n'
+	for node in nodes:
+		if node[5] != "edu":
+			if len(node[7]):
+				relname_string = re.sub(r'_[rm]$','',node[7])
+				relname_string = 'relname="'+relname_string+'"'
+			else:
+				relname_string = ""
+			if node[3] == "0":
+				parent_string = ""
+				relname_string = ""
+			else:
+				parent_string = 'parent="'+node[3]+'"'
+			if len(relname_string) > 0:
+				parent_string += ' '
+			rst_out += '\t\t<group id="'+node[0]+'" type="'+node[5]+'" ' + parent_string + relname_string+'/>\n'
+
+	rst_out += '''  </body>
+</rst>'''
+	return rst_out
 
 def delete_document(doc,project):
 	generic_query("DELETE FROM rst_nodes WHERE doc=? and project=?",(doc,project))

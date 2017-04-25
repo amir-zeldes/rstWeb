@@ -73,6 +73,7 @@ def admin_main(user, admin, mode, **kwargs):
 	edit_bar = edit_bar.replace("**serve_mode**",mode)
 	edit_bar = edit_bar.replace("**open_disabled**",'')
 	edit_bar = edit_bar.replace("**reset_disabled**",'disabled="disabled"')
+	edit_bar = edit_bar.replace("**quickexp_disabled**",'disabled="disabled"')
 	edit_bar = edit_bar.replace("**save_disabled**",'disabled="disabled"')
 	edit_bar = edit_bar.replace("**undo_disabled**",'disabled="disabled"')
 	edit_bar = edit_bar.replace("**redo_disabled**",'disabled="disabled"')
