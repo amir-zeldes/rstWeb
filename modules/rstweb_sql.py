@@ -148,7 +148,7 @@ def get_project_validations(project):
 	if schema < 5:
 		update_schema()
 	if len(project):
-		validation_row = generic_query("SELECT validations FROM projects WHERE project = ?",(project))
+		validation_row = generic_query("SELECT validations FROM projects WHERE project = ?",(project,))
 	else:
 		return ""
 	if len(validation_row) == 0:
