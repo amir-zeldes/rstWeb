@@ -291,6 +291,7 @@ def structure_main(user, admin, mode, **kwargs):
 	cpout += '<input id="redo_log" type="hidden" value=""/>'
 	cpout += '<input id="undo_state" type="hidden" value=""/>'
 	cpout += '<input id="logging" type="hidden" value=""/>'
+	cpout += '<input id="validations" type="hidden" value="'+get_project_validations(current_project)+'"/>'
 	cpout += '<input id="use_span_buttons" type="hidden" value="'+str(use_span_buttons)+'"/>'
 	cpout += '<input id="use_multinuc_buttons" type="hidden" value="'+str(use_multinuc_buttons)+'"/>'
 
@@ -412,6 +413,8 @@ def structure_main(user, admin, mode, **kwargs):
 		});
 
 	});
+		nodes = parse_data();
+		show_warnings(nodes);
 
 			</script>
 			</div>

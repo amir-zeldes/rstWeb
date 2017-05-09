@@ -426,6 +426,108 @@ function get_depth(orig_node, probe_node, nodes){
     }
 }
 
+
+function show_warnings(nodes){
+
+
+    // Get validations
+    validations = document.getElementById("validations").value;
+    if (validations.length<1){
+        return;
+    }
+
+    // Clear previous warnings
+    for (node_id in nodes){
+         element_id = get_element_id(node_id,nodes);
+         document.getElementById(element_id).style.backgroundColor = "transparent";
+         document.getElementById(element_id).title = "";
+    }
+
+
+    if (validations.indexOf('validate_empty')>-1){
+        warn_empty_hierarchy(nodes);
+    }
+    if (validations.indexOf('validate_flat')>-1){
+        warn_multiple_flat_rst(nodes);
+    }
+
+}
+
+function warn_empty_hierarchy(n_list){
+
+    for (n in n_list){
+        node_children = get_children(n,n_list);
+
+        // Flag empty hierarchy spans
+        if (n_list[n].kind=="span"){
+            if (node_children.length > 0){
+                //child = node_children[0];
+                for (child_idx in node_children){
+                    child = node_children[child_idx];
+                    if (count_children(child,n_list)==1 && n_list[child].kind=="span"){
+                        child_element_id = get_element_id(child,n_list);
+                        document.getElementById(child_element_id).style.backgroundColor = "rgba(255, 255, 136, 0.5)";
+                        document.getElementById(child_element_id).title = "Warn: span with single span child (empty hierarchy)";
+                    }
+                }
+            }
+            if (node_children.length == 1){
+                child = node_children[0];
+                if (count_children(child,n_list)==0 && n_list[child].kind=="edu") { //span with EDU child that has no children
+                    element_id = get_element_id(n,n_list);
+                    document.getElementById(element_id).style.backgroundColor = "rgba(255, 255, 136, 0.5)";
+                    document.getElementById(element_id).title = "Warn: span with single span child (empty hierarchy)";
+                }
+            }
+        }
+        if (n_list[n].kind=="edu" && n_list[n].relname == "span"){
+            if (node_children.length == 0){ // EDU without children but a span above
+                    element_id = get_element_id(n,n_list);
+                    document.getElementById(element_id).style.backgroundColor = "rgba(255, 255, 136, 0.5)";
+                    document.getElementById(element_id).title = "Warn: EDU with span above but no satellites (empty hierarchy)";
+            }
+        }
+    }
+}
+
+function warn_multiple_flat_rst(n_list) {
+
+    for (n in n_list){
+
+        node_children = get_children(n,n_list);
+        // Flag flat rst relations
+        if (n_list[n].kind != "multinuc"){
+            if (node_children.length > 1){
+                found_children = 0;
+                for (child_idx in node_children){
+                    child = node_children[child_idx];
+                    if (n_list[child].relname != "span"){
+                        found_children+=1;
+                    }
+                }
+                if (found_children > 1){
+                    element_id = get_element_id(n,n_list);
+                    document.getElementById(element_id).style.backgroundColor = "rgba(255, 255, 136, 0.5)";
+                    document.getElementById(element_id).title = "Warn: multiple incoming RST relations (needs hierarchy)";
+                }
+            }
+        }
+    }
+}
+
+
+function get_element_id(node_id, nodes){
+
+        if (nodes[node_id].kind =="edu"){
+            element_id = "edu" + node_id.replace("n","");
+        }
+        else{
+            element_id = "lg" + node_id.replace("n","");
+        }
+        return element_id;
+}
+
+
 function recalculate_depth(nodes){
 
     top_spacing = 20;
@@ -536,6 +638,7 @@ function recalculate_depth(nodes){
             jsPlumb.animate(element_id, {top: expected_top, left: expected_left});
         }
     }
+    show_warnings(nodes);
 }
 
 function get_left_right(node_id, nodes, min_left, max_right){

@@ -41,7 +41,7 @@ def setup_db():
 	cur.execute('''CREATE TABLE IF NOT EXISTS users
 	             (user text, timestamp text, UNIQUE (user) ON CONFLICT REPLACE)''')
 	cur.execute('''CREATE TABLE IF NOT EXISTS projects
-	             (project text, guideline_url text, UNIQUE (project) ON CONFLICT REPLACE)''')
+	             (project text, guideline_url text, validations text, UNIQUE (project) ON CONFLICT REPLACE)''')
 	cur.execute('''CREATE TABLE IF NOT EXISTS logging
 	             (doc text, project text, user text, actions text, mode text, timestamp text)''')
 	cur.execute('''CREATE TABLE IF NOT EXISTS settings
@@ -79,6 +79,8 @@ def update_schema():
 		cur.execute('ALTER TABLE projects ADD COLUMN guideline_url text')
 	if schema < 4:  # versions below 4 do not have last save timestamp to prevent resubmit on browser refresh
 		cur.execute('ALTER TABLE users ADD COLUMN timestamp text')
+	if schema < 5:  # versions below 5 do not validations
+		cur.execute('ALTER TABLE projects ADD COLUMN validations text')
 
 	conn.commit()
 	conn.close()
@@ -109,7 +111,7 @@ def initialize_settings():
 	save_setting("logging", "off")
 	save_setting("use_span_buttons", "True")
 	save_setting("use_multinuc_buttons", "True")
-	set_schema('4')
+	set_schema('5')
 
 
 def check_refresh(user, timestamp):
@@ -139,6 +141,27 @@ def set_timestamp(user, timestamp):
 	if schema >= 4:
 		if timestamp != "" and user != "":
 			generic_query("INSERT or REPLACE INTO users ('user','timestamp') VALUES (?,?)",(user,timestamp))
+
+
+def get_project_validations(project):
+	schema = get_schema()
+	if schema < 5:
+		update_schema()
+	if len(project):
+		validation_row = generic_query("SELECT validations FROM projects WHERE project = ?",(project))
+	else:
+		return ""
+	if len(validation_row) == 0:
+		validations = ""
+	else:
+		validations = validation_row[0][0]
+	if validations is None:
+		validations = ""
+	return validations
+
+
+def set_project_validations(project,validations):
+	generic_query("UPDATE projects SET validations=? WHERE project=?;",(validations,project))
 
 
 def import_document(filename, project, user):
@@ -411,7 +434,7 @@ def get_export_string(doc, project, user):
 '''
 	for rel in rels:
 		relname_string = re.sub(r'_[rm]$','',rel[0])
-		rst_out += '\t\t\t<rel name="' + relname_string +'" type="' + rel[1] + '"/>\n'
+		rst_out += '\t\t\t<rel name="' + relname_string + '" type="' + rel[1] + '"/>\n'
 
 	rst_out += '''\t\t</relations>
 </header>
@@ -430,7 +453,12 @@ def get_export_string(doc, project, user):
 				parent_string = 'parent="'+node[3]+'" '
 			if len(relname_string) > 0:
 				relname_string = 'relname="' + relname_string
-			rst_out += '\t\t<segment id="'+node[0]+'" '+ parent_string + relname_string+'">'+node[6]+'</segment>\n'
+			contents = node[6]
+			# Handle XML escapes
+			contents = re.sub(r'&([^ ;]*) ',r'&amp;\1 ',contents)
+			contents = re.sub(r'&$','&amp;',contents)
+			contents = contents.replace(">","&gt;").replace("<","&lt;")
+			rst_out += '\t\t<segment id="'+node[0]+'" '+ parent_string + relname_string+'">'+contents+'</segment>\n'
 	for node in nodes:
 		if node[5] != "edu":
 			if len(node[7]):
