@@ -223,7 +223,7 @@ def admin_main(user, admin, mode, **kwargs):
 	if all_project_list:
 		cpout += '''<select class="doclist" id="validate_project_select" onchange="toggle_validation_project();">\n'''
 		if val_project == "":
-			val_project = all_project_list[0]
+			val_project = all_project_list[0][0]
 		for project in all_project_list:
 			if project[0] == val_project:
 				sel_string = ' selected="selected"'
@@ -232,7 +232,7 @@ def admin_main(user, admin, mode, **kwargs):
 			cpout += '\t<option value="' + project[0] + '"' + sel_string +'>' +  project[0] + "</option>\n"
 		cpout += '</select>\n'
 		for project in all_project_list:
-			vals = get_project_validations(project)
+			vals = get_project_validations(project[0])
 			cpout += '\t<input id="validations_' + project[0] +'" type="hidden" value="'+vals+'">'
 	else:
 		cpout += "<p>No projects found with permissions for user: "+ user + "</p>"
@@ -269,17 +269,34 @@ def admin_main(user, admin, mode, **kwargs):
     <i>Highlights spans with multiple incoming satellites</i>
    </span>
 </a></div>
-	<script>
-		selproj = document.getElementById("validate_project_select").value;
-		validations = document.getElementById("validations_" + selproj).value;
-		if (validations.indexOf("validate_flat")>0){
-			document.getElementById("check_flat_rst").checked = true;
-		}
-		if (validations.indexOf("validate_empty")>0){
-			document.getElementById("check_empty_span").checked = true;
-		}
-	</script>'''
+'''
+	checked = ""
+	if "validate_mononuc" in validation_list:
+		checked = " checked"
+	cpout += '''<br><label class="switch">
+		  <input type="checkbox" id="check_mononuc" onclick="admin('toggle_validations');"''' + checked + '''>
+		  <div class="slider round"></div>
+			</label><div style="margin-top: 10px; position: relative; top: -3px; left: 3px; display: inline-block">Warn on multinucs with single child
+			<a class="tooltip" href="">
+	   <i class="fa fa-question-circle">&nbsp;</i>
+	   <span><img src="img/mononuc.png" height="75px">
 
+	    <i>Highlights multinucs with a single child</i>
+	   </span>
+	</a></div>
+		<script>
+			selproj = document.getElementById("validate_project_select").value;
+			validations = document.getElementById("validations_" + selproj).value;
+			if (validations.indexOf("validate_flat")>0){
+				document.getElementById("check_flat_rst").checked = true;
+			}
+			if (validations.indexOf("validate_empty")>0){
+				document.getElementById("check_empty_span").checked = true;
+			}
+			if (validations.indexOf("validate_mononuc")>0){
+				document.getElementById("check_mononuc").checked = true;
+			}
+		</script>'''
 	cpout += validation_message
 
 	cpout += '''

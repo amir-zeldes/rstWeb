@@ -122,12 +122,18 @@ function admin(action){
             toggle_action = sel_proj + "::";
             if (document.getElementById("check_empty_span").checked){
                 toggle_action += "validate_empty";
-                if (document.getElementById("check_flat_rst").checked){
-                    toggle_action += ";";
-                }
             }
             if (document.getElementById("check_flat_rst").checked){
+                if (toggle_action != ""){
+                    toggle_action += ";";
+                }
                 toggle_action += "validate_flat";
+            }
+            if (document.getElementById("check_mononuc").checked){
+                if (toggle_action != ""){
+                    toggle_action += ";";
+                }
+                toggle_action += "validate_mononuc";
             }
             document.getElementById("edit_validation").value = toggle_action;
             document.getElementById("sel_tab").value = "project";

@@ -347,6 +347,14 @@ function count_multinuc_children(parent,nodes) {
     return ids.length;
 }
 
+function get_multinuc_children(parent,nodes) {
+    ids = [];
+    for (node_id in nodes){
+        if (nodes[node_id].parent == parent && nodes[node_id].reltype =="multinuc") {ids.push(node_id);}
+    }
+    return ids;
+}
+
 function count_span_children(parent,nodes) {
     ids = [];
     for (node_id in nodes){
@@ -450,6 +458,9 @@ function show_warnings(nodes){
     if (validations.indexOf('validate_flat')>-1){
         warn_multiple_flat_rst(nodes);
     }
+    if (validations.indexOf('validate_mononuc')>-1){
+        warn_mononuc(nodes);
+    }
 
 }
 
@@ -461,7 +472,6 @@ function warn_empty_hierarchy(n_list){
         // Flag empty hierarchy spans
         if (n_list[n].kind=="span"){
             if (node_children.length > 0){
-                //child = node_children[0];
                 for (child_idx in node_children){
                     child = node_children[child_idx];
                     if (count_children(child,n_list)==1 && n_list[child].kind=="span"){
@@ -515,6 +525,23 @@ function warn_multiple_flat_rst(n_list) {
     }
 }
 
+
+function warn_mononuc(n_list){
+
+    for (n in n_list){
+
+        // Find multinucs with single multinuc child
+        if (n_list[n].kind=="multinuc"){
+            if (count_multinuc_children(n,n_list) == 1 ){
+                child_id = get_multinuc_children(n,n_list)[0];
+                child = node_children[child_id];
+                element_id = get_element_id(n,n_list);
+                document.getElementById(element_id).style.backgroundColor = "rgba(255, 255, 136, 0.5)";
+                document.getElementById(element_id).title = "Warn: multinuc with single child";
+            }
+        }
+    }
+}
 
 function get_element_id(node_id, nodes){
 
