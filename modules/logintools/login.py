@@ -217,10 +217,10 @@ def dologin(theform, userdir, thisscript=None, action=None):
         username = theform['username']
         password  = theform['pass']
         test = checkpass(username, password, userdir, thisscript, action)
-        return test or displaylogin(userdir, thisscript, action)
+        return test or displaylogin(userdir, thisscript, action, True)
     displaylogin(userdir, thisscript, action)                       # XXXX should display error message
     
-def displaylogin(userdir, thisscript=None, action=None):
+def displaylogin(userdir, thisscript=None, action=None, failed=False):
     """This function will display the login page and then exit.
     Usually called if the user has no cookie or an expired/forged cookie.
     """
@@ -235,6 +235,11 @@ def displaylogin(userdir, thisscript=None, action=None):
 
     loginpage = readfile(templatedir+logintemplate)  
     loginpage = loginpage.replace('**login form**', loginform)
+
+    if failed:
+        loginpage = loginpage.replace('**login failed**', '<b style="color:red">Wrong user name or password</b>')
+    else:
+        loginpage = loginpage.replace('**login failed**', '')
 
     if istrue(config['newloginlink']):
         loginpage = loginpage.replace('<!-- **commstart**', '')
