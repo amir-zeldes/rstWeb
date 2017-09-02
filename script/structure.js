@@ -474,7 +474,7 @@ function warn_empty_hierarchy(n_list){
             if (node_children.length > 0){
                 for (child_idx in node_children){
                     child = node_children[child_idx];
-                    if (count_children(child,n_list)==1 && n_list[child].kind=="span"){
+                    if (count_children(child,n_list)==1 && n_list[child].kind=="span" && n_list[child].reltype=="span"){
                         child_element_id = get_element_id(child,n_list);
                         document.getElementById(child_element_id).style.backgroundColor = "rgba(255, 255, 136, 0.5)";
                         document.getElementById(child_element_id).title = "Warn: span with single span child (empty hierarchy)";
