@@ -6,7 +6,7 @@ URL: https://corpling.uis.georgetown.edu/rstweb/info/
 rstWeb is an open source, browser based annotation tool for discourse analyses in Rhetorical Structure Theory. It is meant to support collaborative, online annotation projects using just a Web browser, without the need to install software for annotators, though there is also a standalone local version for offline use if you do not have access to a server. 
 
 ## Local Installation
-rstWeb runs in your browser no matter what, but you can run a local version of the software the emulates a Web server on your own machine. Getting this to work is a little different in Windows and Mac/Linux, and primarily requires Python and the library cherrypy to be installed (for Linux, replace your package repository for the Mac’s easy_install, i.e. apt-get, yum etc. depending on your Linux flavor). If you want to use screenshots in the interface, you will also need to install Selenium, which works with PhantomJS to create screenshots (see below). Alternatively, you can use your browsers print to PDF functionality directly.
+rstWeb runs in your browser no matter what, but you can run a local version of the software that emulates a Web server on your own machine. Getting this to work is a little different in Windows and Mac/Linux, and primarily requires Python and the library cherrypy to be installed (for Linux, replace your package repository for the Mac’s easy_install, i.e. apt-get, yum etc. depending on your Linux flavor). If you want to use screenshots in the interface, you will also need to install Selenium, which works with PhantomJS to create screenshots (see below). Alternatively, you can use your browsers print to PDF functionality directly.
 
 1.	Make sure Python 2.X is installed (preferably 2.6 or newer):
   * For Mac, Python is typically installed by default, no need to do anything
@@ -32,7 +32,7 @@ rstWeb runs in your browser no matter what, but you can run a local version of t
   * On Windows: run rstweb_local.bat 
 5.	You can now use rstWeb in your browser at: http://127.0.0.1:8080/ 
 
-If you run into problems getting the software to run, please contact amir.zeldes@georgetown.edu 
+If you run into problems getting the software to run, please check the PDF user guide in this repo first, then contact amir.zeldes@georgetown.edu 
 
 ## Server Installation
 1.	Make sure Python 2.X is installed (preferably 2.6 or newer)

@@ -21,17 +21,17 @@ import StringIO
 class Root(object):
 	@cherrypy.expose
 	def default(self,**kwargs):
-		print kwargs
+		print(kwargs)
 		return '<script>document.location.href="open";</script>'
 
 	@cherrypy.expose
 	def open(self,**kwargs):
-		print kwargs
+		print(kwargs)
 		return open_main("local","3","local",**kwargs)
 
 	@cherrypy.expose
 	def structure(self,**kwargs):
-		print kwargs
+		print(kwargs)
 		if "current_doc" not in kwargs:
 			return '<script>document.location.href="open";</script>'
 		elif "screenshot" in kwargs:
@@ -43,7 +43,7 @@ class Root(object):
 
 	@cherrypy.expose
 	def segment(self,**kwargs):
-		print kwargs
+		print(kwargs)
 		if "current_doc" not in kwargs:
 			return '<script>document.location.href="open";</script>'
 		else:
@@ -51,7 +51,7 @@ class Root(object):
 
 	@cherrypy.expose
 	def quick_export(self,**kwargs):
-		print kwargs
+		print(kwargs)
 		if "quickexp_doc" not in kwargs:
 			return '<script>document.location.href="open";</script>'
 		else:
@@ -61,7 +61,7 @@ class Root(object):
 
 	@cherrypy.expose
 	def admin(self,**kwargs):
-		print kwargs
+		print(kwargs)
 		return admin_main("local","3",'local',**kwargs)
 
 

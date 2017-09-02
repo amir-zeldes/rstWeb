@@ -29,15 +29,15 @@ class MyZipFile(zipfile.ZipFile):
 			path = os.getcwd()
 
 		ret_val = self._extract_member(member, path, pwd)
-		#attr = member.external_attr >> 16
-		attr = 0755
+		attr = 0o755
+
 		os.chmod(ret_val, attr)
 		return ret_val
 
 from rstweb_sql import (
 	import_document, get_def_rel, get_max_right, get_multinuc_children_lr,
 	get_multinuc_children_lr_ids, get_rel_type,
-	get_rst_doc, get_rst_rels, setup_db)
+	get_rst_doc, get_rst_rels, setup_db, generic_query)
 from rstweb_classes import NODE, get_depth, get_left_right
 
 
@@ -66,10 +66,9 @@ def rs3tohtml(rs3_filepath, user='temp_user', project='rstviewer_temp'):
 	with open(os.path.join(templatedir, 'main.html'), 'r') as template:
 		header = template.read()
 
-	header = header.replace("**page_title**","RST Viewer")
-	header = header.replace("**doc**",current_doc)
-	header = header.replace(
-		"**css_dir**", os.path.join(ROOT_DIR, 'css'))
+	header = header.replace("**page_title**", "RST Viewer")
+	header = header.replace("**doc**", current_doc)
+	header = header.replace("**css_dir**", os.path.join(ROOT_DIR, 'css'))
 	header = header.replace('**script_dir**', script_dir)
 
 	cpout = ""
@@ -78,6 +77,11 @@ def rs3tohtml(rs3_filepath, user='temp_user', project='rstviewer_temp'):
 	cpout += '''<div>\n'''
 
 	rels = get_rst_rels(current_doc, current_project)
+	if len(rels) < 2:
+		# Define at least one of each rel type
+		generic_query("INSERT INTO rst_relations VALUES(?,?,?,?)", ("elaboration_r", "rst", current_doc, current_project))
+		generic_query("INSERT INTO rst_relations VALUES(?,?,?,?)", ("joint_m", "multinuc", current_doc, current_project))
+
 	def_multirel = get_def_rel("multinuc",current_doc, current_project)
 	def_rstrel = get_def_rel("rst",current_doc, current_project)
 	multi_options =""
@@ -239,7 +243,7 @@ def rs3tohtml(rs3_filepath, user='temp_user', project='rstviewer_temp'):
 			if node.relname == "span":
 				cpout += 'jsPlumb.connect({source:"'+node_id_str+'",target:"'+parent_id_str+ '", connector:"Straight", anchors: ["Top","Bottom"]});'
 			elif parent.kind == "multinuc" and node.relkind=="multinuc":
-				cpout += 'jsPlumb.connect({source:"'+node_id_str+'",target:"'+parent_id_str+ '", connector:"Straight", anchors: ["Top","Bottom"], overlays: [ ["Custom", {create:function(component) {return make_relchooser("'+node.id+'","multi","'+node.relname+'");},location:0.2,id:"customOverlay"}]]});'
+				cpout += 'jsPlumb.connect({source:"'+node_id_str+'",target:"'+parent_id_str+ '", connector:"Straight", anchors: ["Top","Bottom"], overlays: [ ["Custom", {create:function(component) {return make_relchooser("'+node.id+'","multi","'+node.relname+'");},location:0.25,id:"customOverlay"}]]});'
 			else:
 				cpout += 'jsPlumb.connect({source:"'+node_id_str+'",target:"'+parent_id_str+'", overlays: [ ["Arrow" , { width:12, length:12, location:0.95 }],["Custom", {create:function(component) {return make_relchooser("'+node.id+'","rst","'+node.relname+'");},location:0.1,id:"customOverlay"}]]});'
 
@@ -309,19 +313,22 @@ def rs3tohtml(rs3_filepath, user='temp_user', project='rstviewer_temp'):
 def rs3topng(rs3_filepath, png_filepath=None):
 
 	try:
-		from selenium import webdriver
 		from selenium.common.exceptions import WebDriverException
+		from selenium import webdriver
 	except ImportError:
 		raise ImportError('Please install selenium to use images: pip install selenium')
 
 	html_str = rs3tohtml(rs3_filepath)
 	html_str = html_str.replace('="C:','="file:///C:')  # Make real file URIs for Windows
+	html_str = html_str.replace('="c:','="file:///c:')  # Some Pythons produce lower case c:\
 	html_str = html_str.replace('<body','<body style="background-color:white"')  # Make white background for PNG
 
 	temp = tempfile.NamedTemporaryFile(suffix='.html', delete=False)
 	temp.write(html_str.encode('utf8'))
-	print(temp.name)
+	#print(temp.name)
 	temp.close()
+	with open("c:\\uni\\test.html",'w') as x:
+		x.write(html_str.encode('utf8'))
 
 	try:
 		ver = "-2.1.1"
@@ -332,8 +339,7 @@ def rs3topng(rs3_filepath, png_filepath=None):
 		else:
 			os_suff = ver + "-macosx"
 
-		ex_path = os.path.dirname(os.path.realpath(
-			__file__)) + os.sep + "phantomjs" + os.sep + "phantomjs"  # "bin" + os.sep + os_subdir + os.sep + "phantomjs"
+		ex_path = os.path.dirname(os.path.realpath(__file__)) + os.sep + "phantomjs" + os.sep + "phantomjs"
 		if not (os.path.isfile(ex_path) or os.path.isfile(ex_path + ".exe")):
 			zip_ref = MyZipFile(ex_path + os_suff + ".zip", "r")
 			zip_ref.extractall(os.path.dirname(os.path.realpath(__file__)) + os.sep + "phantomjs")
@@ -347,9 +353,9 @@ def rs3topng(rs3_filepath, png_filepath=None):
 	driver.get("file:///"+temp.name)
 	driver.save_screenshot(png_filepath)   ## WORKS ##
 
+
 if __name__ == '__main__':
 	# Entry point when called via subprocess/cli
 	# Expects two file path arguments: infile.rs3, outfile.png
 	rs3topng(sys.argv[1], sys.argv[2])
-	#rs3topng("c:\\uni\\corpora\\gum\\rst\\example_edus.txt", "C:\\uni\\test4.png")
 

@@ -57,9 +57,9 @@ def newlogin(userdir, thisscript, action=None):
     #
     if action:
         newloginpage = newloginpage.replace('<!-- **action** -->', actionline % action)
-    print serverline
-    print '\r'
-    print newloginpage
+    print(serverline)
+    print('\r')
+    print(newloginpage)
     #
     sys.exit()
 

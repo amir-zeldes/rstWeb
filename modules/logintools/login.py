@@ -143,7 +143,7 @@ def login(theform, userdir, thisscript=None, action=None):
         displaylogin(userdir, thisscript)
     elif loginaction == 'logout':
 # this means a logout link can be implemented as myscript.py?login=logout
-        print logout(userdir)   # this prints the empty cookie
+        print(logout(userdir))  # this prints the empty cookie
         displaylogin(userdir, thisscript)       # we don't use 'action' in this case because user has explicitly logged out, outstanding action is lost.
     elif loginaction == 'newlogin':
         from newlogin import newlogin
@@ -182,7 +182,7 @@ def login(theform, userdir, thisscript=None, action=None):
     else:
         displaylogin(userdir, thisscript, action) # we haven't understood - just display the login screen XXXX error message instead ?          
     
-    print newcookie     # XXXX ought to be a way of returning the cookie object instead...
+    print(newcookie)     # XXXX ought to be a way of returning the cookie object instead...
     if action == 'EMPTY_VAL_MJF':           # the programmer ought never to 'see' this value, although it might get passed to his script by the login code a few times....
         action = None
     userconfig['lastused'] = str(time())
@@ -248,9 +248,9 @@ def displaylogin(userdir, thisscript=None, action=None, failed=False):
 
     if action:
         loginpage = loginpage.replace('<!-- **action** -->', actionline % action)
-    print serverline
-    print '\r'
-    print loginpage
+    print(serverline)
+    print('\r')
+    print(loginpage)
     
     sys.exit()
     

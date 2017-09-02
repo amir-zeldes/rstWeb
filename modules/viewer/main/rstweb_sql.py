@@ -175,7 +175,7 @@ def import_document(filename, project, user):
 
 	rel_hash = {}
 	rst_nodes = read_rst(filename, rel_hash)
-	if isinstance(rst_nodes,basestring):
+	if not isinstance(rst_nodes, dict):
 		return rst_nodes
 
 	# First delete any old copies of this document, if they are already imported

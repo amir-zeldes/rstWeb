@@ -129,7 +129,7 @@ def open_main_server():
 	kwargs={}
 	for key in theform:
 		kwargs[key] = theform[key].value
-	print open_main(user, admin, 'server', **kwargs)
+	print(open_main(user, admin, 'server', **kwargs))
 
 
 if "/" in os.environ.get('SCRIPT_NAME', ''):

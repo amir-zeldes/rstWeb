@@ -9,7 +9,6 @@ segmentation.
 Author: Amir Zeldes
 """
 
-import collections
 import _version
 import cgitb
 from modules.rstweb_sql import *
@@ -216,7 +215,7 @@ def segment_main_server():
 	kwargs={}
 	for key in theform:
 		kwargs[key] = theform[key].value
-	print segment_main(user, admin, 'server', **kwargs)
+	print(segment_main(user, admin, 'server', **kwargs))
 
 
 scriptpath = os.path.dirname(os.path.realpath(__file__)) + os.sep

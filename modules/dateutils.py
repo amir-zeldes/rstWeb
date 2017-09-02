@@ -591,11 +591,11 @@ dateformcon = { 'dayofweek' : 1, 'addzero' : 0, 'addcom' : 1, 'fullstop' : 1, 'm
 ############################################################
 
 if __name__ == "__main__":
-    print returndate()
+    print(returndate())
     year, month, day = returndate()
     test = daycount(year, month, day)
-    print test
-    print counttodate(test)
+    print(test)
+    print(counttodate(test))
     while True:
         x = raw_input("Enter Year of date (Enter to quit) >> ")
         if x=='':

@@ -161,10 +161,10 @@ def displaymenu(theform, userdir, thisscript, userconfig, action, newcookie):
     adminpage = adminpage.replace('**admin**', adminmenu)
     adminpage = adminpage.replace('**admin menu**', thisscript+'?login=admin'+'&action='+action)
         
-    print newcookie
-    print serverline
-    print
-    print adminpage
+    print(newcookie)
+    print(serverline)
+    print("")
+    print(adminpage)
     sys.exit()
 
 
@@ -282,10 +282,10 @@ def invite(theform, userdir, thisscript, userconfig, action, newcookie, msg=None
     invitemenu = invitemenu.replace('**action**', action)
 
     adminpage = adminpage.replace('**admin**', invitemenu)
-    print newcookie
-    print serverline
-    print
-    print adminpage
+    print(newcookie)
+    print(serverline)
+    print("")
+    print(adminpage)
     sys.exit()
   
 def edituser(theform, userdir, thisscript, userconfig, action, newcookie, msg=None, success=None):
@@ -370,10 +370,10 @@ def edituser(theform, userdir, thisscript, userconfig, action, newcookie, msg=No
         adminpage =  adminpage.replace('<br><!- message --> ', '<h2>%s</h2>' % msg) 
 
     adminpage = adminpage.replace('**admin**', eduserpage)
-    print newcookie
-    print serverline
-    print
-    print adminpage
+    print(newcookie)
+    print(serverline)
+    print("")
+    print(adminpage)
     sys.exit()
     
 ##########################################################

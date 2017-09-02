@@ -70,7 +70,7 @@ def quickexp_main_server():
 	for key in theform:
 		kwargs[key] = theform[key].value
 
-	print quickexp_main(user, admin, 'server', **kwargs)
+	print(quickexp_main(user, admin, 'server', **kwargs))
 
 
 scriptpath = os.path.dirname(os.path.realpath(__file__)) + os.sep

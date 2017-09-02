@@ -896,24 +896,24 @@ def internalfunc2(data):
 def test():                     # the test suite
     from time import clock
     from os.path import exists
-    print 'Printing the TABLE : '
+    print('Printing the TABLE : ')
     index = 0
     while index < len(TABLE):
-        print TABLE[index], TABLE.find(TABLE[index])
+        print(str(TABLE[index]) + str(TABLE.find(TABLE[index])))
         index +=1
 
-    print '\nEnter test password to encode using table_enc :\n(Hit enter to continue past this)\n'
+    print('\nEnter test password to encode using table_enc :\n(Hit enter to continue past this)\n')
     while True:
         dummy = raw_input('>>...')
         if not dummy: break
         test =  table_enc(dummy)
         test2 = table_dec(test)
-        print test
-        print 'length  : ', len(test), '    modulo 4 of length - 1  : ', (len(test)-1) % 4
-        print 'Decoded : ', test2
-        print 'Length dec : ', len(test2)
+        print(test)
+        print('length  : ' + str(len(test)) + '    modulo 4 of length - 1  : ' +str((len(test)-1) % 4))
+        print('Decoded : ' + str(test2))
+        print('Length dec : '+ str(len(test2)))
 
-    print '\nEnter password - to timestamp and then encode :\n(Hit enter to continue past this)\n'
+    print('\nEnter password - to timestamp and then encode :\n(Hit enter to continue past this)\n')
     while True:
         instring = raw_input('>>...')
         if not instring:
