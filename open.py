@@ -60,6 +60,8 @@ def open_main(user, admin, mode, **kwargs):
 		edit_bar = edit_bar.replace("**submit_target**",'structure')
 	edit_bar = edit_bar.replace("**action_type**",'')
 	edit_bar = edit_bar.replace("**serve_mode**",mode)
+	edit_bar = edit_bar.replace("**quickexp_disabled**",'disabled="disabled"')
+	edit_bar = edit_bar.replace("**screenshot_disabled**",'disabled="disabled"')
 	edit_bar = edit_bar.replace("**open_disabled**",'disabled="disabled"')
 	edit_bar = edit_bar.replace("**reset_disabled**",'disabled="disabled"')
 	edit_bar = edit_bar.replace("**save_disabled**",'disabled="disabled"')
@@ -127,7 +129,7 @@ def open_main_server():
 	kwargs={}
 	for key in theform:
 		kwargs[key] = theform[key].value
-	print open_main(user, admin, 'server', **kwargs)
+	print(open_main(user, admin, 'server', **kwargs))
 
 
 if "/" in os.environ.get('SCRIPT_NAME', ''):

@@ -111,6 +111,33 @@ function admin(action){
             document.getElementById("guidelines_url").value = projects_to_edit + "::" + document.getElementById("guidelines_url_input").value;
             document.getElementById("sel_tab").value = "project";
 			break;
+		case "toggle_validations":
+            if ($('#project_select').length == 0) {
+                alert("No projects available!");
+                document.getElementById("check_flat_rst").checked = false;
+                document.getElementById("check_empty_span").checked = false;
+                return;
+            }
+            sel_proj = document.getElementById("validate_project_select").value;
+            toggle_action = sel_proj + "::";
+            if (document.getElementById("check_empty_span").checked){
+                toggle_action += "validate_empty";
+            }
+            if (document.getElementById("check_flat_rst").checked){
+                if (toggle_action != ""){
+                    toggle_action += ";";
+                }
+                toggle_action += "validate_flat";
+            }
+            if (document.getElementById("check_mononuc").checked){
+                if (toggle_action != ""){
+                    toggle_action += ";";
+                }
+                toggle_action += "validate_mononuc";
+            }
+            document.getElementById("edit_validation").value = toggle_action;
+            document.getElementById("sel_tab").value = "project";
+			break;
 		case "assign_user":
             if ($('#userlist_select').length == 0) {
                 alert("No users available!");
@@ -254,7 +281,25 @@ function update_assignments(){
 
 }
 
+function toggle_validation_project(){
+    val_proj = $("#validate_project_select option:selected").text();
+    validations = document.getElementById("validations_" + val_proj).value;
+    if (validations.indexOf("validate_flat")>-1){
+        document.getElementById("check_flat_rst").checked = true;
+    } else {
+        document.getElementById("check_flat_rst").checked = false;
+    }
+    if (validations.indexOf("validate_empty")>-1){
+        document.getElementById("check_empty_span").checked = true;
+    } else {
+        document.getElementById("check_empty_span").checked = false;
+    }
+
+}
+
 function validateEmail(email) {
     var re = /^([\w-]+(?:\.[\w-]+)*)@((?:[\w-]+\.)*\w[\w-]{0,66})\.([a-z]{2,6}(?:\.[a-z]{2})?)$/i;
     return re.test(email);
 }
+
+

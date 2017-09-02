@@ -73,6 +73,8 @@ def admin_main(user, admin, mode, **kwargs):
 	edit_bar = edit_bar.replace("**serve_mode**",mode)
 	edit_bar = edit_bar.replace("**open_disabled**",'')
 	edit_bar = edit_bar.replace("**reset_disabled**",'disabled="disabled"')
+	edit_bar = edit_bar.replace("**quickexp_disabled**",'disabled="disabled"')
+	edit_bar = edit_bar.replace("**screenshot_disabled**",'disabled="disabled"')
 	edit_bar = edit_bar.replace("**save_disabled**",'disabled="disabled"')
 	edit_bar = edit_bar.replace("**undo_disabled**",'disabled="disabled"')
 	edit_bar = edit_bar.replace("**redo_disabled**",'disabled="disabled"')
@@ -108,8 +110,6 @@ def admin_main(user, admin, mode, **kwargs):
 		if len(new_project)>0:
 			create_project(new_project)
 
-	all_project_list = get_all_projects()
-
 	if "doclist" in theform:
 		current_doc = theform["doclist"]
 	else:
@@ -139,6 +139,7 @@ def admin_main(user, admin, mode, **kwargs):
 		<input type="hidden" name="unassign_doc" id="unassign_doc" value=""/>
 		<input type="hidden" name="unassign_user" id="unassign_user" value=""/>
 		<input type="hidden" name="new_user_data" id="new_user_data" value=""/>
+		<input type="hidden" name="edit_validation" id="edit_validation" value=""/>
 		<input type="hidden" name="del_project" id="del_project" value=""/>
 		<input type="hidden" name="guidelines_url" id="guidelines_url" value=""/>
 		<input id="file" type="file" name="file" multiple="multiple"/>
@@ -165,6 +166,8 @@ def admin_main(user, admin, mode, **kwargs):
 					delete_project(project)
 			else:
 				delete_project(projects_to_delete)
+
+	all_project_list = get_all_projects()
 
 	url_message = ""
 	if "guidelines_url" in theform:
@@ -194,13 +197,111 @@ def admin_main(user, admin, mode, **kwargs):
 	cpout += '''<p>
 		<p>Add guidelines URL to selected project:</p><p><input id="guidelines_url_input"/></p>
 		<button onclick="admin('guidelines_url')">Add URL</button>
-		''' + url_message + '''
+		''' + url_message
+
+	cpout += '''
+
 		<p>Delete selected projects:</p>
 
 		<button onclick="admin('delete_project')">Delete Selected</button></p>
-	</div>'''
+	'''
 
 
+	# Handle validation settings
+	validation_message = ""
+	val_project = ""
+	if "edit_validation" in theform:
+		if "::" in theform["edit_validation"]:
+			val_project, validations = theform["edit_validation"].split("::")
+			schema = get_schema()
+			if schema < 5:
+				update_schema()
+			set_project_validations(val_project,validations)
+			validation_message = '<p class="warn">Updated validation settings for project ' + val_project
+
+	cpout += '''<p>Change annotation warning settings for project:</p>'''
+
+	if all_project_list:
+		cpout += '''<select class="doclist" id="validate_project_select" onchange="toggle_validation_project();">\n'''
+		if val_project == "":
+			val_project = all_project_list[0][0]
+		for project in all_project_list:
+			if project[0] == val_project:
+				sel_string = ' selected="selected"'
+			else:
+				sel_string = ""
+			cpout += '\t<option value="' + project[0] + '"' + sel_string +'>' +  project[0] + "</option>\n"
+		cpout += '</select>\n'
+		for project in all_project_list:
+			vals = get_project_validations(project[0])
+			cpout += '\t<input id="validations_' + project[0] +'" type="hidden" value="'+vals+'">'
+	else:
+		cpout += "<p>No projects found with permissions for user: "+ user + "</p>"
+
+	validations = get_project_validations(val_project)
+	validation_list = validations.split(";")
+	checked = ""
+	if "validate_empty" in validation_list:
+		checked = " checked"
+
+	cpout += '''<br><br><label class="switch">
+	  <input type="checkbox" id="check_empty_span" onclick="admin('toggle_validations');"'''+ checked +'''>
+	  <div class="slider round"></div>
+		</label><div style="position: relative; top: -3px; left: 3px; display: inline-block">Warn on empty span
+		<a class="tooltip" href="">
+   <i class="fa fa-question-circle">&nbsp;</i>
+   <span><img src="img/empty_span.png" height="100px">
+
+    <i>Highlights spans with single span child</i>
+   </span>
+</a></div>
+		'''
+	checked = ""
+	if "validate_flat" in validation_list:
+		checked = " checked"
+	cpout += '''<br><label class="switch">
+	  <input type="checkbox" id="check_flat_rst" onclick="admin('toggle_validations');"'''+ checked +'''>
+	  <div class="slider round"></div>
+		</label><div style="margin-top: 10px; position: relative; top: -3px; left: 3px; display: inline-block">Warn on multiple incoming flat RST relations
+		<a class="tooltip" href="">
+   <i class="fa fa-question-circle">&nbsp;</i>
+   <span><img src="img/flat_rst.png" height="75px">
+
+    <i>Highlights spans with multiple incoming satellites</i>
+   </span>
+</a></div>
+'''
+	checked = ""
+	if "validate_mononuc" in validation_list:
+		checked = " checked"
+	cpout += '''<br><label class="switch">
+		  <input type="checkbox" id="check_mononuc" onclick="admin('toggle_validations');"''' + checked + '''>
+		  <div class="slider round"></div>
+			</label><div style="margin-top: 10px; position: relative; top: -3px; left: 3px; display: inline-block">Warn on multinucs with single child
+			<a class="tooltip" href="">
+	   <i class="fa fa-question-circle">&nbsp;</i>
+	   <span><img src="img/mononuc.png" height="75px">
+
+	    <i>Highlights multinucs with a single child</i>
+	   </span>
+	</a></div>
+		<script>
+			selproj = document.getElementById("validate_project_select").value;
+			validations = document.getElementById("validations_" + selproj).value;
+			if (validations.indexOf("validate_flat")>0){
+				document.getElementById("check_flat_rst").checked = true;
+			}
+			if (validations.indexOf("validate_empty")>0){
+				document.getElementById("check_empty_span").checked = true;
+			}
+			if (validations.indexOf("validate_mononuc")>0){
+				document.getElementById("check_mononuc").checked = true;
+			}
+		</script>'''
+	cpout += validation_message
+
+	cpout += '''
+		</div>'''
 
 
 	cpout += '''
@@ -221,7 +322,7 @@ def admin_main(user, admin, mode, **kwargs):
 			cpout += '\t<option value="' + all_project_list +'">' +  all_project_list + "</option>"
 		cpout += '</select>\n'
 	else:
-		cpout += "<p>No projects found with permissons for user: "+ user + "</p>"
+		cpout += "<p>No projects found with permissions for user: "+ user + "</p>"
 	cpout += '''
 	</p>
 	<p><button onclick="admin('upload')">Upload</button></p>
@@ -369,7 +470,7 @@ def admin_main(user, admin, mode, **kwargs):
 		if len(theform["unassign_user"]) > 0:
 			user_to_unassign = theform["unassign_user"]
 			doc_to_unassign = theform["unassign_doc"]
-			print theform
+			print(theform)
 			delete_doc_user_version(doc_to_unassign.split("/")[1],doc_to_unassign.split("/")[0],user_to_unassign)
 
 	if "new_user_data" in theform:
@@ -605,7 +706,7 @@ def admin_main_server():
 			kwargs[key] = theform[key]
 		else:
 			kwargs[key] = theform[key].value
-	print admin_main(user, admin, 'server', **kwargs)
+	print(admin_main(user, admin, 'server', **kwargs))
 
 
 scriptpath = os.path.dirname(os.path.realpath(__file__)) + os.sep

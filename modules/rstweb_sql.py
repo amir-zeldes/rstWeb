@@ -41,7 +41,7 @@ def setup_db():
 	cur.execute('''CREATE TABLE IF NOT EXISTS users
 	             (user text, timestamp text, UNIQUE (user) ON CONFLICT REPLACE)''')
 	cur.execute('''CREATE TABLE IF NOT EXISTS projects
-	             (project text, guideline_url text, UNIQUE (project) ON CONFLICT REPLACE)''')
+	             (project text, guideline_url text, validations text, UNIQUE (project) ON CONFLICT REPLACE)''')
 	cur.execute('''CREATE TABLE IF NOT EXISTS logging
 	             (doc text, project text, user text, actions text, mode text, timestamp text)''')
 	cur.execute('''CREATE TABLE IF NOT EXISTS settings
@@ -79,6 +79,8 @@ def update_schema():
 		cur.execute('ALTER TABLE projects ADD COLUMN guideline_url text')
 	if schema < 4:  # versions below 4 do not have last save timestamp to prevent resubmit on browser refresh
 		cur.execute('ALTER TABLE users ADD COLUMN timestamp text')
+	if schema < 5:  # versions below 5 do not validations
+		cur.execute('ALTER TABLE projects ADD COLUMN validations text')
 
 	conn.commit()
 	conn.close()
@@ -109,7 +111,7 @@ def initialize_settings():
 	save_setting("logging", "off")
 	save_setting("use_span_buttons", "True")
 	save_setting("use_multinuc_buttons", "True")
-	set_schema('4')
+	set_schema('5')
 
 
 def check_refresh(user, timestamp):
@@ -139,6 +141,27 @@ def set_timestamp(user, timestamp):
 	if schema >= 4:
 		if timestamp != "" and user != "":
 			generic_query("INSERT or REPLACE INTO users ('user','timestamp') VALUES (?,?)",(user,timestamp))
+
+
+def get_project_validations(project):
+	schema = get_schema()
+	if schema < 5:
+		update_schema()
+	if len(project):
+		validation_row = generic_query("SELECT validations FROM projects WHERE project = ?",(project,))
+	else:
+		return ""
+	if len(validation_row) == 0:
+		validations = ""
+	else:
+		validations = validation_row[0][0]
+	if validations is None:
+		validations = ""
+	return validations
+
+
+def set_project_validations(project,validations):
+	generic_query("UPDATE projects SET validations=? WHERE project=?;",(validations,project))
 
 
 def import_document(filename, project, user):
@@ -393,58 +416,68 @@ def generic_query(sql,params):
 
 
 def export_document(doc, project,exportdir):
-	rels = get_rst_rels(doc,project)
 	doc_users = get_users(doc,project)
 	for user in doc_users:
 		this_user = user[0]
-		nodes = get_rst_doc(doc,project,this_user)
-		rst_out = '''<rst>
-	<header>
-		<relations>
-'''
-		for rel in rels:
-			relname_string = re.sub(r'_[rm]$','',rel[0])
-			rst_out += '\t\t\t<rel name="' + relname_string +'" type="' + rel[1] + '"/>\n'
-
-		rst_out += '''\t\t</relations>
-	</header>
-	<body>
-'''
-		for node in nodes:
-			if node[5] == "edu":
-				if len(node[7]) > 0:
-					relname_string = re.sub(r'_[rm]$','',node[7])
-				else:
-					relname_string = ""
-				if node[3] == "0":
-					parent_string = ""
-					relname_string = ""
-				else:
-					parent_string = 'parent="'+node[3]+'" '
-				if len(relname_string) > 0:
-					relname_string = 'relname="' + relname_string
-				rst_out += '\t\t<segment id="'+node[0]+'" '+ parent_string + relname_string+'">'+node[6]+'</segment>\n'
-		for node in nodes:
-			if node[5] != "edu":
-				if len(node[7]):
-					relname_string = re.sub(r'_[rm]$','',node[7])
-					relname_string = 'relname="'+relname_string+'"'
-				else:
-					relname_string = ""
-				if node[3] == "0":
-					parent_string = ""
-					relname_string = ""
-				else:
-					parent_string = 'parent="'+node[3]+'"'
-				if len(relname_string) > 0:
-					parent_string += ' '
-				rst_out += '\t\t<group id="'+node[0]+'" type="'+node[5]+'" ' + parent_string + relname_string+'/>\n'
-
-		rst_out += '''  </body>
-</rst>'''
+		rst_out = get_export_string(doc, project, this_user)
 		filename = project + "_" + doc + "_" + this_user + ".rs3"
 		f = codecs.open(exportdir + filename, 'w','utf-8')
 		f.write(rst_out)
+
+
+def get_export_string(doc, project, user):
+	rels = get_rst_rels(doc,project)
+	nodes = get_rst_doc(doc,project,user)
+	rst_out = '''<rst>
+<header>
+	<relations>
+'''
+	for rel in rels:
+		relname_string = re.sub(r'_[rm]$','',rel[0])
+		rst_out += '\t\t\t<rel name="' + relname_string + '" type="' + rel[1] + '"/>\n'
+
+	rst_out += '''\t\t</relations>
+</header>
+<body>
+'''
+	for node in nodes:
+		if node[5] == "edu":
+			if len(node[7]) > 0:
+				relname_string = re.sub(r'_[rm]$','',node[7])
+			else:
+				relname_string = ""
+			if node[3] == "0":
+				parent_string = ""
+				relname_string = ""
+			else:
+				parent_string = 'parent="'+node[3]+'" '
+			if len(relname_string) > 0:
+				relname_string = 'relname="' + relname_string+'"'
+			contents = node[6]
+			# Handle XML escapes
+			contents = re.sub(r'&([^ ;]*) ',r'&amp;\1 ',contents)
+			contents = re.sub(r'&$','&amp;',contents)
+			contents = contents.replace(">","&gt;").replace("<","&lt;")
+			rst_out += '\t\t<segment id="'+node[0]+'" '+ parent_string + relname_string+'>'+contents+'</segment>\n'
+	for node in nodes:
+		if node[5] != "edu":
+			if len(node[7]):
+				relname_string = re.sub(r'_[rm]$','',node[7])
+				relname_string = 'relname="'+relname_string+'"'
+			else:
+				relname_string = ""
+			if node[3] == "0":
+				parent_string = ""
+				relname_string = ""
+			else:
+				parent_string = 'parent="'+node[3]+'"'
+			if len(relname_string) > 0:
+				parent_string += ' '
+			rst_out += '\t\t<group id="'+node[0]+'" type="'+node[5]+'" ' + parent_string + relname_string+'/>\n'
+
+	rst_out += '''  </body>
+</rst>'''
+	return rst_out
 
 def delete_document(doc,project):
 	generic_query("DELETE FROM rst_nodes WHERE doc=? and project=?",(doc,project))

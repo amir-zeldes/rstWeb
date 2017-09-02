@@ -14,37 +14,54 @@ from open import open_main
 from structure import structure_main
 from segment import segment_main
 from admin import admin_main
+from quick_export import quickexp_main
+from cherrypy.lib import file_generator
+import StringIO
 
 class Root(object):
 	@cherrypy.expose
 	def default(self,**kwargs):
-		print kwargs
+		print(kwargs)
 		return '<script>document.location.href="open";</script>'
 
 	@cherrypy.expose
 	def open(self,**kwargs):
-		print kwargs
+		print(kwargs)
 		return open_main("local","3","local",**kwargs)
 
 	@cherrypy.expose
 	def structure(self,**kwargs):
-		print kwargs
+		print(kwargs)
 		if "current_doc" not in kwargs:
 			return '<script>document.location.href="open";</script>'
+		elif "screenshot" in kwargs:
+			cherrypy.response.headers['Content-Type'] = "image/png"
+			cherrypy.response.headers['Content-Disposition'] = 'attachment; filename="' + kwargs["current_doc"] + '.png"'
+			return file_generator(StringIO.StringIO(structure_main("local", "3", 'local', **kwargs)))
 		else:
 			return structure_main("local","3",'local',**kwargs)
 
 	@cherrypy.expose
 	def segment(self,**kwargs):
-		print kwargs
+		print(kwargs)
 		if "current_doc" not in kwargs:
 			return '<script>document.location.href="open";</script>'
 		else:
 			return segment_main("local","3",'local',**kwargs)
 
 	@cherrypy.expose
+	def quick_export(self,**kwargs):
+		print(kwargs)
+		if "quickexp_doc" not in kwargs:
+			return '<script>document.location.href="open";</script>'
+		else:
+			cherrypy.response.headers['Content-Type'] = "application/download"
+			cherrypy.response.headers['Content-Disposition'] = 'attachment; filename="'+kwargs["quickexp_doc"]+'"'
+			return quickexp_main("local","3",'local',**kwargs)
+
+	@cherrypy.expose
 	def admin(self,**kwargs):
-		print kwargs
+		print(kwargs)
 		return admin_main("local","3",'local',**kwargs)
 
 

@@ -16,7 +16,7 @@ from modules.rstweb_classes import *
 def read_rst(filename, rel_hash):
 	f = codecs.open(filename, "r", "utf-8")
 	try:
-		xmldoc = minidom.parseString (codecs.encode (f.read(), "utf-8"))
+		xmldoc = minidom.parseString(codecs.encode (f.read(), "utf-8"))
 	except ExpatError:
 		message = "Invalid .rs3 file"
 		return message
@@ -93,6 +93,14 @@ def read_rst(filename, rel_hash):
 				relname = relname+"_r"
 		edu_id = segment.attributes["id"].value
 		contents = segment.childNodes[0].data.strip()
+
+		# Check for invalid XML in segment contents
+		if "<" in contents or ">" in contents or "&" in contents:
+			contents = contents.replace('>','&gt;')
+			contents = contents.replace('<', '&lt;')
+			contents = re.sub(r'&([^ ;]* )', r'&amp;\1', contents)
+			contents = re.sub(r'&$', r'&amp;', contents)
+
 		nodes.append([str(ordered_id[edu_id]), id_counter, id_counter, str(ordered_id[parent]), 0, "edu", contents, relname])
 
 	item_list = xmldoc.getElementsByTagName("group")
@@ -148,7 +156,16 @@ def read_text(filename,rel_hash):
 
 	for line in f:
 		id_counter += 1
-		nodes[str(id_counter)] = NODE(str(id_counter),id_counter,id_counter,"0",0,"edu",line.strip(),rels.keys()[0],rels.values()[0])
+		contents = line.strip()
+
+		# Check for invalid XML in segment contents
+		if "<" in contents or ">" in contents or "&" in contents:
+			contents = contents.replace('>','&gt;')
+			contents = contents.replace('<', '&lt;')
+			contents = re.sub(r'&([^ ;]* )', r'&amp;\1', contents)
+			contents = re.sub(r'&$', r'&amp;', contents)
+
+		nodes[str(id_counter)] = NODE(str(id_counter),id_counter,id_counter,"0",0,"edu",contents,rels.keys()[0],rels.values()[0])
 
 	return nodes
 

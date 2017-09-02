@@ -10,10 +10,16 @@
         <input id="dirty" name="dirty" type="hidden" value=""/>
         <input id="timestamp" name="timestamp" type="hidden" value=""/>
     </form>
+    <form id="quickexp_form" name="quickexp_form" action="quick_export" method="post" class="nav_form" enctype="multipart/form-data">
+        <input id="quickexp_doc" name="quickexp_doc" type="hidden" value="**doc**"/>
+        <input id="quickexp_project" name="quickexp_project" type="hidden" value="**project**"/>
+    </form>
 
             <button id="nav_open" class="nav_button" onclick="open_open();" name="open" **open_disabled**><i class="fa fa-folder-open" title="Open"></i> open</button>
             <button id="nav_save" class="nav_button" onclick="save();" **save_disabled**><i class="fa fa-save" title="Save"></i> save</button>
             <button id="nav_reset" class="nav_button" onclick="do_reset();" **reset_disabled**><i class="fa fa-refresh on fa-trash" title="Reset"></i> reset</button>
+            <button id="nav_quickexp" class="nav_button" onclick="do_quickexp();" **quickexp_disabled**><i class="fa fa-code" title="Download XML"></i> xml</button>
+            <button id="nav_screenshot" class="nav_button" onclick="do_screenshot();" **screenshot_disabled**><i class="fa fa-image" title="Image"></i> image</button>
     <span class="divider">|</span>
             <button class="nav_button" onclick="undo();" **undo_disabled**><i class="fa fa-undo" title="Undo"></i> undo</button>
             <button class="nav_button" onclick="redo();" **redo_disabled**><i class="fa fa-undo fa-flip-horizontal" title="Redo"></i> redo</button>
@@ -27,6 +33,3 @@
             <button id="nav_help" class="nav_button" onclick="show_help();"><i class="fa fa-question-circle" title="Help"></i> help</button>
             <button id="nav_about" class="nav_button" onclick="show_about();"><i class="fa fa-info-circle" title="About"></i> about</button>
 </div>
-<script src="./script/jquery-1.11.3.min.js"></script>
-<script src="./script/jquery-ui.min.js"></script>
-<script src="./script/nav.js"></script>

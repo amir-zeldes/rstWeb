@@ -122,6 +122,37 @@ function do_open(project_doc){
 }
 
 
+function do_quickexp(){
+    if (document.getElementById("dirty").value=="dirty"){
+        var r = confirm("You have unsaved work - really export without saved work? Changes will be omitted.");
+        if (r == false) {
+            return;
+        }
+    }
+    document.getElementById("quickexp_form").action="quick_export";
+    if(document.getElementById("serve_mode").value=="server"){document.getElementById("quickexp_form").action="quick_export.py";}
+    document.getElementById("quickexp_form").submit();
+}
+
+function do_screenshot(){
+    if (document.getElementById("dirty").value=="dirty"){
+        var r = confirm("You have unsaved work - really capture image without saved work? Changes will be omitted.");
+        if (r == false) {
+            return;
+        }
+    }
+    current_project = document.getElementById('current_project').value;
+    current_doc = document.getElementById('current_doc').value;
+    if(document.getElementById("serve_mode").value=="server"){
+        loc='structure.py';
+    }
+    else {
+        loc='structure';
+    }
+    img_url = loc + '?current_doc=' + current_doc + '&current_project=' + current_project + '&screenshot=screenshot';
+    window.open(img_url, '_rst_download');
+}
+
 function undo(){
 
     //document.getElementById("undo_log").value = reorder_undo_log(document.getElementById("undo_log").value);

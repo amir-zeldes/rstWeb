@@ -313,15 +313,16 @@ def validemail(email):
 
 def error(errorval=''):
     """The generic error function."""
-    print serverline
-    print
-    print '''<html><head><title>An Error Has Occurred</title>
+    print(serverline)
+    print("")
+    err_msg = '''<html><head><title>An Error Has Occurred</title>
     <body><center>
     <h1>Very Sorry</h1>
     <h2>An Error Has Occurred</h2>'''
+    print(err_msg)
     if errorval:
-        print '<h3>%s</h3>' % errorval
-    print '</center></body></html>'
+        print('<h3>'+errorval+'</h3>')
+    print('</center></body></html>')
     sys.exit()
     
 #########################################################
@@ -546,7 +547,7 @@ def blacklisted(ip, DNSBL_HOST='sbl-xbl.spamhaus.org'):
 ############################
 
 if __name__ == '__main__':
-    print 'No tests yet - sorry'
+    print('No tests yet - sorry')
 
 """
 TODO/ISSUES

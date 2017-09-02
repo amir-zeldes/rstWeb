@@ -28,9 +28,6 @@ def structure_main(user, admin, mode, **kwargs):
 	userdir = scriptpath + "users" + os.sep
 	theform = kwargs
 
-	UTF8Writer = codecs.getwriter('utf8')
-	sys.stdout = UTF8Writer(sys.stdout)
-
 	cgitb.enable()
 
 	###GRAPHICAL PARAMETERS###
@@ -62,6 +59,17 @@ def structure_main(user, admin, mode, **kwargs):
 		current_project = ""
 		current_guidelines = ""
 
+
+	if "screenshot" in theform:
+		if len(theform["screenshot"]) > 1:
+			from screenshot import get_png
+			return get_png(current_doc,current_project,user,mode)
+
+
+	UTF8Writer = codecs.getwriter('utf8')
+	sys.stdout = UTF8Writer(sys.stdout)
+
+
 	edit_bar = "edit_bar.html"
 	edit_bar = readfile(templatedir+edit_bar)
 	edit_bar = edit_bar.replace("**doc**",current_doc)
@@ -69,6 +77,8 @@ def structure_main(user, admin, mode, **kwargs):
 	edit_bar = edit_bar.replace("**structure_disabled**",'disabled="disabled"')
 	edit_bar = edit_bar.replace("**segment_disabled**",'')
 	edit_bar = edit_bar.replace("**relations_disabled**",'')
+	edit_bar = edit_bar.replace("**screenshot_disabled**",'')
+	edit_bar = edit_bar.replace("**quickexp_disabled**",'')
 	edit_bar = edit_bar.replace("**current_guidelines**",current_guidelines)
 	if mode == "server":
 		edit_bar = edit_bar.replace("**submit_target**",'structure.py')
@@ -99,7 +109,6 @@ def structure_main(user, admin, mode, **kwargs):
 
 	if current_guidelines != "":
 		cpout += '<script>enable_guidelines();</script>'
-	cpout += '<script src="./script/structure.js"></script>'
 
 	if current_doc =="":
 		cpout += '<p class="warn">No file found - please select a file to open</p>'
@@ -108,6 +117,7 @@ def structure_main(user, admin, mode, **kwargs):
 	cpout += '''<div class="canvas">'''
 	cpout += '\t<p>Document: <b>'+current_doc+'</b> (project: <i>'+current_project+'</i>)</p>'
 	cpout += '''<div id="inner_canvas">'''
+	cpout += '<script src="./script/structure.js"></script>'
 
 	rels = get_rst_rels(current_doc, current_project)
 	def_multirel = get_def_rel("multinuc",current_doc, current_project)
@@ -117,12 +127,12 @@ def structure_main(user, admin, mode, **kwargs):
 	rel_kinds = {}
 	for rel in rels:
 		if rel[1]=="multinuc":
-			multi_options += "<option value='"+rel[0]+"'>"+rel[0].replace("_m","")+'</option>'
+			multi_options += "<option value='"+rel[0]+"'>"+rel[0].replace("_m","")+'</option>\n'
 			rel_kinds[rel[0]] = "multinuc"
 		else:
-			rst_options += "<option value='"+rel[0]+"'>"+rel[0].replace("_r","")+'</option>'
+			rst_options += "<option value='"+rel[0]+"'>"+rel[0].replace("_r","")+'</option>\n'
 			rel_kinds[rel[0]] = "rst"
-	multi_options += "<option value='"+def_rstrel+"'>(satellite...)</option>"
+	multi_options += "<option value='"+def_rstrel+"'>(satellite...)</option>\n"
 
 	# Remove floating non-terminal nodes if found
 	# (e.g. due to browsing back and re-submitting old actions or other data corruption)
@@ -154,7 +164,7 @@ def structure_main(user, admin, mode, **kwargs):
 					elif action_type == "rl":
 						update_rel(params[0],params[1],current_doc,current_project,user)
 					else:
-						cpout += '<script>alert("the action was: " + theform["action"]);</script>'
+						cpout += '<script>alert("the action was: " + theform["action"]);</script>\n'
 
 	if "logging" in theform and not refresh:
 		if len(theform["logging"]) > 1:
@@ -285,14 +295,15 @@ def structure_main(user, admin, mode, **kwargs):
 	cpout += 'value="' + hidden_val + '"/>'
 
 
-	cpout += '<input id="def_multi_rel" type="hidden" value="' + get_def_rel("multinuc",current_doc,current_project) +'"/>'
-	cpout += '<input id="def_rst_rel" type="hidden" value="' + get_def_rel("rst",current_doc,current_project) +'"/>'
-	cpout += '<input id="undo_log" type="hidden" value=""/>'
-	cpout += '<input id="redo_log" type="hidden" value=""/>'
-	cpout += '<input id="undo_state" type="hidden" value=""/>'
-	cpout += '<input id="logging" type="hidden" value=""/>'
-	cpout += '<input id="use_span_buttons" type="hidden" value="'+str(use_span_buttons)+'"/>'
-	cpout += '<input id="use_multinuc_buttons" type="hidden" value="'+str(use_multinuc_buttons)+'"/>'
+	cpout += '<input id="def_multi_rel" type="hidden" value="' + get_def_rel("multinuc",current_doc,current_project) +'"/>\n'
+	cpout += '<input id="def_rst_rel" type="hidden" value="' + get_def_rel("rst",current_doc,current_project) +'"/>\n'
+	cpout += '<input id="undo_log" type="hidden" value=""/>\n'
+	cpout += '<input id="redo_log" type="hidden" value=""/>\n'
+	cpout += '<input id="undo_state" type="hidden" value=""/>\n'
+	cpout += '<input id="logging" type="hidden" value=""/>\n'
+	cpout += '<input id="validations" type="hidden" value="'+get_project_validations(current_project)+'"/>\n'
+	cpout += '<input id="use_span_buttons" type="hidden" value="'+str(use_span_buttons)+'"/>\n'
+	cpout += '<input id="use_multinuc_buttons" type="hidden" value="'+str(use_multinuc_buttons)+'"/>\n'
 
 	cpout += '''	<script src="./script/jquery.jsPlumb-1.7.5-min.js"></script>
 
@@ -300,8 +311,8 @@ def structure_main(user, admin, mode, **kwargs):
 			'''
 
 	cpout += 'function select_my_rel(options,my_rel){'
-	cpout += 'var multi_options = "' + multi_options +'";'
-	cpout += 'var rst_options = "' + rst_options +'";'
+	cpout += 'var multi_options = `' + multi_options +'`;\n'
+	cpout += 'var rst_options = `' + rst_options +'`;\n'
 	cpout += 'if (options =="multi"){options = multi_options;} else {options=rst_options;}'
 	cpout += '		return options.replace("<option value='+"'" +'"' + '+my_rel+'+'"' +"'"+'","<option selected='+"'"+'selected'+"'"+' value='+"'" +'"'+ '+my_rel+'+'"' +"'"+'");'
 	cpout += '			}\n'
@@ -412,8 +423,14 @@ def structure_main(user, admin, mode, **kwargs):
 		});
 
 	});
+		nodes = parse_data();
+		show_warnings(nodes);
 
 			</script>
+
+'''
+
+	cpout += '''
 			</div>
 			</div>
 			<div id="anim_catch" class="anim_catch">&nbsp;</div>
@@ -438,12 +455,16 @@ def structure_main_server():
 	kwargs={}
 	for key in theform:
 		kwargs[key] = theform[key].value
-	print structure_main(user, admin, 'server', **kwargs)
+	output = structure_main(user, admin, 'server', **kwargs)
+
+	if "screenshot" in theform:
+		print("Content-type: image/png")
+		print('Content-Disposition: attachment; filename="image.png"\n')
+		print(output)
+	else:
+		print(output)
 
 
-scriptpath = os.path.dirname(os.path.realpath(__file__)) + os.sep
-userdir = scriptpath + "users" + os.sep
-config = ConfigObj(userdir + 'config.ini')
 if "/" in os.environ.get('SCRIPT_NAME', ''):
 	mode = "server"
 else:
