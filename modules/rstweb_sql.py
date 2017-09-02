@@ -452,13 +452,13 @@ def get_export_string(doc, project, user):
 			else:
 				parent_string = 'parent="'+node[3]+'" '
 			if len(relname_string) > 0:
-				relname_string = 'relname="' + relname_string
+				relname_string = 'relname="' + relname_string+'"'
 			contents = node[6]
 			# Handle XML escapes
 			contents = re.sub(r'&([^ ;]*) ',r'&amp;\1 ',contents)
 			contents = re.sub(r'&$','&amp;',contents)
 			contents = contents.replace(">","&gt;").replace("<","&lt;")
-			rst_out += '\t\t<segment id="'+node[0]+'" '+ parent_string + relname_string+'">'+contents+'</segment>\n'
+			rst_out += '\t\t<segment id="'+node[0]+'" '+ parent_string + relname_string+'>'+contents+'</segment>\n'
 	for node in nodes:
 		if node[5] != "edu":
 			if len(node[7]):

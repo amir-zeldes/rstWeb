@@ -16,7 +16,7 @@ from modules.rstweb_classes import *
 def read_rst(filename, rel_hash):
 	f = codecs.open(filename, "r", "utf-8")
 	try:
-		xmldoc = minidom.parseString (codecs.encode (f.read(), "utf-8"))
+		xmldoc = minidom.parseString(codecs.encode (f.read(), "utf-8"))
 	except ExpatError:
 		message = "Invalid .rs3 file"
 		return message

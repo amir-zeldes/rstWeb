@@ -61,6 +61,7 @@ def open_main(user, admin, mode, **kwargs):
 	edit_bar = edit_bar.replace("**action_type**",'')
 	edit_bar = edit_bar.replace("**serve_mode**",mode)
 	edit_bar = edit_bar.replace("**quickexp_disabled**",'disabled="disabled"')
+	edit_bar = edit_bar.replace("**screenshot_disabled**",'disabled="disabled"')
 	edit_bar = edit_bar.replace("**open_disabled**",'disabled="disabled"')
 	edit_bar = edit_bar.replace("**reset_disabled**",'disabled="disabled"')
 	edit_bar = edit_bar.replace("**save_disabled**",'disabled="disabled"')

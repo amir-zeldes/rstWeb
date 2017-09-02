@@ -15,6 +15,8 @@ from structure import structure_main
 from segment import segment_main
 from admin import admin_main
 from quick_export import quickexp_main
+from cherrypy.lib import file_generator
+import StringIO
 
 class Root(object):
 	@cherrypy.expose
@@ -32,6 +34,10 @@ class Root(object):
 		print kwargs
 		if "current_doc" not in kwargs:
 			return '<script>document.location.href="open";</script>'
+		elif "screenshot" in kwargs:
+			cherrypy.response.headers['Content-Type'] = "image/png"
+			cherrypy.response.headers['Content-Disposition'] = 'attachment; filename="' + kwargs["current_doc"] + '.png"'
+			return file_generator(StringIO.StringIO(structure_main("local", "3", 'local', **kwargs)))
 		else:
 			return structure_main("local","3",'local',**kwargs)
 
