@@ -19,7 +19,7 @@ import os
 from modules.configobj import ConfigObj
 from modules.pathutils import *
 from modules.cgiutils import *
-from loginutils import *
+from .loginutils import *
 
 ####################################################
 # Various default values etc
@@ -89,7 +89,7 @@ def donewlogin(theform, userdir, thisscript, action=None):
     # if passwords don't match or are too short 
     realname = formdict['realname']
     # If we've got this far we've got a valid new login and need to save the
-    # details, send the email and print a mesage
+    # details, send the email and print(a mesage)
     #
     config = ConfigObj(userdir + 'config.ini') 
     link_url = savedetails(userdir, formdict, action)     # this includes any 'extra' keys, not just the ones we require      
@@ -102,9 +102,9 @@ def donewlogin(theform, userdir, thisscript, action=None):
     logindonepage = readfile(templatedir+logindone)
     logindonepage = logindonepage.replace('**this script**', thisscript)
     #
-    print serverline
-    print '\r'
-    print logindonepage
+    print(serverline)
+    print('\r')
+    print(logindonepage)
     #
     sys.exit()
     
@@ -290,9 +290,9 @@ def invalidentry(msg, formdict, userdir, thisscript, action=None):
     #
     if action:
         newloginpage = newloginpage.replace('<!-- **action** -->', actionline % action)
-    print serverline
-    print '\r'
-    print newloginpage
+    print(serverline)
+    print('\r')
+    print(newloginpage)
     #
     sys.exit()
 
@@ -360,7 +360,7 @@ def display_edit(formdict, userdir, thisscript, msg, action, newcookie,
     changing email address and password.
     """
     from time import ctime
-    print newcookie
+    print(newcookie)
     config = ConfigObj(userdir + 'config.ini')
     templatedir = config['templatedir']
     # if we are sending the userconfig as the formdict, we needn't explicitly
@@ -384,9 +384,9 @@ def display_edit(formdict, userdir, thisscript, msg, action, newcookie,
     #
     if action:
         edaccpage = edaccpage.replace('<!-- **action** -->', actionline % action)
-    print serverline
-    print '\r'
-    print edaccpage
+    print(serverline)
+    print('\r')
+    print(edaccpage)
     #
     sys.exit()
 

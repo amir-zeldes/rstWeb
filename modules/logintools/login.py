@@ -29,10 +29,14 @@ cgitb.enable()
 
 from modules.configobj import ConfigObj
 from modules.dataenc import pass_enc, pass_dec, unexpired, table_enc, table_dec
-from Cookie import SimpleCookie
+if sys.version_info[0] < 3:
+    from Cookie import SimpleCookie
+else:
+    from http.cookies import SimpleCookie
+
 from modules.pathutils import *
 from modules.cgiutils import *
-from loginutils import *
+from .loginutils import *
 
 # a default max age of 15 days. This ensures encoded cookies don't have
 # unlimited lifetimes.

@@ -169,7 +169,7 @@ def formatteddate(day, month, year, configdict = {}, **configs)
     e.g. 24th January 1997 or 2nd February 1948
     configs accepts the following keywords :
     dayofweek, addzero, addcom, fullstop, monthfirst
-    e.g. print formatteddate(12, 8, 1974, dayofweek=1, addzero=0, addcom=1, fullstop=1, monthfirst=0)
+    e.g. print(formatteddate(12, 8, 1974, dayofweek=1, addzero=0, addcom=1, fullstop=1, monthfirst=0))
          Monday 12th August, 1974.
     If dayofweek is set to 1 then the day of the week will also be printed :
     e.g. Monday 24th January 1997
@@ -541,7 +541,7 @@ def formatteddate(day, month, year, configdict = {}, **configs):
     e.g. 24th January 1997 or 2nd February 1948
     configs accepts the following keywords :
     dayofweek, addzero, addcom, fullstop, monthfirst
-    e.g. print formatteddate(12, 8, 1974, dayofweek=1, addzero=0, addcom=1, fullstop=1, monthfirst=0)
+    e.g. print(formatteddate(12, 8, 1974, dayofweek=1, addzero=0, addcom=1, fullstop=1, monthfirst=0))
          Monday 12th August, 1974.
     If dayofweek is set to 1 then the day of the week will also be printed :
     e.g. Monday 24th January 1997
@@ -603,23 +603,23 @@ if __name__ == "__main__":
         y = raw_input("Enter Month >> ")
         z = raw_input("Enter Day >> ")
         test = daycount(int(x), int(y), int(z))
-        print test
-        print counttodate(test)
+        print(test)
+        print(counttodate(test))
 
 
     
-    print realdate(32, 1, 2004)
+    print(realdate(32, 1, 2004))
     while True:
         x = raw_input("Enter Modifier (0 to quit) >> ")
         if x=='0':
             break
-        print addnumdays(31, 3, 2004, -int(x) )
+        print(addnumdays(31, 3, 2004, -int(x) ))
 
     while True:
         x = raw_input("Enter Day of Week 0-6 (7 to quit) >> ")
         if x=='7':
             break
-        print nearestday(24, 1, 2004, int(x))
+        print(nearestday(24, 1, 2004, int(x)))
 
     while True:
         x = raw_input("Enter Years to Add (Enter to quit) >> ")
@@ -627,9 +627,9 @@ if __name__ == "__main__":
             break
         y = raw_input("Enter Months to Add >> ")
         z = raw_input("Enter Days To Add >> ")
-        print adddate(24, 1, 2004, int(z), int(y), int(x))
+        print(adddate(24, 1, 2004, int(z), int(y), int(x)))
         year, month , day = adddate(24, 1, 2004, int(z), int(y), int(x))
-        print "The nearest Tuesday after that date is ", nearestday(day, month, year)
+        print("The nearest Tuesday after that date is ", nearestday(day, month, year))
 
 
 """

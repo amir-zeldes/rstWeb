@@ -11,9 +11,9 @@
 # Scripts maintained at http://www.voidspace.org.uk/python/index.shtml
 # Comments, suggestions and bug reports welcome.
 
-from login import *
-from loginutils import *
-from newlogin import *
+from .login import *
+from .loginutils import *
+from .newlogin import *
 
 __all__ = (
     'login',

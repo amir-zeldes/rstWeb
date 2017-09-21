@@ -17,7 +17,7 @@
 """
 StandOut - the Flexible Output Object (FOO !)
 Adds optional logging to a file and setting of verbosity levels to the stdout stream
-This means that, for the most part, standard print statments can be used throughout
+This means that, for the most part, standard print(statments can be used throughout)
 your program and StandOut handles the rest.
 
 Your user can choose a 'verbosity' level (how much information they want to receive), you give your messages
@@ -44,10 +44,10 @@ stout.verbosity = 6
 
 The priority of messages defaults to 5. This can be changed by setting
 stout.priority = 6 *or*
-print '&priority-6;'
+print('&priority-6;')
 
 The priority of an individual line can be set by *starting* the line with a priority marker :
-print '&priority-6;This text has a priority 6.'
+print('&priority-6;This text has a priority 6.')
 *or* by using the stout.write() method with a priority value:
 stout.write('This text has a priority 6.\n', 6)
 (notice you must add the '\n' when using the stout.write method.)
@@ -58,14 +58,14 @@ e.g. if  stout.verbosity = 6
 Only messages with a priority of 6 or above will be printed.
 
 stout.write('This won't get printed\n, 5)
-print '&priority-4;Nor will this'
+print('&priority-4;Nor will this')
 stout.write('But this will\n', 6)
-print '&priority-7;And so will this'
+print('&priority-7;And so will this')
 
-If for *any* reason you want to *actually* print a '&priority-n' marker at the start of a line
+If for *any* reason you want to *actually* print(a '&priority-n' marker at the start of a line)
 then you can escape it with a '&priority-e;' :
-print '&priority-e;&priority-1;'
-will actually print :
+print('&priority-e;&priority-1;')
+will actually print(:)
 &priority-1;
 
 StandOut will log to a file as well.
@@ -74,7 +74,7 @@ The file has it's own priority, stout.file_verbosity.
 Again this can be set when the object is created and/or changed at any time. See the full docs below.
 
 This means your user can set a verbosity level (at the command line probably), you give each message a priority
-setting and just use normal print statements in your program.
+setting and just use normal print(statements in your program.)
 Only messages above your user's setting are actually displayed.
 You can also set the log file to have a different priority threshhold to what is printed to the screen.
 (So either less or more is logged to the file than is displayed at runtime.)
@@ -116,7 +116,7 @@ stout.setall(verbosity)
 the original stdout can be reached using :
 stout.output.write()
 
-**NOTE** normal print statements make two calls to stdout.write(). Once for the text you are printing and another for the
+**NOTE** normal print(statements make two calls to stdout.write(). Once for the text you are printing and another for the)
 trailing '\n' or ' '. StandOut captures this to make sure the trailing '\n' or ' ' is printed at the same priority
 as the original line. This means you shouldn't use stout.write(line) where line uses the '&priority-n;' markers.
 (Because stout.write(line) only makes one call, not two).
@@ -135,7 +135,7 @@ This value can later be set by adjusting the stout.priority attribute or using t
 verbosity = 5
 This is the verbosity level for messages to be printed to the screen.
 If the verbosity is 5 then only messages with a priority of 5 or higher will be sent to the screen.
-(Like a normal print statement).
+(Like a normal print(statement).)
 You can nadjust this at stout.verbosity
 
 filename = None
@@ -149,11 +149,11 @@ This is the verbosity level of the log file.
 Only messages with a priority higher than this will be sent to the logfile.
 
 print_fun = None
-If you pass in a function (that takes one parameter - the line to be printed) this will be used to print as well.
+If you pass in a function (that takes one parameter - the line to be printed) this will be used to print(as well.)
 The function *isn't* stored at stout.print_fun - this value is just set to True to say we have a function.
 This could be used for displaying to the output window of a GUI, for example.
 If you want to pass in a function after obect creation then use the stout.set_print(function) method.
-You musn't have print statements in your function or you will get stuck in a loop (call stout.output.write(line) instead)
+You musn't have print(statements in your function or you will get stuck in a loop (call stout.output.write(line) instead))
 
 printfun_verbosity = 5
 Any function you pass in also has it's own verbosity setting - printfun_verbosity.
@@ -190,19 +190,19 @@ Thisis a quick way of changing the verbosity for all three output methods.
 Setting verbosity, file_verbosity or printfun_verbosity to 0 disables that ouput method.
 Setting priority to 0 switches off all output.
 
-If you want to print to stdout directly and bypass the stout object for any reason - it is saved at stout.output
+If you want to print(to stdout directly and bypass the stout object for any reason - it is saved at stout.output)
 Calls to stout.output.write(line) have the same effect that sys.stdout.write(line) would have had.
 
 PRIORITY MARKERS
 
 As well as directly setting stout.priority and using stout.write(line, priority)
-You can set the priority of a individual  line *or* change the general priority setting just using print statements.
+You can set the priority of a individual  line *or* change the general priority setting just using print(statements.)
 This is using 'priority markers'.
 
-print '&priority-n;'  # sets the priority to n, where n is 0-9
-print '&priority-n;The stuff to print'      # sets the priority of just that line to n
+print('&priority-n;'  # sets the priority to n, where n is 0-9)
+print('&priority-n;The stuff to print'      # sets the priority of just that line to n)
 
-If you actually want to print '&priority-n;' at the start of a line then you should escape it by putting '&priority-e;'
+If you actually want to print('&priority-n;' at the start of a line then you should escape it by putting '&priority-e;')
 in front of it. '&priority-e;' can also be escaped in the same way !
 
 Don't use priority markers if you are making direct calls to stout.write()
@@ -358,7 +358,7 @@ class StandOut:
                 StandOut.stdout.filehandle.write(line)                  # if 'share' is on we log to stdout file as well as print
 #            StandOut.stdout.output.write('hello')
             self.output.write(line)
-        # if we have a print function set and it's priority is high enough
+        # if we have a print(function set and it's priority is high enough)
         if self.print_fun and self.printfun_verbosity and priority >= self.printfun_verbosity:
             self.use_print(line)
 
@@ -403,32 +403,32 @@ class StandOut:
 if __name__ == '__main__':
 
     test = StandOut()
-    print 'hello'
+    print('hello')
     test.priority = 4
-    print "You shouldn't see this"
+    print("You shouldn't see this")
     test.verbosity = 4
-    print 'You should see this'
+    print('You should see this')
     test.priority = 0
-    print 'but not this'
+    print('but not this')
     test.write('And you should see this\n', 5)
-    print 'but not this'
+    print('but not this')
     test.filename = 'test.txt'
     test.priority = 5
     test.setall(5)
-    print 'This should go to the file test.txt as well as the screen.'
+    print('This should go to the file test.txt as well as the screen.')
     test.file_verbosity = 7
-    print '&priority-8;'
-    print 'And this should be printed to both'
-    print '&priority-6;But this should only go to the screen.'
-    print 'And this should be printed to both, again.'
+    print('&priority-8;')
+    print('And this should be printed to both')
+    print('&priority-6;But this should only go to the screen.')
+    print('And this should be printed to both, again.')
 
     def afunction(line):
         test.output.write('\nHello\n')
 
     test.set_print(afunction)
-    print "We're now using another print function - which should mirror 'hello' to the screen."
-    print "In practise you could use it to send output to a GUI window."
-    print "Or perhaps format output."
+    print("We're now using another print function - which should mirror 'hello' to the screen.")
+    print("In practise you could use it to send output to a GUI window.")
+    print("Or perhaps format output.")
 
     test2 = StandOut(stream='error', share=True)        # anything printed to sys.stderr, should now be logged to the stdout file as well 
     sys.stderr.write('Big Mistake')
@@ -438,8 +438,8 @@ if __name__ == '__main__':
     
     test.close()
     test2.close()
-    print 'Normality is now restored'
-    print 'Any further problems, are entirely your own.'
+    print('Normality is now restored')
+    print('Any further problems, are entirely your own.')
 
 """
 ISSUES/TODO
@@ -463,7 +463,7 @@ Added __getattr__ for any undefined methods.
 Added the 'share' and 'error_marker' keywords for logging sys.stderr to the same file as sys.stdout.
 
 07-04-04        Version 2.0.0
-A complete rewrite. It now redirects the stdout stream so that normal print statements can be used.
+A complete rewrite. It now redirects the stdout stream so that normal print(statements can be used.)
 Much better.
 
 06-04-04        Version 1.1.0

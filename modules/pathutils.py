@@ -373,8 +373,8 @@ def import_path(fullpath, strict=True):
         path = os.path.split(module.__file__)[0]
         # FIXME: doesn't *startswith* allow room for errors ?
         if not fullpath.startswith(path):
-            raise ImportError, "Module '%s' found, but not in '%s'" % (
-                  filename, fullpath)
+            raise ImportError("Module '%s' found, but not in '%s'" % (
+                  filename, fullpath))
     #
     return module
 
@@ -463,7 +463,7 @@ class Lock(object):
             t += self.step
             try:
                 os.mkdir(self._mungedname())
-            except os.error, err:
+            except os.error as err:
                 time.sleep(self.step)
             else:
                 self.locked = True
@@ -486,7 +486,7 @@ class Lock(object):
         self.locked = False
         try:
             os.rmdir(self._mungedname())
-        except os.error, err:
+        except os.error as err:
             if not ignore:
                 raise LockError('unlocking appeared to fail - %s' %
                     self.filename)

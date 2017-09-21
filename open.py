@@ -103,7 +103,7 @@ def open_main(user, admin, mode, **kwargs):
 				cpout += '<optgroup label="'+doc[1]+'">\n'
 			cpout += '\t<option value="'+doc[1]+"/"+doc[0]+'">'+doc[0]+'</option>\n'
 	
-		cpout += '</optgroup>\n</select>\b<br/>'
+		cpout += '</optgroup>\n</select>\n<br/>'
 		cpout += '''<button class="nav_button" onclick="do_open(document.getElementById('doclist').value);">Open file</button>'''
 	
 	
