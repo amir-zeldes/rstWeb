@@ -447,8 +447,10 @@ function show_warnings(nodes){
     // Clear previous warnings
     for (node_id in nodes){
          element_id = get_element_id(node_id,nodes);
-         document.getElementById(element_id).style.backgroundColor = "transparent";
-         document.getElementById(element_id).title = "";
+		 if (document.getElementById(element_id)){
+			 document.getElementById(element_id).style.backgroundColor = "transparent";
+			 document.getElementById(element_id).title = "";
+		 }
     }
 
 
