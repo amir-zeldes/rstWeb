@@ -42,19 +42,18 @@ def quickexp_main(user, admin, mode, **kwargs):
 		current_doc = ""
 		current_project = ""
 
-
 	cpout = ""
 	if mode == "server":
 		cpout += "Content-Type: application/download\n"
 		cpout += "Content-Disposition: attachment; filename=" + current_doc + "\n\n"
-	else:
-		#cpout += "Content-Type: application/download\n\n\n"
-		pass
 
 	cpout += get_export_string(current_doc,current_project,user)
-	cpout = cpout
 
-	return cpout
+	if mode == "server":
+		return cpout
+	else:
+		return bytes(cpout.encode('utf-8'))
+
 
 # Main script when running from Apache
 def quickexp_main_server():
