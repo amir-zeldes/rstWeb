@@ -296,7 +296,7 @@ class Section(dict):
         if not isinstance(key, StringTypes):
             raise ValueError('The key "%s" is not a string.' % key)
         # add the comment
-        if not self.comments.has_key(key):
+        if not key in self.comments:
             self.comments[key] = []
             self.inline_comments[key] = ''
         # remove the entry from defaults
@@ -323,7 +323,7 @@ class Section(dict):
                     indict=value,
                     name=key))
         else:
-            if not self.has_key(key):
+            if not key in self.__dict__:
                 self.scalars.append(key)
             if not self.main.stringify:
                 if isinstance(value, StringTypes):
@@ -1123,7 +1123,7 @@ class ConfigObj(Section):
                 #
 ##                print >> sys.stderr, sline
                 key = self._unquote(key)
-                if this_section.has_key(key):
+                if key in this_section:
                     self._handle_error(
                         'Duplicate keyword name at line %s.',
                         DuplicateError, infile, cur_index)
