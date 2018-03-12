@@ -9,41 +9,50 @@ Author: Amir Zeldes
 """
 
 import cherrypy
-import os
+import os, sys
 from open import open_main
 from structure import structure_main
 from segment import segment_main
 from admin import admin_main
 from quick_export import quickexp_main
 from cherrypy.lib import file_generator
-import StringIO
+try:
+	from StringIO import StringIO
+except ImportError:
+	from io import BytesIO, StringIO
+	from base64 import b64decode
+
+print_out = sys.stdout.write
 
 class Root(object):
 	@cherrypy.expose
 	def default(self,**kwargs):
-		print(kwargs)
+		print_out(kwargs)
 		return '<script>document.location.href="open";</script>'
 
 	@cherrypy.expose
 	def open(self,**kwargs):
-		print(kwargs)
+		print_out(str(kwargs))
 		return open_main("local","3","local",**kwargs)
 
 	@cherrypy.expose
 	def structure(self,**kwargs):
-		print(kwargs)
+		print_out(str(kwargs))
 		if "current_doc" not in kwargs:
 			return '<script>document.location.href="open";</script>'
 		elif "screenshot" in kwargs:
 			cherrypy.response.headers['Content-Type'] = "image/png"
 			cherrypy.response.headers['Content-Disposition'] = 'attachment; filename="' + kwargs["current_doc"] + '.png"'
-			return file_generator(StringIO.StringIO(structure_main("local", "3", 'local', **kwargs)))
+			if sys.version_info[0] == 2:
+				return file_generator(StringIO(structure_main("local", "3", 'local', **kwargs)))
+			else:
+				return file_generator(BytesIO(b64decode(structure_main("local", "3", 'local', **kwargs))))
 		else:
 			return structure_main("local","3",'local',**kwargs)
 
 	@cherrypy.expose
 	def segment(self,**kwargs):
-		print(kwargs)
+		print_out(str(kwargs))
 		if "current_doc" not in kwargs:
 			return '<script>document.location.href="open";</script>'
 		else:
@@ -51,7 +60,7 @@ class Root(object):
 
 	@cherrypy.expose
 	def quick_export(self,**kwargs):
-		print(kwargs)
+		print_out(str(kwargs))
 		if "quickexp_doc" not in kwargs:
 			return '<script>document.location.href="open";</script>'
 		else:
@@ -61,7 +70,7 @@ class Root(object):
 
 	@cherrypy.expose
 	def admin(self,**kwargs):
-		print(kwargs)
+		print_out(str(kwargs))
 		return admin_main("local","3",'local',**kwargs)
 
 

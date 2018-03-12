@@ -9,7 +9,7 @@ directly under cherrypy.
 Author: Amir Zeldes
 """
 
-import tempfile, os
+import tempfile, os, sys
 import subprocess
 import base64
 from modules.rstweb_sql import get_export_string
@@ -48,7 +48,10 @@ def make_img_via_temp(input_text, command_params, mode="local",workdir=""):
 			image.close()
 			os.remove(image.name)
 
-			return base64.b64decode(img_str)
+			if sys.version_info[0] == 2:
+				return base64.b64decode(img_str)
+			else:
+				return img_str
 
 
 def get_png(current_doc, current_project, user, mode="local"):
