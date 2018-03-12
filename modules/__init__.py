@@ -19,17 +19,17 @@ aa
 """
 
 
-from listquote import *
-from configobj import *
-from pathutils import *
-from standout import *
-from urlpath import *
-from odict import *
-from dateutils import *
+from .listquote import *
+from .configobj import *
+from .pathutils import *
+from .standout import *
+from .urlpath import *
+from .odict import *
+from .dateutils import *
 
-from rstweb_classes import *
-from rstweb_sql import *
-from rstweb_reader import *
+from .rstweb_classes import *
+from .rstweb_sql import *
+from .rstweb_reader import *
 
 
 __version__ = '1.0.0'

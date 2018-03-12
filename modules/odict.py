@@ -29,7 +29,14 @@ __version__ = '0.2.1'
 __all__ = ['OrderedDict', 'SequenceOrderedDict']
 
 from warnings import warn
-from types import SliceType
+
+import sys
+if sys.version_info[0] < 3:
+    from types import SliceType
+else:
+    from types import *
+    SliceType = type('slice')
+
 
 import sys
 INTP_VER = sys.version_info[:2]
@@ -632,7 +639,7 @@ class OrderedDict(dict):
         TypeError: pop expected at most 2 arguments, got 3
         """
         if len(args) > 1:
-            raise TypeError, ('pop expected at most 2 arguments, got %s' %
+            raise TypeError('pop expected at most 2 arguments, got %s' %
                 (len(args) + 1))
         if key in self:
             val = self[key]

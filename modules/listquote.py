@@ -27,12 +27,15 @@ delimited lines) and quoting/unquoting elements of lists.
 
 The test stuff provides useful examples of how the functions work.
 """
-
-# Pre-2.3 workaround for basestring.
-try:
-    basestring
-except NameError:
-    basestring = (str, unicode)
+import sys
+if sys.version_info[0] < 3:
+	# Pre-2.3 workaround for basestring.
+	try:
+		basestring
+	except NameError:
+		basestring = (str, unicode)
+else:
+		basestring = str
 
 import re
 inquotes = re.compile(r'''\s*(".*?"|'.*?')(.*)''')
@@ -319,7 +322,7 @@ class LineParser(object):
                             'csv',
                             'recursive',
                             'force_list']:
-                raise TypeError, ("'%s' is an invalid keyword argument for "
+                raise TypeError("'%s' is an invalid keyword argument for "
                                     "this function" % entry)
         #
         self.recursive = defaults['recursive']
@@ -696,7 +699,7 @@ def csvread(infile):
         index += 1
         try:
             values = p.feed(line)
-        except ListQuoteError, e:
+        except ListQuoteError as e:
             values = []
             e.line = line
             e.index = index

@@ -585,7 +585,7 @@ def table_enc(instring, table=None):
     out = []
     test = len(instring) % 3
     if test: instring = instring + chr(0)*(3-test)          # make sure the length of instring is divisible by 3
-#    print test,'  ', len(instring) % 3
+#    print(test,'  ', len(instring) % 3)
     while instring:
         chunk = instring[:3]
         instring = instring[3:]
@@ -687,7 +687,7 @@ def binleave(data1, data2, endleave = False):
     This could cause you to get them back in an unexpected order from binunleave.    
     """
     header, out, data1 = internalfunc(data1,data2)
-#    print len(data1), len(out), len(header)
+#    print(len(data1), len(out), len(header))
     header = chr(int(random()*128)) + header            # making it a 4 byte header
     if endleave and data1 and len(data1) < 65536:
         header, out, data1 = internalfunc(header + out, data1)
@@ -700,7 +700,7 @@ def binunleave(data):
     data = data[1:]
     data1, data2 = internalfunc2(data)
     if ord(header) > 127:
-#        print len(data1)
+#        print(len(data1))
         data = data2 + data1
         data = data[1:]
         data1, data2 = internalfunc2(data)
@@ -722,16 +722,16 @@ class bf(object):
         return (self._d >> index) & 1 
 
     def __setitem__(self,index,value):
-        value    = (value&1L)<<index
-        mask     = (1L)<<index
+        value = (value & long(1)) << index
+        mask = (long(1)) << index
         self._d  = (self._d & ~mask) | value
 
     def __getslice__(self, start, end):
-        mask = 2L**(end - start) -1
+        mask = long(2)**(end - start) -1
         return (self._d >> start) & mask
 
     def __setslice__(self, start, end, value):
-        mask = 2L**(end - start) -1
+        mask = long(2) ** (end - start) - 1
         value = (value & mask) << start
         mask = mask << start
         self._d = (self._d & ~mask) | value
@@ -752,8 +752,8 @@ def bitset(value, bitindex, bit):
     bit should be 1 or 0
     bitindex starts at 0.
     """
-    bit    = (bit&1L)<<bitindex
-    mask     = (1L)<<bitindex
+    bit = (bit & long(1)) << bitindex
+    mask = (long(1)) << bitindex
     return (value & ~mask) | bit                # set that bit of value to 0 with an & operation and then or it with the 'bit'
 
     
@@ -786,7 +786,7 @@ def internalfunc(data1, data2):
     BINLIST=[1,2,4,8,16,32,64,128]
     out = []
     bitlen = multiple*8 + 8     # the total number of bits we'll have
-#    print bitlen, multiple
+#    print(bitlen, multiple)
     while data2:
         chunklist = data1[startpos:startpos + multiple]
         startpos = startpos + multiple
@@ -798,7 +798,7 @@ def internalfunc(data1, data2):
         heapindex = 0
         charindex = 0
         while mainindex < bitlen:
-    #        print  mainindex, heapindex, charindex, bitindex
+    #        print( mainindex, heapindex, charindex, bitindex)
             if heapindex == 8:       #    if we've got all 8 bit's
                 out.append(chr(heapobj))
                 heapobj = 0
@@ -839,12 +839,12 @@ def internalfunc2(data):
     multiple = length1//length2 + 1
     if multiple > 65536: multiple = 65536   # in practise we'll set to max 65535 + 1
     bitlen = multiple*8
-#    print len(data), length1, length2, multiple
+#    print(len(data), length1, length2, multiple)
     out1 = []
     out = []
     index = 0
     BINLIST=[1,2,4,8,16,32,64,128]
-#    print len(chunk)    
+#    print(len(chunk)    )
     while index < length2:
         index += 1
         chunk = data[:multiple]
@@ -858,7 +858,7 @@ def internalfunc2(data):
         heapindex = 0
         charindex = 0
         while mainindex < bitlen:
-    #        print  mainindex, heapindex, charindex, bitindex
+    #        print( mainindex, heapindex, charindex, bitindex)
             if heapindex == 8:       #    if we've got all 8 bit's
                 out.append(chr(heapobj))
                 heapobj = 0
@@ -919,13 +919,13 @@ def test():                     # the test suite
         if not instring:
             break
         code = pass_enc(instring, sha_hash=False, daynumber=True, timestamp=True)
-        print code
-        print pass_dec(code)
+        print(code)
+        print(pass_dec(code))
 
 
-    print '\n\nTesting interleaving a 1000 byte random string with a 1500 byte random string :'
+    print('\n\nTesting interleaving a 1000 byte random string with a 1500 byte random string :')
     print
-    print 'Overall length of combined string : ',
+    print('Overall length of combined string : ',)
     a=0
     b=''
     c = ''
@@ -938,12 +938,12 @@ def test():                     # the test suite
         c = c + chr(int(random()*256))
     d = clock()
     test = binleave(c, b, True)
-    print  len(test)
+    print( len(test))
     a1, a2 = binunleave(test)
-    print 'Time taken (including print statements ;-) ', str(clock()-d)[:6], ' seconds'
-    print 'Test for equality of extracted data against original :'
-    print a1 == b
-    print a2 == c
+    print('Time taken (including print statements ;-) '+ str(clock()-d)[:6]+ ' seconds')
+    print('Test for equality of extracted data against original :')
+    print(a1 == b)
+    print(a2 == c)
 
 
 # If you give it two test files 'test1.zip' and 'test2.zip' it will interleave the two files,
@@ -952,10 +952,10 @@ def test():                     # the test suite
     
     if exists('test1.zip') and exists('test2.zip'):
         print
-        print "Reading 'test1.zip' and 'test2.zip'"
-        print "Interleaving them together and writing the combined file out as 'test3.zip'"
-        print "Then unleaving them and writing 'test1.zip' back out as 'test4.zip'",
-        print " to confirm it is unchanged by the process"
+        print("Reading 'test1.zip' and 'test2.zip'")
+        print("Interleaving them together and writing the combined file out as 'test3.zip'")
+        print("Then unleaving them and writing 'test1.zip' back out as 'test4.zip'",)
+        print(" to confirm it is unchanged by the process")
         a = file('test1.zip','rb')
         b = a.read()
         a.close()
@@ -965,22 +965,22 @@ def test():                     # the test suite
         d = clock()
         test = binleave(c,b, True)
 
-        print len(test)
+        print(len(test))
         a = file('test3.zip','wb')
         a.write(test)
         a.close()
         a1, a2 = binunleave(test)
-        print str(clock()-d)[:6]
+        print(str(clock()-d)[:6])
         a = file('test4.zip','wb')
         a.write(a1)
         a.close()
     else:
         print
-        print 'Unable to perform final test.'
-        print "We need two files to use for the test : 'test1.zip' and 'test2.zip'"
-        print "We then interleave them together, and write the combined file out as 'test3.zip'"
-        print "Then we unleave them again, and write 'test1.zip' back out as 'test4.zip'",
-        print "(So we can confirm that it's unchanged by the process.)"
+        print('Unable to perform final test.')
+        print("We need two files to use for the test : 'test1.zip' and 'test2.zip'")
+        print("We then interleave them together, and write the combined file out as 'test3.zip'")
+        print("Then we unleave them again, and write 'test1.zip' back out as 'test4.zip'",)
+        print("(So we can confirm that it's unchanged by the process.)")
 
     
 
@@ -1026,7 +1026,7 @@ if __name__ == '__main__':
 ##    parser = OptionParser()
 ##    parser.add_option("-q", "--quiet",
 ##                      action="store_false", dest="quiet", default = False,
-##                      help="Set a verbosity level of 0, print no messages.")
+##                      help="Set a verbosity level of 0, print(no messages."))
 ##    
 ##    parser.add_option("--test",
 ##                      action="store_true", dest="test", default=False,
@@ -1064,7 +1064,7 @@ if __name__ == '__main__':
 ##
 ##
 ##    options, args = parser.parse_args()
-###    print args
+###    print(args)
 ##
 ##
 ### next import StandOut which allows us to set variable levels of verbosity
@@ -1072,8 +1072,8 @@ if __name__ == '__main__':
 ##        from standout import StandOut
 ##        stout = StandOut()
 ##    except:
-##        print 'dataenc uses the standout module to handle varying levels of verbosity'
-##        print 'Without it, all messages will be printed.'
+##        print('dataenc uses the standout module to handle varying levels of verbosity')
+##        print('Without it, all messages will be printed.')
 ##        class dummy:                # a dummy object that we can twiddle if StandOut isn't available
 ##            def __init__(self):
 ##                self.priority = 0
@@ -1087,8 +1087,8 @@ if __name__ == '__main__':
 ##        try:
 ##            from configobj import ConfigObj
 ##        except ImportError:
-##            print "Without the ConfigObj module I can't import a config file."
-##            print 'See http://www.voidspace.org.uk/atlantibots/pythonutils.html'
+##            print("Without the ConfigObj module I can't import a config file.")
+##            print('See http://www.voidspace.org.uk/atlantibots/pythonutils.html')
 ##            raise
 ##        config = ConfigObj(options.config_file, fileerror=True)
 ##        
@@ -1100,14 +1100,14 @@ if __name__ == '__main__':
 ##    if options.quiet:                                   # if the quiet option is explicitly set
 ##        stout.verbosity = 0
 ##    stout.priority = 2
-##    print 'Welcome to dataenc - the data encoding and interleaving program by Fuzzyman'
-##    print 'See http://www.voidspace.org.uk/atlantibots/pythonutils.html'
-##    print 'Written in Python.'
+##    print('Welcome to dataenc - the data encoding and interleaving program by Fuzzyman')
+##    print('See http://www.voidspace.org.uk/atlantibots/pythonutils.html')
+##    print('Written in Python.')
 ##    stout.priority = 3
 ##    if not psycoin:
-##        print 'Having the Psyco module installed (Python Specialising compiler) would vastly speed up dataenc.'
+##        print('Having the Psyco module installed (Python Specialising compiler) would vastly speed up dataenc.')
 ##    if not DATEIN:
-##        print 'Some of the datestamping features are only available when the dateutils module is available.'
+##        print('Some of the datestamping features are only available when the dateutils module is available.')
 ##    stout.priority = 5
 ##
 ##        

@@ -327,8 +327,6 @@ def rs3topng(rs3_filepath, png_filepath=None):
 	temp.write(html_str.encode('utf8'))
 	#print(temp.name)
 	temp.close()
-	with open("c:\\uni\\test.html",'w') as x:
-		x.write(html_str.encode('utf8'))
 
 	try:
 		ver = "-2.1.1"

@@ -20,7 +20,12 @@
 
 import posixpath
 import os
-from urllib import url2pathname, pathname2url
+
+
+try:
+    from urllib import url2pathname, pathname2url
+except ImportError:
+    from urllib.request import url2pathname, pathname2url
 
 __all__ = [
     'nativejoin',
@@ -79,12 +84,12 @@ def relpathto(thisdir, origin, dest):
         orig_abs = orig_abs + '/'
     if dest.endswith('/') and not dest_abs.endswith('/'):
         dest_abs = dest_abs + '/'
-#    print orig_abs, dest_abs
+#    print(orig_abs, dest_abs)
     #
     # if the first item is a filename, we want to get rid of it
     orig_list = orig_abs.split('/')[:-1]
     dest_list = dest_abs.split('/')
-#    print orig_list, dest_list
+#    print(orig_list, dest_list)
 
     if orig_list[0] != dest_list[0]:
         # can't get here from there
@@ -192,9 +197,9 @@ def testJoin():
         ('', '../path'),
     ]
     for entry in thelist:
-        print entry, '      ::        ', pathjoin(*entry)
-        print entry, '      ::        ', nativejoin(*entry)
-        print '\n'
+        print(entry + '      ::        ' + pathjoin(*entry))
+        print(entry + '      ::        ' + nativejoin(*entry))
+        print('\n')
 
 def testRelpathto():
     thedir = '//toplevel/dirone/dirtwo/dirthree'
@@ -209,7 +214,7 @@ def testRelpathto():
         ('../../../fish1/fish2/', 'sub1/sub2/file1.html'),
    ]
     for orig, dest in thelist:
-        print '(%s, %s)      : ' % (orig, dest), relpathto(thedir, orig, dest)
+        print('(%s, %s)      : ' % (orig, dest) + relpathto(thedir, orig, dest))
 
 def testRelpathto2():
     thedir = 'section3/'
@@ -218,7 +223,7 @@ def testRelpathto2():
     ]
     for orig, dest in thelist:
         answer = relpathto(thedir, orig, dest)
-        print '(%s, %s)      : ' % (orig, dest), answer
+        print('(%s, %s)      : ' % (orig, dest) + answer)
 
 def testRelpath():
     thelist = [
@@ -226,7 +231,7 @@ def testRelpath():
     ]
     for orig, dest in thelist:
         answer = relpath(orig, dest)
-        print '(%s, %s)      : ' % (orig, dest), answer
+        print('(%s, %s)      : ' % (orig, dest) + answer)
 
 
 if __name__ == '__main__':
