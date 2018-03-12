@@ -140,6 +140,9 @@ def set_timestamp(user, timestamp):
 	schema = get_schema()
 	if schema >= 4:
 		if timestamp != "" and user != "":
+			# Remove potentially non UTF-8 trailing timezone specifications in brackets
+			timestamp = re.sub(r'\([^)]+\)','', timestamp)
+			timestamp = timestamp.strip()
 			generic_query("INSERT or REPLACE INTO users ('user','timestamp') VALUES (?,?)",(user,timestamp))
 
 
@@ -410,7 +413,6 @@ def generic_query(sql,params):
 	with conn:
 		cur = conn.cursor()
 		cur.execute(sql,params)
-
 		rows = cur.fetchall()
 		return rows
 
