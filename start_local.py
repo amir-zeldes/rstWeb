@@ -27,7 +27,7 @@ print_out = sys.stdout.write
 class Root(object):
 	@cherrypy.expose
 	def default(self,**kwargs):
-		print_out(kwargs)
+		print_out(str(kwargs))
 		return '<script>document.location.href="open";</script>'
 
 	@cherrypy.expose
