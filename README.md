@@ -74,6 +74,19 @@ allow from all
 8.	Use the administration interface to change the passwords/user names to secure your system. The initial administrator password is ‘pass1’.
 9.	You’re all set! 
 
+##Usage with Docker
+1.  Build docker container.
+```
+cd docker
+./build.sh
+```
+2.  Run docker container. The default port in script is 8085
+```
+cd ../
+./start_docker.sh
+```
+3.  You can now use rstWeb in your browser at: http://127.0.0.1:8085/rstweb/open.py
+
 ## Troubleshooting
 If you’re having trouble, it’s possible some permissions are set incorrectly, or that your server needs to be configured to execute the Python scripts. Otherwise, the entry point for the program is the script open.py. If you’re using the Apache configuration above, this acts as the directory index, so you can simply direct users to `http://.../<rstwebsdirectory>/`. 
 
