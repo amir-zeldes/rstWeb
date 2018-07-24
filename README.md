@@ -74,7 +74,7 @@ allow from all
 8.	Use the administration interface to change the passwords/user names to secure your system. The initial administrator password is ‘pass1’.
 9.	You’re all set! 
 
-##Usage with Docker
+## Usage with Docker
 1.  Build docker container.
 ```
 cd docker
