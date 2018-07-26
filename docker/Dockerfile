@@ -1,5 +1,5 @@
 FROM debian
-RUN apt-get update
+RUN apt-get -yqq update
 RUN apt-get install -yqq supervisor apache2
 RUN a2enmod rewrite
 RUN a2enmod cgi
