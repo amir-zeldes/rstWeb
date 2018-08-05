@@ -323,8 +323,8 @@ class Section(dict):
                     indict=value,
                     name=key))
         else:
-            if not key in self.__dict__:
-                self.scalars.append(key)
+            if (not key in self.__dict__) and (not key in self): #There was just 'not key in self.__dict__' condition
+                self.scalars.append(key)                         #Maybe whe should delete 'not key in self.__dict__'?
             if not self.main.stringify:
                 if isinstance(value, StringTypes):
                     pass
@@ -932,6 +932,8 @@ class ConfigObj(Section):
             error.errors = self._errors
             # set the config attribute
             error.config = self
+            sys.stderr.write(str('Error: There is a problem in user config file!\n'))
+            sys.stderr.write(str(self._errors) + "\n")
             raise error
         # delete private attributes
         del self._errors

@@ -100,7 +100,10 @@ def structure_main(user, admin, mode, **kwargs):
 	help = readfile(templatedir+help)
 	help_match = re.search(r'(<div id="help_edit".*?</div>)',help,re.MULTILINE|re.DOTALL)
 	help = help_match.group(1)
-	cpout += help.decode("utf-8")
+	if sys.version_info[0] == 2:
+		cpout += help.decode("utf-8")
+	else:
+		cpout += help
 
 	about = "about.html"
 	about = readfile(templatedir+about)
@@ -250,6 +253,10 @@ def structure_main(user, admin, mode, **kwargs):
 		use_span_buttons = True
 		use_multinuc_buttons = True
 
+	if sys.version_info[0] == 2:
+		lambda_button = "Λ".decode("utf-8")
+	else:
+		lambda_button = "Λ"
 	for key in nodes:
 		node = nodes[key]
 		if node.kind != "edu":
@@ -260,7 +267,7 @@ def structure_main(user, admin, mode, **kwargs):
 				cpout += '<td><button id="aspan_'+ node.id+'" title="add span above" class="minibtn" onclick="act('+"'sp:"+node.id+"'"+');">T</button></td>'
 			cpout += '</tr>'
 			if use_multinuc_buttons:
-				cpout += '<tr><td><button id="amulti_'+ node.id+'" title="add multinuc above" class="minibtn" onclick="act('+"'mn:"+node.id+"'"+');">' + "Λ".decode("utf-8") + '</button></td></tr>'
+				cpout += '<tr><td><button id="amulti_'+ node.id+'" title="add multinuc above" class="minibtn" onclick="act('+"'mn:"+node.id+"'"+');">' + lambda_button + '</button></td></tr>'
 			cpout += '</table></div><br/>'
 
 		elif node.kind=="edu":
@@ -270,7 +277,7 @@ def structure_main(user, admin, mode, **kwargs):
 				cpout += '<td><button id="aspan_'+ node.id+'" title="add span above" class="minibtn" onclick="act('+"'sp:"+node.id+"'"+');">T</button></td>'
 			cpout += '</tr>'
 			if use_multinuc_buttons:
-				cpout += '<tr><td><button id="amulti_'+ node.id+'" title="add multinuc above" class="minibtn" onclick="act('+"'mn:"+node.id+"'"+');">' + "Λ".decode("utf-8") + '</button></td></tr>'
+				cpout += '<tr><td><button id="amulti_'+ node.id+'" title="add multinuc above" class="minibtn" onclick="act('+"'mn:"+node.id+"'"+');">' + lambda_button + '</button></td></tr>'
 			cpout += '</table></div>'+node.text+'</div>'
 
 

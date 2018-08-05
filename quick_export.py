@@ -52,7 +52,7 @@ def quickexp_main(user, admin, mode, **kwargs):
 		pass
 
 	cpout += get_export_string(current_doc,current_project,user)
-	if mode == "server" or sys.version_info[0] == 2:
+	if mode == "server":
 		return cpout
 	else:
 		return bytes(cpout.encode('utf-8'))
