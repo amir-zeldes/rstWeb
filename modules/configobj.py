@@ -932,8 +932,8 @@ class ConfigObj(Section):
             error.errors = self._errors
             # set the config attribute
             error.config = self
-            print >> sys.stderr, str('Error: There is a problem in user config file!')
-            print >> sys.stderr, str(self._errors)
+            sys.stderr.write(str('Error: There is a problem in user config file!\n'))
+            sys.stderr.write(str(self._errors) + "\n")
             raise error
         # delete private attributes
         del self._errors
