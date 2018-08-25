@@ -144,9 +144,9 @@ def admin_main(user, admin, mode, **kwargs):
 		<input type="hidden" name="guidelines_url" id="guidelines_url" value=""/>
 		<input id="file" type="file" name="file" multiple="multiple"/>
 	</form>
-	<script src="./script/admin.js"></script>
-	<script src="./script/jquery-1.11.3.min.js"></script>
-	<script src="./script/jquery-ui.min.js"></script>
+	<script src="/script/admin.js"></script>
+	<script src="/script/jquery-1.11.3.min.js"></script>
+	<script src="/script/jquery-ui.min.js"></script>
 	'''
 
 
@@ -250,7 +250,7 @@ def admin_main(user, admin, mode, **kwargs):
 		</label><div style="position: relative; top: -3px; left: 3px; display: inline-block">Warn on empty span
 		<a class="tooltip" href="">
    <i class="fa fa-question-circle">&nbsp;</i>
-   <span><img src="img/empty_span.png" height="100px">
+   <span><img src="/img/empty_span.png" height="100px">
 
     <i>Highlights spans with single span child</i>
    </span>
@@ -265,7 +265,7 @@ def admin_main(user, admin, mode, **kwargs):
 		</label><div style="margin-top: 10px; position: relative; top: -3px; left: 3px; display: inline-block">Warn on multiple incoming flat RST relations
 		<a class="tooltip" href="">
    <i class="fa fa-question-circle">&nbsp;</i>
-   <span><img src="img/flat_rst.png" height="75px">
+   <span><img src="/img/flat_rst.png" height="75px">
 
     <i>Highlights spans with multiple incoming satellites</i>
    </span>
@@ -280,7 +280,7 @@ def admin_main(user, admin, mode, **kwargs):
 			</label><div style="margin-top: 10px; position: relative; top: -3px; left: 3px; display: inline-block">Warn on multinucs with single child
 			<a class="tooltip" href="">
 	   <i class="fa fa-question-circle">&nbsp;</i>
-	   <span><img src="img/mononuc.png" height="75px">
+	   <span><img src="/img/mononuc.png" height="75px">
 
 	    <i>Highlights multinucs with a single child</i>
 	   </span>

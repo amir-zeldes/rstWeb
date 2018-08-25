@@ -120,7 +120,7 @@ def structure_main(user, admin, mode, **kwargs):
 	cpout += '''<div class="canvas">'''
 	cpout += '\t<p>Document: <b>'+current_doc+'</b> (project: <i>'+current_project+'</i>)</p>'
 	cpout += '''<div id="inner_canvas">'''
-	cpout += '<script src="./script/structure.js"></script>'
+	cpout += '<script src="/script/structure.js"></script>'
 
 	rels = get_rst_rels(current_doc, current_project)
 	def_multirel = get_def_rel("multinuc",current_doc, current_project)
@@ -312,7 +312,7 @@ def structure_main(user, admin, mode, **kwargs):
 	cpout += '<input id="use_span_buttons" type="hidden" value="'+str(use_span_buttons)+'"/>\n'
 	cpout += '<input id="use_multinuc_buttons" type="hidden" value="'+str(use_multinuc_buttons)+'"/>\n'
 
-	cpout += '''	<script src="./script/jquery.jsPlumb-1.7.5-min.js"></script>
+	cpout += '''	<script src="/script/jquery.jsPlumb-1.7.5-min.js"></script>
 
 			<script>
 			'''
