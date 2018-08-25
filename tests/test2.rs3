@@ -1,0 +1,13 @@
+<rst>
+<header>
+	<relations>
+			<rel name="sequence" type="multinuc"/>
+			<rel name="unless" type="rst"/>
+		</relations>
+</header>
+<body>
+		<segment id="1" parent="3" relname="span">You should not drive a car,</segment>
+		<segment id="2" parent="1" relname="unless">unless you have a driver's license.</segment>
+		<group id="3" type="span" />
+  </body>
+</rst>
