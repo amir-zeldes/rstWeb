@@ -12,6 +12,7 @@ Author: Arne Neumann
 from __future__ import print_function
 import base64
 from collections import defaultdict
+import io
 import json
 import os
 from tempfile import mkdtemp, NamedTemporaryFile
@@ -270,8 +271,9 @@ class APIController(object):
             project that the document will be added to
         file_name : str
             file name under which the document will be stored in the project
-        rs3_file : cherrypy._cpreqbody.Part
+        rs3_file : cherrypy._cpreqbody.Part or basestring
             a cherrypy representation of the content of the uploaded rs3 file
+            or the string content of the file
 
         Usage example:
 
@@ -289,6 +291,8 @@ class APIController(object):
                        "Use PUT to overwrite it.")).format(file_name, project_name))
 
         # import rs3 file
+        if isinstance(rs3_file, basestring):
+            rs3_file = _string2cpreqbody_part(rs3_file)
         error = self.import_rs3_file(rs3_file, file_name, project_name)
 
         # check if document was imported
@@ -341,8 +345,9 @@ class APIController(object):
 
         Parameters
         ----------
-        input_file : cherrypy._cpreqbody.Part
-            a cherrypy representation of the content of the uploaded rs3 file
+        input_file : cherrypy._cpreqbody.Part or basestring
+            a cherrypy representation of the content of the uploaded file
+            or the string content of the file
         input_format : str
             format of the input file
         output_format : str
@@ -520,3 +525,13 @@ def create_api_dispatcher():
                        conditions={'method': ['POST']})
 
     return dispatcher
+
+
+def _string2cpreqbody_part(string):
+    mem_file = io.StringIO(string)
+    headers = cherrypy.lib.httputil.HeaderMap(
+        {'Content-Disposition': u'form-data; name="input_file"',
+         'Content-Type': u'text/plain'})
+    part = cherrypy._cpreqbody.Part(fp=mem_file, headers=headers, boundary=None)
+    part.file = mem_file
+    return part
