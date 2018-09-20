@@ -155,17 +155,17 @@ def read_text(filename,rel_hash):
 	rels = collections.OrderedDict(sorted(rel_hash.items()))
 
 	for line in f:
-		id_counter += 1
 		contents = line.strip()
+		if len(contents) > 0:
+			id_counter += 1
+			# Check for invalid XML in segment contents
+			if "<" in contents or ">" in contents or "&" in contents:
+				contents = contents.replace('>','&gt;')
+				contents = contents.replace('<', '&lt;')
+				contents = re.sub(r'&([^ ;]* )', r'&amp;\1', contents)
+				contents = re.sub(r'&$', r'&amp;', contents)
 
-		# Check for invalid XML in segment contents
-		if "<" in contents or ">" in contents or "&" in contents:
-			contents = contents.replace('>','&gt;')
-			contents = contents.replace('<', '&lt;')
-			contents = re.sub(r'&([^ ;]* )', r'&amp;\1', contents)
-			contents = re.sub(r'&$', r'&amp;', contents)
-
-		nodes[str(id_counter)] = NODE(str(id_counter),id_counter,id_counter,"0",0,"edu",contents,rels.keys()[0],rels.values()[0])
+			nodes[str(id_counter)] = NODE(str(id_counter),id_counter,id_counter,"0",0,"edu",contents,rels.keys()[0],rels.values()[0])
 
 	return nodes
 
