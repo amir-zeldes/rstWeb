@@ -160,6 +160,7 @@ def segment_main(user, admin, mode, **kwargs):
 
 	cpout += '\t<script src="script/segment.js"></script>'
 	cpout += '<h2>Edit segmentation</h2>'
+	cpout += '%(warning)s'
 	cpout += '\t<div id="control">'
 	cpout += '\t<p>Document: <b>'+current_doc+'</b> (project: <i>'+current_project+'</i>)</p>'
 	cpout += '\t<div id="segment_canvas">'
@@ -172,6 +173,7 @@ def segment_main(user, admin, mode, **kwargs):
 	tok_counter=0
 
 	segs = collections.OrderedDict(sorted(segs.items()))
+	del_token_to_seg = {}
 	first_seg = True
 	for seg_id in segs:
 		first_tok = True
@@ -182,6 +184,7 @@ def segment_main(user, admin, mode, **kwargs):
 		else:
 			cpout += '<div class="tok_space" id="tok'+str(tok_counter)+'" style="display:none" onclick="act('+"'ins:"+'tok'+str(tok_counter)+"'"+')">&nbsp;</div>'
 			cpout += '\t\t\t<div id="segend_post_tok'+str(tok_counter)+'" class="seg_end" onclick="act('+"'del:"+'tok'+str(tok_counter)+"'"+')">||</div>'
+			del_token_to_seg[tok_counter] = seg_counter
 			cpout += '\t\t</div>'
 		cpout += '\t\t<div id="seg'+ str(seg_counter) +'" class="seg">'
 		for token in seg.tokens:
@@ -197,6 +200,18 @@ def segment_main(user, admin, mode, **kwargs):
 	</html>
 
 	'''
+
+	tok_seg_map = get_tok_map(current_doc,current_project,user)
+	incorrect_segs = [token_key for token_key in del_token_to_seg if int(tok_seg_map[token_key])+1 != del_token_to_seg[token_key]]
+	warning = ''
+	if len(incorrect_segs) > 0:
+		warning = '<p class="warn">Attention! The markup is broken! Don\'t mark! Contact with your administrator.</p>'
+
+	cpout %= {
+		'warning' : warning
+	}
+
+
 	if mode != "server":
 		cpout = cpout.replace(".py","")
 	return cpout
