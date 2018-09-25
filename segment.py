@@ -43,7 +43,6 @@ def segment_main(user, admin, mode, **kwargs):
 	header = header.replace("**user**",user)
 	header = header.replace("**open_disabled**",'')
 
-
 	if admin == "0":
 		header = header.replace("**admin_disabled**",'disabled="disabled"')
 	else:
@@ -166,11 +165,11 @@ def segment_main(user, admin, mode, **kwargs):
 	cpout += '\t<div id="segment_canvas">'
 
 	for row in rows:
-		if row[5] =="edu":
+		if row[5] == "edu":
 			segs[int(row[0])] = SEGMENT(row[0],row[6])
 
-	seg_counter=0
-	tok_counter=0
+	seg_counter = 0
+	tok_counter = 0
 
 	segs = collections.OrderedDict(sorted(segs.items()))
 	del_token_to_seg = {}
@@ -178,7 +177,7 @@ def segment_main(user, admin, mode, **kwargs):
 	for seg_id in segs:
 		first_tok = True
 		seg = segs[seg_id]
-		seg_counter+=1
+		seg_counter += 1
 		if first_seg:
 			first_seg = False
 		else:
@@ -186,7 +185,7 @@ def segment_main(user, admin, mode, **kwargs):
 			cpout += '\t\t\t<div id="segend_post_tok'+str(tok_counter)+'" class="seg_end" onclick="act('+"'del:"+'tok'+str(tok_counter)+"'"+')">||</div>'
 			del_token_to_seg[tok_counter] = seg_counter
 			cpout += '\t\t</div>'
-		cpout += '\t\t<div id="seg'+ str(seg_counter) +'" class="seg">'
+		cpout += '\t\t<div id="seg'+ str(seg_counter) + '" class="seg">'
 		for token in seg.tokens:
 			tok_counter+=1
 			if first_tok:
@@ -205,12 +204,9 @@ def segment_main(user, admin, mode, **kwargs):
 	incorrect_segs = [token_key for token_key in del_token_to_seg if int(tok_seg_map[token_key])+1 != del_token_to_seg[token_key]]
 	warning = ''
 	if len(incorrect_segs) > 0:
-		warning = '<p class="warn">Attention! The markup is broken! Don\'t mark! Contact with your administrator.</p>'
+		warning = '<p class="warn">Attention! Empty segments detected - markup may be broken! Please contact your administrator.</p>'
 
-	cpout %= {
-		'warning' : warning
-	}
-
+	cpout %= {'warning': warning}
 
 	if mode != "server":
 		cpout = cpout.replace(".py","")
