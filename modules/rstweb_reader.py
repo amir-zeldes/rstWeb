@@ -13,7 +13,9 @@ from xml.dom import minidom
 from xml.parsers.expat import ExpatError
 from modules.rstweb_classes import *
 
+
 def read_rst(filename, rel_hash):
+
 	f = codecs.open(filename, "r", "utf-8")
 	try:
 		xmldoc = minidom.parseString(codecs.encode (f.read(), "utf-8"))
@@ -44,7 +46,7 @@ def read_rst(filename, rel_hash):
 		return '<div class="warn">No segment elements found in .rs3 file</div>'
 
 	id_counter = 0
-
+	total_toks = 0
 
 	# Get hash to reorder EDUs and spans according to the order of appearance in .rs3 file
 	for segment in item_list:
@@ -54,6 +56,7 @@ def read_rst(filename, rel_hash):
 	for group in item_list:
 		id_counter += 1
 		ordered_id[group.attributes["id"].value] = id_counter
+	all_node_ids = set(range(1,id_counter+1))  # All non-zero IDs in documents, which a signal may refer back to
 	ordered_id["0"] = 0
 
 	element_types={}
@@ -101,6 +104,7 @@ def read_rst(filename, rel_hash):
 			contents = re.sub(r'&([^ ;]* )', r'&amp;\1', contents)
 			contents = re.sub(r'&$', r'&amp;', contents)
 
+		total_toks += contents.strip().count(" ") + 1
 		nodes.append([str(ordered_id[edu_id]), id_counter, id_counter, str(ordered_id[parent]), 0, "edu", contents, relname])
 
 	item_list = xmldoc.getElementsByTagName("group")
@@ -115,7 +119,7 @@ def read_rst(filename, rel_hash):
 			if relname in schemas:
 				relname = "span"
 				
-			relname = re.sub(r"[:;,]","",relname) #remove characters used for undo logging, not allowed in rel names
+			relname = re.sub(r"[:;,]","",relname)  # Remove characters used for undo logging, not allowed in rel names
 			# Note that in RSTTool, a multinuc child with a multinuc compatible relation is always interpreted as multinuc
 			if parent in element_types:
 				if element_types[parent] == "multinuc" and relname+"_m" in rel_hash:
@@ -131,6 +135,25 @@ def read_rst(filename, rel_hash):
 		contents = ""
 		nodes.append([str(ordered_id[group_id]),0,0,str(ordered_id[parent]),0,group_type,contents,relname])
 
+	# Collect discourse signal annotations if any are available
+	item_list = xmldoc.getElementsByTagName("signal")
+	signals = []
+	for signal in item_list:
+		source = signal.attributes["source"].value
+		# This will crash if signal source refers to a non-existing node:
+		source = ordered_id[source]
+		if source not in all_node_ids:
+			raise IOError("Invalid source node ID for signal: " + str(source) + " (from XML file source="+signal.attributes["source"].value+"(\n")
+		type = signal.attributes["type"].value
+		subtype = signal.attributes["subtype"].value
+		tokens = signal.attributes["tokens"].value
+		if tokens != "":
+			# This will crash if tokens contains non-numbers:
+			token_list = [int(tok) for tok in tokens.split(",")]
+			max_tok = max(token_list)
+			if max_tok > total_toks:
+				raise IOError("Signal refers to non-existent token: " + str(max_tok))
+		signals.append([str(source),type,subtype,tokens])
 
 	elements = {}
 	for row in nodes:
@@ -140,14 +163,15 @@ def read_rst(filename, rel_hash):
 		if elements[element].kind == "edu":
 			get_left_right(element, elements,0,0,rel_hash)
 
-	return elements
+	return elements, signals
 
 
 def read_text(filename,rel_hash):
 	id_counter = 0
 	nodes = {}
 	f = codecs.open(filename, "r", "utf-8")
-	#Add some default relations if none have been supplied (at least 1 rst and 1 multinuc)
+
+	# Add some default relations if none have been supplied (at least 1 rst and 1 multinuc)
 	if len(rel_hash) < 2:
 		rel_hash["elaboration_r"] = "rst"
 		rel_hash["joint_m"] = "multinuc"
@@ -177,8 +201,8 @@ def read_relfile(filename):
 		if line.find("\t") > 0:
 			rel_data = line.split("\t")
 			if rel_data[1].strip() == "rst":
-				rels[rel_data[0].strip()+"_r"]="rst"
+				rels[rel_data[0].strip()+"_r"] = "rst"
 			elif rel_data[1].strip() == "multinuc":
-				rels[rel_data[0].strip()+"_m"]="multinuc"
+				rels[rel_data[0].strip()+"_m"] = "multinuc"
 
 	return rels

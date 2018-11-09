@@ -22,6 +22,7 @@ def setup_db():
 
 	# Drop tables if they exist
 	cur.execute("DROP TABLE IF EXISTS rst_nodes")
+	cur.execute("DROP TABLE IF EXISTS rst_signals")
 	cur.execute("DROP TABLE IF EXISTS rst_relations")
 	cur.execute("DROP TABLE IF EXISTS docs")
 	cur.execute("DROP TABLE IF EXISTS perms")
@@ -34,6 +35,8 @@ def setup_db():
 	# Create tables
 	cur.execute('''CREATE TABLE IF NOT EXISTS rst_nodes
 	             (id text, left real, right real, parent text, depth real, kind text, contents text, relname text, doc text, project text, user text, UNIQUE (id, doc, project, user) ON CONFLICT REPLACE)''')
+	cur.execute('''CREATE TABLE IF NOT EXISTS rst_signals
+	             (source text, type text, subtype text, tokens text, doc text, project text, user text, UNIQUE (source, type, subtype, tokens, doc, project, user) ON CONFLICT REPLACE)''')
 	cur.execute('''CREATE TABLE IF NOT EXISTS rst_relations
 	             (relname text, reltype text, doc text, project text, UNIQUE (relname, reltype, doc, project) ON CONFLICT REPLACE)''')
 	cur.execute('''CREATE TABLE IF NOT EXISTS docs
@@ -62,6 +65,8 @@ def update_schema():
 	             (id text, left real, right real, parent text, depth real, kind text, contents text, relname text, doc text, project text, user text, UNIQUE (id, doc, project, user) ON CONFLICT REPLACE)''')
 	cur.execute('''CREATE TABLE IF NOT EXISTS rst_relations
 	             (relname text, reltype text, doc text, project text, UNIQUE (relname, reltype, doc, project) ON CONFLICT REPLACE)''')
+	cur.execute('''CREATE TABLE IF NOT EXISTS rst_signals
+	             (source text, type text, subtype text, tokens text, doc text, project text, user text, UNIQUE (source, type, subtype, tokens, doc, project, user) ON CONFLICT REPLACE)''')
 	cur.execute('''CREATE TABLE IF NOT EXISTS docs
 	             (doc text, project text, user text,  UNIQUE (doc, project, user) ON CONFLICT REPLACE)''')
 	cur.execute('''CREATE TABLE IF NOT EXISTS users
@@ -111,7 +116,7 @@ def initialize_settings():
 	save_setting("logging", "off")
 	save_setting("use_span_buttons", "True")
 	save_setting("use_multinuc_buttons", "True")
-	set_schema('5')
+	set_schema('6')
 
 
 def check_refresh(user, timestamp):
@@ -176,7 +181,12 @@ def import_document(filename, project, user):
 	doc=os.path.basename(filename)
 
 	rel_hash = {}
-	rst_nodes = read_rst(filename, rel_hash)
+
+	schema = get_schema()
+	if schema < 6:  # Schemas below 6 do not support importing signals
+		update_schema()
+
+	rst_nodes, rst_signals = read_rst(filename, rel_hash)
 	if isinstance(rst_nodes,basestring):
 		return rst_nodes
 
@@ -187,6 +197,10 @@ def import_document(filename, project, user):
 		node = rst_nodes[key]
 		cur.execute("INSERT INTO rst_nodes VALUES(?,?,?,?,?,?,?,?,?,?,?)", (node.id,node.left,node.right,node.parent,node.depth,node.kind,node.text,node.relname,doc,project,user)) #user's instance
 		cur.execute("INSERT INTO rst_nodes VALUES(?,?,?,?,?,?,?,?,?,?,?)", (node.id,node.left,node.right,node.parent,node.depth,node.kind,node.text,node.relname,doc,project,"_orig")) #backup instance
+
+	for signal in rst_signals:
+		cur.execute("INSERT INTO rst_signals VALUES(?,?,?,?,?,?,?)", (signal[0],signal[1],signal[2],signal[3],doc,project,user)) #user's instance
+		cur.execute("INSERT INTO rst_signals VALUES(?,?,?,?,?,?,?)", (signal[0],signal[1],signal[2],signal[3],doc,project,"_orig")) #backup instance
 
 	for key in rel_hash:
 		rel_name = key
