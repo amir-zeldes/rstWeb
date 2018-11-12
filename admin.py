@@ -18,6 +18,12 @@ from modules.rstweb_sql import *
 from modules.configobj import ConfigObj
 from modules.pathutils import *
 
+try:
+	basestring
+except NameError:
+	basestring = str
+
+
 def admin_main(user, admin, mode, **kwargs):
 
 	scriptpath = os.path.dirname(os.path.realpath(__file__)) + os.sep

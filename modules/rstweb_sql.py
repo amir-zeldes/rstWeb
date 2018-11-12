@@ -13,6 +13,12 @@ import codecs
 import os
 import re
 
+try:
+	basestring
+except NameError:
+	basestring = str
+
+
 def setup_db():
 	dbpath = os.path.dirname(os.path.realpath(__file__)) + os.sep +".."+os.sep+"rstweb.db"
 
