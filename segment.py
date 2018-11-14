@@ -159,7 +159,7 @@ def segment_main(user, admin, mode, **kwargs):
 
 	cpout += '\t<script src="script/segment.js"></script>'
 	cpout += '<h2>Edit segmentation</h2>'
-	cpout += '%(warning)s'
+	cpout += '**warning**'
 	cpout += '\t<div id="control">'
 	cpout += '\t<p>Document: <b>'+current_doc+'</b> (project: <i>'+current_project+'</i>)</p>'
 	cpout += '\t<div id="segment_canvas">'
@@ -206,7 +206,7 @@ def segment_main(user, admin, mode, **kwargs):
 	if len(incorrect_segs) > 0:
 		warning = '<p class="warn">Attention! Empty segments detected - markup may be broken! Please contact your administrator.</p>'
 
-	cpout %= {'warning': warning}
+	cpout = cpout.replace("**warning**",warning)
 
 	if mode != "server":
 		cpout = cpout.replace(".py","")
