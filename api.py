@@ -97,8 +97,12 @@ class APIController(object):
     def import_rs3_file(self, rs3_file, file_name, project_name):
         """Import an .rs3 file into rstWeb's database."""
         # upload the POSTed file into the import directory
-        # rs3_file: cherrypy._cpreqbody.Part
-        file_content = rs3_file.file.read()
+        if isinstance(rs3_file, unicode):  # upload via FormData field
+            file_content = rs3_file
+
+        else:  # upload as a file
+            # isinstance(rs3_file, cherrypy._cpreqbody.Part)
+            file_content = rs3_file.file.read()
         import_filepath = os.path.join(self.import_dir, file_name)
         with open(import_filepath, 'w') as import_file:
             import_file.write(file_content)
