@@ -93,15 +93,74 @@ h2 {	font-weight:bold;
 .minibtn{z-index:120;width:13px;height:13px;padding:0px;border:0px;font-size:9px; border:solid 1px}
 .minibtn:hover{background-color:#C0C0C0}
 
-
-.canvas{width:100%; position: absolute; top: 80px; bottom: 45px;}
-#inner_canvas{position:relative;overflow-x:auto;height:100%; min-height:80%;overflow-y:visible;
+.container {
+		white-space: nowrap;
+		width: 100%;
+}
+.canvas {
+    display: inline-block;
+		white-space: initial;
+		height: calc(100% - 86px); /* height of bars above */
+		vertical-align: top;
+		overflow-x: scroll;
+		overflow-y: visible;
+		width: 100%;
+}
+#inner_canvas{
+		position:relative;
     -moz-user-select: -moz-none;
     -khtml-user-select: none;
     -webkit-user-select: none;
     -o-user-select: none;
     user-select: none;
-    margin-left:10px
+    margin-left:10px;
+}
+
+/* signal drawer classes */
+
+.signal-drawer {
+		box-shadow: 0 0 2px 2px gray;
+		margin: 4px;
+		padding: 4px;
+		display: inline-block;
+		vertical-align: top;
+		height: calc(100% - 104px); /* height of bars above plus margin and padding */
+}
+
+.signal-drawer--inactive {
+		display: none;
+}
+
+.signal-drawer--active {
+	  width: 200px;
+}
+
+.signal-drawer--active + .canvas {
+		width: calc(100% - 224px);
+}
+
+.signal-drawer__label {
+		color: black;
+		font-size: 14px;
+
+		display: inline-block;
+		width: 80px;
+		text-align: right;
+}
+
+.signal-drawer__select {
+		width: 100px;
+		height: 30px;
+		color: black;
+		font-size: 14px;
+}
+
+
+
+
+
+select.rst_rel {
+		width: 70px;
 }
 .span_div{width:2px; background-color:black; height: 60px; position:absolute}
 .top_scroll{height: 20px; overflow-x:scroll; overflow-y:visible}
@@ -317,3 +376,4 @@ input:checked + .slider:before {
   overflow:hidden;
   padding:8px;
 }
+
