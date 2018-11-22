@@ -969,3 +969,69 @@ function is_ancestor(new_parent_id,node_id){
     }
     return false;
 }
+
+// signals handling
+
+(function() {
+		function create_curtain () {
+				var div = document.createElement("div");
+				div.setAttribute('class', 'curtain');
+				div.setAttribute('id', 'curtain');
+				document.getElementById("canvas").appendChild(div);
+		}
+
+		function close_curtain() {
+				var div = document.getElementById("curtain");
+				div.parentNode.removeChild(div);
+		}
+
+		function open_signal_drawer() {
+				create_curtain();
+				$('.edu').addClass('edu--clickable');
+				// raise text over the div
+				// make text selectable
+				// fetch signals for id, populate sidebar with them
+				// hook up click event:
+				// 1. click on <li>
+				//   -> highlight <li>
+				//   -> clear previous highlight
+				//   -> clear text highlights
+				// 2. click on token
+				//   -> highlight token
+				//   -> mutate signals structure
+		}
+
+		function close_signal_drawer() {
+				// destroy div
+				// unhighlight text
+				// make text unselectable
+		}
+
+		function tokenize_text() {
+				var tokCount = 0;
+				$(".edu")
+						.sort(function(a, b) {
+								return parseInt(a.id.substring(3)) -  parseInt(b.id.substring(3));
+						})
+						.each(function() {
+								var edu = $(this)[0];
+								var textNode = edu.childNodes[2];
+								edu.removeChild(textNode);
+								var toks = textNode.textContent.split(' ');
+								toks.forEach(function(tok) {
+										var span = document.createElement('span');
+										span.setAttribute('id', 'tok' + ++tokCount);
+										span.textContent = tok;
+										span.className = "tok";
+										edu.appendChild(span);
+										edu.appendChild(document.createTextNode(' '));
+								});
+						});
+		}
+
+		function signals_init() {
+				tokenize_text();
+				open_signal_drawer();
+		}
+		$(document).ready(signals_init);
+})();

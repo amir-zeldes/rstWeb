@@ -98,6 +98,7 @@ h2 {	font-weight:bold;
 		width: 100%;
 }
 .canvas {
+		position: relative; /* so that the curtain can position relative to it */
     display: inline-block;
 		white-space: initial;
 		height: calc(100% - 86px); /* height of bars above */
@@ -118,13 +119,56 @@ h2 {	font-weight:bold;
 
 /* signal drawer classes */
 
+div.curtain {
+		position: fixed;
+		top: 86px;
+		left: 208px;
+		width: 100%;
+		height: 100%;
+		z-index: 10000;
+		background: rgba(0,0,0,0.5);
+}
+
+@keyframes become-clickable {
+		from {
+				font-size: 9px;
+				color: black;
+				text-shadow: none;
+		}
+
+		to {
+				font-size: 14px;
+				color: white;
+				text-shadow: 2px 2px 3px black;
+		}
+}
+
+.edu--clickable {
+		color: white;
+		text-shadow: 2px 2px 3px black;
+		font-size: 14px;
+		animation-duration: 1.5s;
+		animation-name: become-clickable;
+}
+
+.edu--clickable span {
+		z-index: 108108;
+}
+
+.edu--clickable .tok:hover {
+		background: red;
+}
+
+.edu--clickable .tok--selected {
+		background: orange;
+}
+
 .signal-drawer {
-		box-shadow: 0 0 2px 2px gray;
-		margin: 4px;
+		box-shadow: 0 0 1px 2px gray;
 		padding: 4px;
 		display: inline-block;
 		vertical-align: top;
-		height: calc(100% - 104px); /* height of bars above plus margin and padding */
+		height: calc(100% - 96px); /* height of bars above plus margin and padding */
 }
 
 .signal-drawer--inactive {
@@ -136,7 +180,21 @@ h2 {	font-weight:bold;
 }
 
 .signal-drawer--active + .canvas {
-		width: calc(100% - 224px);
+		width: calc(100% - 216px);
+}
+
+.signal-drawer__create-new {
+		padding-top: 100px;
+}
+
+.signal-drawer__row {
+    padding-bottom: 10px;
+}
+
+.signal-drawer__create-new-button {
+		margin-left: 80px;
+		height: 30px;
+		width: 108px;
 }
 
 .signal-drawer__label {

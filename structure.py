@@ -163,7 +163,7 @@ def structure_main(user, admin, mode, **kwargs):
           <div class="container">
             <script>window.rstWebSignals = ''' + json.dumps(signals) + ''';</script>
             <div class="signal-drawer signal-drawer--active">
-              <form>
+              <form class=signal-drawer__create-new>
                 <div class="signal-drawer__row">
                   <label class="signal-drawer__label" for="type">Type:</label>
                   <select id="type" name="type" class="signal-drawer__select"> </select>
@@ -172,11 +172,17 @@ def structure_main(user, admin, mode, **kwargs):
                   <label class="signal-drawer__label" for="type">Subtype:</label>
                   <select id="subtype" name="subtype" class="signal-drawer__select"> </select>
                 </div>
+			    <div class="signal-drawer__row">
+			      <button class="signal-drawer__create-new-button">
+  			        <i class="fa fa-plus" title="New Signal"> </i>
+			        New Signal
+			      </button>
+			    </div>
               </form>
             </div>
     '''
 
-	cpout += '''<div class="canvas">'''
+	cpout += '''<div id="canvas" class="canvas">'''
 	cpout += '\t<p>Document: <b>'+current_doc+'</b> (project: <i>'+current_project+'</i>)</p>'
 	cpout += '''<div id="inner_canvas">'''
 	cpout += '<script src="./script/structure.js"></script>'
