@@ -122,7 +122,7 @@ h2 {	font-weight:bold;
 div.curtain {
 		position: fixed;
 		top: 86px;
-		left: 208px;
+		left: 308px;
 		width: 100%;
 		height: 100%;
 		z-index: 10000;
@@ -132,55 +132,111 @@ div.curtain {
 @keyframes become-clickable {
 		from {
 				font-size: 9px;
-				color: black;
+				color: white;
 				text-shadow: none;
 		}
 
 		to {
-				font-size: 14px;
+				font-size: 18px;
 				color: white;
 				text-shadow: 2px 2px 3px black;
 		}
 }
 
+.sel--active {
+		pointer-events: none;
+		z-index: 10001;
+}
+
 .edu--clickable {
 		color: white;
 		text-shadow: 2px 2px 3px black;
-		font-size: 14px;
-		animation-duration: 1.5s;
+		font-size: 18px;
+		animation-duration: 0.3s;
+		animation-timing-function: ease-out;
 		animation-name: become-clickable;
 }
 
-.edu--clickable span {
+.edu--clickable {
 		z-index: 108108;
 }
 
+.edu--clickable .edu_num_cont {
+		pointer-events: none;
+		opacity: 0.8;
+}
+
+.edu--clickable .tok {
+		padding: 3px;
+}
+
 .edu--clickable .tok:hover {
-		background: red;
+		background: rgba(255,255,0,0.3);
 }
 
 .edu--clickable .tok--selected {
-		background: orange;
+		background: rgba(255,255,0,0.7);
 }
 
 .signal-drawer {
 		box-shadow: 0 0 1px 2px gray;
 		padding: 4px;
-		display: inline-block;
 		vertical-align: top;
 		height: calc(100% - 96px); /* height of bars above plus margin and padding */
-}
-
-.signal-drawer--inactive {
 		display: none;
 }
 
+@keyframes drawer-reveal {
+		from {
+				left: -300px;
+		}
+
+		to {
+				left: 0;
+		}
+}
+
 .signal-drawer--active {
-	  width: 200px;
+		position: relative;
+	  width: 300px;
+		display: inline-block;
+		animation-duration: 0.3s;
+		animation-timing-function: ease-out;
+		animation-name: drawer-reveal;
 }
 
 .signal-drawer--active + .canvas {
-		width: calc(100% - 216px);
+		width: calc(100% - 316px);
+}
+
+.signal-drawer__item {
+		font-size: 16px;
+		white-space: pre-line;
+		padding: 10px;
+		margin: 10px 8px;
+		border-radius: 8px;
+		background: rgba(0,0,0,0.15);
+}
+
+.signal-drawer__item:hover {
+		background: rgba(255,255,0,0.3);
+}
+
+.signal-drawer__item--selected {
+		background: yellow;
+}
+
+.signal-drawer__item-type {
+		font-weight: 700;
+		padding-left: 10px;
+}
+
+.signal-drawer__item-type:after {
+		content: ", "
+}
+
+.signal-drawer__item-subtype {
+		
 }
 
 .signal-drawer__create-new {
@@ -207,7 +263,7 @@ div.curtain {
 }
 
 .signal-drawer__select {
-		width: 100px;
+		width: 200px;
 		height: 30px;
 		color: black;
 		font-size: 14px;

@@ -162,8 +162,11 @@ def structure_main(user, admin, mode, **kwargs):
 	cpout += '''
           <div class="container">
             <script>window.rstWebSignals = ''' + json.dumps(signals) + ''';</script>
-            <div class="signal-drawer signal-drawer--active">
-              <form class=signal-drawer__create-new>
+            <div class="signal-drawer">
+              <h1>Signals</h1>
+              <div id="signal-list">
+              </div>
+              <form class="signal-drawer__create-new">
                 <div class="signal-drawer__row">
                   <label class="signal-drawer__label" for="type">Type:</label>
                   <select id="type" name="type" class="signal-drawer__select"> </select>
@@ -173,7 +176,7 @@ def structure_main(user, admin, mode, **kwargs):
                   <select id="subtype" name="subtype" class="signal-drawer__select"> </select>
                 </div>
 			    <div class="signal-drawer__row">
-			      <button class="signal-drawer__create-new-button">
+			      <button id="new-signal" class="signal-drawer__create-new-button">
   			        <i class="fa fa-plus" title="New Signal"> </i>
 			        New Signal
 			      </button>
@@ -295,7 +298,9 @@ def structure_main(user, admin, mode, **kwargs):
 		lambda_button = "Λ".decode("utf-8")
 	else:
 		lambda_button = "Λ"
-	for key in nodes:
+
+	tok_count = 0
+	for key in sorted(nodes.keys(), key=int):
 		node = nodes[key]
 		if node.kind != "edu":
 			g_wid = str(int((node.right- node.left+1) *100 -4 ))
@@ -316,7 +321,13 @@ def structure_main(user, admin, mode, **kwargs):
 			cpout += '</tr>'
 			if use_multinuc_buttons:
 				cpout += '<tr><td><button id="amulti_'+ node.id+'" title="add multinuc above" class="minibtn" onclick="act('+"'mn:"+node.id+"'"+');">' + lambda_button + '</button></td></tr>'
-			cpout += '</table></div>'+node.text+'</div>'
+			cpout += '</table></div>'
+
+			for tok in node.text.split(" "):
+				tok_count += 1
+				cpout += '<span id="tok' + str(tok_count) + '" class="tok">' + tok + '</span> '
+
+			cpout += '</div>'
 
 
 	max_right = get_max_right(current_doc,current_project,user)
@@ -363,15 +374,15 @@ def structure_main(user, admin, mode, **kwargs):
 	cpout += '			}\n'
 	cpout += '''function make_relchooser(id,option_type,rel){
 	    var s = "<div style='white-space:nowrap;' id='sel"+id.replace("n","")+"'>";
-	    s += make_signal_button();
+	    s += make_signal_button(id);
 	    s += "<select class='rst_rel' onchange='crel(" + id.replace("n","") + ",this.options[this.selectedIndex].value);'>" + select_my_rel(option_type,rel) + "</select>";
 	    return $(s);
 	}'''
 	# todo: make a flag that controls whether signals are on
 	cpout += 'var signalsEnabled = ' + ('true;' if True else 'false;')
-	cpout += '''function make_signal_button() {
+	cpout += '''function make_signal_button(id) {
 		if (signalsEnabled) {
-			return '<button title="add signals" class="minibtn drawer-toggle">S</button>';
+			return '<button title="add signals" class="minibtn" onclick="open_signal_drawer(' + id + ')">S</button>';
 		} else {
 			return '';
 		}
