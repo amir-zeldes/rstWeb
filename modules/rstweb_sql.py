@@ -254,7 +254,13 @@ def get_rst_doc(doc,project,user):
 
 def get_def_rel(relkind, doc, project):
 	rel_row = generic_query("SELECT relname FROM rst_relations WHERE reltype = ? and doc=? and project=? ORDER BY relname",(relkind,doc,project))
-	return rel_row[0][0]
+	if len(rel_row) == 0:
+		if relkind == "rst":
+			return "--_r"
+		else:
+			return "--_m"
+	else:
+		return rel_row[0][0]
 
 
 def get_rst_rels(doc,project):
