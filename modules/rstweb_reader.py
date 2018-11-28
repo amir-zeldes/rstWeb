@@ -165,7 +165,7 @@ def read_text(filename,rel_hash):
 			contents = re.sub(r'&([^ ;]* )', r'&amp;\1', contents)
 			contents = re.sub(r'&$', r'&amp;', contents)
 
-		nodes[str(id_counter)] = NODE(str(id_counter),id_counter,id_counter,"0",0,"edu",contents,rels.keys()[0],rels.values()[0])
+		nodes[str(id_counter)] = NODE(str(id_counter),id_counter,id_counter,"0",0,"edu",contents,list(rels.keys())[0],list(rels.values())[0])
 
 	return nodes
 
