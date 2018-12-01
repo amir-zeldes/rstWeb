@@ -1,0 +1,3 @@
+cherrypy
+selenium
+six>=1.11
