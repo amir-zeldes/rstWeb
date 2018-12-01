@@ -163,7 +163,6 @@ def structure_main(user, admin, mode, **kwargs):
           <div class="container">
             <script>window.rstWebSignals = ''' + json.dumps(signals) + ''';</script>
             <div class="signal-drawer">
-              <h1>Signals</h1>
               <div id="signal-list">
               </div>
               <form class="signal-drawer__create-new">
@@ -182,6 +181,16 @@ def structure_main(user, admin, mode, **kwargs):
 			      </button>
 			    </div>
               </form>
+			  <div class="signal-drawer__row" style="text-align: center;padding-top:20px;">
+  		        <button id="save-signals" class="signal-drawer__save-button">
+  		          <i class="fa fa-check"> </i>
+  		          Save Changes
+  		        </button>
+  		        <button id="discard-signals" class="signal-drawer__discard-button">
+  		          <i class="fa fa-ban"> </i>
+  		          Discard Changes
+  		        </button>
+  		      </div>
             </div>
     '''
 

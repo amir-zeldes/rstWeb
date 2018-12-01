@@ -9,6 +9,8 @@ html{width:100%}
     -o-user-select: none;
     user-select: none;
     z-index: 2;
+		transition-property: all;
+		transition-duration: 0.35s;
     }
 
 .whisker{border-left: solid; border-right: solid; height:2px;display: table-cell;margin:0;border-collapse:collapse}
@@ -30,8 +32,6 @@ html{width:100%}
 .group:hover{border-color: red;}
 .num_cont:hover .num_id{border: 1px solid red;border-color: red;z-index:200}
 .group:hover .whisker{border-color: red;}
-.edu .num_id{z-index:200}
-.edu:hover .num_id{border: 1px solid red;border-color: red}
 .edu:hover .whisker{border-color: red;z-index:200}
 .group:hover .whisker{border-color: red;}
 
@@ -129,20 +129,6 @@ div.curtain {
 		background: rgba(0,0,0,0.5);
 }
 
-@keyframes become-clickable {
-		from {
-				font-size: 9px;
-				color: white;
-				text-shadow: none;
-		}
-
-		to {
-				font-size: 18px;
-				color: white;
-				text-shadow: 2px 2px 3px black;
-		}
-}
-
 .sel--active {
 		pointer-events: none;
 		z-index: 10001;
@@ -152,9 +138,8 @@ div.curtain {
 		color: white;
 		text-shadow: 2px 2px 3px black;
 		font-size: 18px;
-		animation-duration: 0.3s;
-		animation-timing-function: ease-out;
-		animation-name: become-clickable;
+		transition-property: all;
+		transition-duration: 0.35s;
 }
 
 .edu--clickable {
@@ -178,6 +163,16 @@ div.curtain {
 		background: rgba(255,255,0,0.7);
 }
 
+
+@keyframes drawer-close {
+		from {
+				left: 0;
+		}
+		to {
+				left: -300px;
+		}
+}
+
 .signal-drawer {
 		box-shadow: 0 0 1px 2px gray;
 		padding: 4px;
@@ -186,11 +181,19 @@ div.curtain {
 		display: none;
 }
 
+.signal-drawer--active::before {
+		content: "fafafa",
+		width: 300px;
+		height: 100%;
+		position: absolute;
+		left: 0;
+		top: 86px;
+}
+
 @keyframes drawer-reveal {
 		from {
 				left: -300px;
 		}
-
 		to {
 				left: 0;
 		}
@@ -200,7 +203,7 @@ div.curtain {
 		position: relative;
 	  width: 300px;
 		display: inline-block;
-		animation-duration: 0.3s;
+		animation-duration: 0.35s;
 		animation-timing-function: ease-out;
 		animation-name: drawer-reveal;
 }
@@ -236,7 +239,6 @@ div.curtain {
 }
 
 .signal-drawer__item-subtype {
-		
 }
 
 .signal-drawer__create-new {
@@ -251,6 +253,18 @@ div.curtain {
 		margin-left: 80px;
 		height: 30px;
 		width: 108px;
+}
+
+.signal-drawer__save-button {
+		height: 40px;
+		width: 130px;
+		background: linear-gradient(#f7f7f7, lightgreen);
+}
+
+.signal-drawer__discard-button {
+		height: 40px;
+		width: 130px;
+		background: linear-gradient(#f7f7f7, lightpink);
 }
 
 .signal-drawer__label {
