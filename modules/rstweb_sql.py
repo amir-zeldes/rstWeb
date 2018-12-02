@@ -777,15 +777,12 @@ def update_signals(signals_blob, doc, project, user):
 						 example: 45,dm,but,5-6-9   # a signal of type dm, subtype but added to node 45, signaled by tokens 5, 6 and 9
 	:return: None
 	"""
+	params = (doc, project, user)
+	generic_query("DELETE from rst_signals WHERE doc=? and project=? and user=?", params)
 
-	quashed = set([])  # Set to keep track of entries already purged before signal update
 	for signal in signals_blob:
 		source, sig_type, subtype, tokens = signal.split(",")
 		tokens = tokens.replace("-",",")
-		params = (source,doc,project,user)
-		if source not in quashed:  # Only delete previous state if this is the first instance of this source node in the blob
-			generic_query("DELETE from rst_signals WHERE source=? and doc=? and project=? and user=?",params)
-		quashed.add(source)
 		params = (source, sig_type, subtype, tokens, doc, project, user)
 		generic_query("INSERT INTO rst_signals VALUES (?,?,?,?,?,?,?)",params)
 
