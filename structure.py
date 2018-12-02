@@ -170,9 +170,9 @@ def structure_main(user, admin, mode, **kwargs):
   		          <i class="fa fa-check"> </i>
   		          Save Changes
   		        </button>
-  		        <button id="discard-signals" class="signal-drawer__discard-button">
+  		        <button id="cancel-signals" class="signal-drawer__cancel-button">
   		          <i class="fa fa-ban"> </i>
-  		          Discard Changes
+  		          Cancel
   		        </button>
   		      </div>
             </div>
@@ -387,7 +387,7 @@ def structure_main(user, admin, mode, **kwargs):
 	cpout += 'var signalsEnabled = ' + ('true;' if True else 'false;')
 	cpout += '''function make_signal_button(id) {
 		if (signalsEnabled) {
-			return '<button title="add signals" class="minibtn" onclick="open_signal_drawer(' + id + ')">S</button>';
+			return '<button title="add signals" class="minibtn" onclick="open_signal_drawer(\\'' + id + '\\')">S</button>';
 		} else {
 			return '';
 		}
