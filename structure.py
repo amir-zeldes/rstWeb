@@ -145,21 +145,10 @@ def structure_main(user, admin, mode, **kwargs):
 		else:
 			nodes[row[0]] = NODE(row[0],0,0,row[3],row[4],row[5],row[6],row[7],relkind)
 
-	signals = {}
-	for signal in get_signals(current_doc, current_project, user):
-		s_id, s_type, subtype, tokens = signal
-		if s_id not in signals:
-			signals[s_id] = list()
-		signals[s_id].append({'type': s_type,
-							  'subtype': subtype,
-							  'tokens': map(int, tokens.split(",")) if tokens else []})
-
 	cpout += '''
-          <div class="container">
-            <script>window.rstWebSignals = ''' + json.dumps(signals) + ''';</script>
+          <div id="container" class="container">
             <div class="signal-drawer">
-              <div id="signal-list">
-              </div>
+              <div id="signal-list"> </div>
               <form class="signal-drawer__create-new">
                 <div class="signal-drawer__row">
                   <label class="signal-drawer__label" for="type">Type:</label>
@@ -227,6 +216,16 @@ def structure_main(user, admin, mode, **kwargs):
 						update_signals(action.split(":")[1:], current_doc, current_project, user)
 					else:
 						cpout += '<script>alert("the action was: " + theform["action"]);</script>\n'
+
+	signals = {}
+	for signal in get_signals(current_doc, current_project, user):
+		s_id, s_type, subtype, tokens = signal
+		if s_id not in signals:
+			signals[s_id] = list()
+		signals[s_id].append({'type': s_type,
+							  'subtype': subtype,
+							  'tokens': map(int, tokens.split(",")) if tokens else []})
+	cpout += '<script>window.rstWebSignals = ' + json.dumps(signals) + ';</script>'
 
 	if "logging" in theform and not refresh:
 		if len(theform["logging"]) > 1:

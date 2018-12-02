@@ -99,13 +99,22 @@ h2 {	font-weight:bold;
 }
 .canvas {
 		position: relative; /* so that the curtain can position relative to it */
+		left: 0;
     display: inline-block;
 		white-space: initial;
 		height: calc(100% - 86px); /* height of bars above */
 		vertical-align: top;
 		overflow-x: scroll;
 		overflow-y: visible;
-		width: 100%;
+		transition-duration: 0.35s;
+		transition-property: left;
+		padding-left: 10px;
+		width: calc(100% - 10px);
+}
+.canvas--shifted {
+		left: 308px;
+		transition-duration: 0.35s;
+		transition-property: left;
 }
 #inner_canvas{
 		position:relative;
@@ -114,7 +123,6 @@ h2 {	font-weight:bold;
     -webkit-user-select: none;
     -o-user-select: none;
     user-select: none;
-    margin-left:10px;
 }
 
 /* signal drawer classes */
@@ -122,11 +130,11 @@ h2 {	font-weight:bold;
 div.curtain {
 		position: fixed;
 		top: 86px;
-		left: 308px;
+		left: 0;
 		width: 100%;
 		height: 100%;
 		z-index: 10000;
-		background: rgba(0,0,0,0.5);
+		background: rgba(0,0,0,0.12);
 }
 
 .sel--active {
@@ -135,15 +143,13 @@ div.curtain {
 }
 
 .edu--clickable {
-		color: white;
-		text-shadow: 2px 2px 3px black;
 		font-size: 18px;
 		transition-property: all;
 		transition-duration: 0.35s;
 }
 
 .edu--clickable {
-		z-index: 108108;
+		z-index: 10001;
 }
 
 .edu--clickable .edu_num_cont {
@@ -152,7 +158,8 @@ div.curtain {
 }
 
 .edu--clickable .tok {
-		padding: 3px;
+		padding: 0 4px;
+		margin: 0 -3px;
 }
 
 .edu--clickable .tok:hover {
@@ -169,30 +176,26 @@ div.curtain {
 				left: 0;
 		}
 		to {
-				left: -300px;
+				left: -308px;
 		}
 }
 
 .signal-drawer {
+		z-index: 10001;
 		box-shadow: 0 0 1px 2px gray;
 		padding: 4px;
 		vertical-align: top;
 		height: calc(100% - 96px); /* height of bars above plus margin and padding */
-		display: none;
-}
-
-.signal-drawer--active::before {
-		content: "fafafa",
-		width: 300px;
-		height: 100%;
 		position: absolute;
-		left: 0;
+		background: white;
+		width: 300px;
 		top: 86px;
+		left: -308px;
 }
 
 @keyframes drawer-reveal {
 		from {
-				left: -300px;
+				left: -308px;
 		}
 		to {
 				left: 0;
@@ -200,16 +203,14 @@ div.curtain {
 }
 
 .signal-drawer--active {
-		position: relative;
-	  width: 300px;
-		display: inline-block;
+		left: 0px;
 		animation-duration: 0.35s;
 		animation-timing-function: ease-out;
 		animation-name: drawer-reveal;
 }
 
 .signal-drawer--active + .canvas {
-		width: calc(100% - 316px);
+		width: calc(100% - 318px);
 }
 
 .signal-drawer__item {

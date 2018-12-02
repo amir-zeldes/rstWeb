@@ -981,7 +981,7 @@ function create_curtain () {
     //div.addEventListener('click', close_signal_drawer);
     div.setAttribute('class', 'curtain');
     div.setAttribute('id', 'curtain');
-    document.getElementById("canvas").appendChild(div);
+    document.getElementById("container").appendChild(div);
 }
 
 function close_curtain() {
@@ -1011,9 +1011,8 @@ function create_signal_item(id, type, subtype, signals) {
         if (!item.hasClass("signal-drawer__item--selected")) {
             $(".signal-drawer__item").removeClass("signal-drawer__item--selected");
             deselect_tokens();
-
-            $(".signal-drawer__item").removeClass("");
             item.addClass("signal-drawer__item--selected");
+
             signals[id][index].tokens.forEach(function(tindex) {
                 $("#tok" + tindex).addClass("tok--selected");
             });
@@ -1048,6 +1047,8 @@ function create_signal_item(id, type, subtype, signals) {
         signals[id].splice(index, 1);
         item.remove();
     });
+
+    return item;
 }
 
 
@@ -1057,15 +1058,12 @@ function open_signal_drawer(id, event) {
     create_curtain();
     $('.edu').addClass('edu--clickable');
     $('.signal-drawer').addClass('signal-drawer--active');
-    canvas = $('.canvas');
-    canvas.scrollLeft(function(_, left) {
-        return left + 308;
-    });
+    $('.canvas').addClass("canvas--shifted");
     sel = $("#sel" + id);
     sel.addClass("sel--active");
 
     var signals = window.rstWebSignals;
-		signalsWhenOpened = JSON.stringify(signals);
+    signalsWhenOpened = JSON.stringify(signals);
 
     var new_signal_button = $("#new-signal");
     new_signal_button.unbind('click');
@@ -1073,12 +1071,11 @@ function open_signal_drawer(id, event) {
         e.preventDefault();
         var type = $("#type").val();
         var subtype = $("#subtype").val();
-        create_signal_item(id, type, subtype, signals);
-
         if (!signals[id]) {
             signals[id] = [];
         }
         signals[id].push({type: type, subtype: subtype, tokens: []});
+        create_signal_item(id, type, subtype, signals).trigger('click');
     });
 
     var list = $("#signal-list");
@@ -1090,46 +1087,43 @@ function open_signal_drawer(id, event) {
 }
 
 function makeSaveSignalsAction(signals) {
-		var s = "sg:";
+    var s = "sg:";
 
-		Object.keys(signals).forEach(function(id) {
-				signals[id].forEach(function(signal) {
-						s += id + ",";
-						s += signal.type + ",";
-						s += signal.subtype + ",";
-						s += signal.tokens.join("-") + ":";
-				});
-		});
+    Object.keys(signals).forEach(function(id) {
+        signals[id].forEach(function(signal) {
+            s += id + ",";
+            s += signal.type + ",";
+            s += signal.subtype + ",";
+            s += signal.tokens.join("-") + ":";
+        });
+    });
 
-		if (s.endsWith(":")) {
-				s = s.substring(0, s.length - 1);
-		}
-		return s;
+    if (s.endsWith(":")) {
+        s = s.substring(0, s.length - 1);
+    }
+    return s;
 }
 
 function close_signal_drawer(should_save) {
     close_curtain();
     $('.edu').removeClass('edu--clickable');
     $('.signal-drawer').removeClass('signal-drawer--active');
-    canvas = $('.canvas');
-    canvas.scrollLeft(function(_, left ) {
-        return left - 308;
-    });
+    $('.canvas').removeClass("canvas--shifted");
     sel.removeClass("sel--active");
     deselect_tokens();
 
-		if (should_save) {
-				if (JSON.stringify(window.rstWebSignals) !== signalsWhenOpened) {
-						act(makeSaveSignalsAction(window.rstWebSignals));
-				}
-		} else {
-				window.rstWebSignals = JSON.parse(signalsWhenOpened);
-		}
+    if (should_save) {
+        if (JSON.stringify(window.rstWebSignals) !== signalsWhenOpened) {
+            act(makeSaveSignalsAction(window.rstWebSignals));
+        }
+    } else {
+        window.rstWebSignals = JSON.parse(signalsWhenOpened);
+    }
 }
 
 function init_signal_drawer() {
 
-		// these MUST NOT contain commas or colons
+    // these MUST NOT contain commas or colons
     var signal_types = {
         'DM': ['DM'],
         'Reference': ['Personal reference',
@@ -1199,15 +1193,15 @@ function init_signal_drawer() {
     });
     type_select.trigger('change');
 
-		$("#save-signals").click(function(e) {
-				e.preventDefault();
-				close_signal_drawer(true);
-		});
+    $("#save-signals").click(function(e) {
+        e.preventDefault();
+        close_signal_drawer(true);
+    });
 
-		$("#discard-signals").click(function(e) {
-				e.preventDefault();
-				close_signal_drawer(false);
-		});
+    $("#discard-signals").click(function(e) {
+        e.preventDefault();
+        close_signal_drawer(false);
+    });
 }
 
 $(document).ready(init_signal_drawer);
