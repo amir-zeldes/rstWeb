@@ -16,6 +16,7 @@ import sys
 import cgi
 import os
 import datetime
+import json
 import _version
 from modules.configobj import ConfigObj
 from modules.pathutils import *
@@ -117,11 +118,6 @@ def structure_main(user, admin, mode, **kwargs):
 		cpout += '<p class="warn">No file found - please select a file to open</p>'
 		return cpout
 
-	cpout += '''<div class="canvas">'''
-	cpout += '\t<p>Document: <b>'+current_doc+'</b> (project: <i>'+current_project+'</i>)</p>'
-	cpout += '''<div id="inner_canvas">'''
-	cpout += '<script src="./script/structure.js"></script>'
-
 	rels = get_rst_rels(current_doc, current_project)
 	def_multirel = get_def_rel("multinuc",current_doc, current_project)
 	def_rstrel = get_def_rel("rst",current_doc, current_project)
@@ -136,6 +132,56 @@ def structure_main(user, admin, mode, **kwargs):
 			rst_options += "<option value='"+rel[0]+"'>"+rel[0].replace("_r","")+'</option>\n'
 			rel_kinds[rel[0]] = "rst"
 	multi_options += "<option value='"+def_rstrel+"'>(satellite...)</option>\n"
+
+	nodes={}
+	rows = get_rst_doc(current_doc,current_project,user)
+	for row in rows:
+		if row[7] in rel_kinds:
+			relkind = rel_kinds[row[7]]
+		else:
+			relkind = "span"
+		if row[5] == "edu":
+			nodes[row[0]] = NODE(row[0],row[1],row[2],row[3],row[4],row[5],row[6],row[7],relkind)
+		else:
+			nodes[row[0]] = NODE(row[0],0,0,row[3],row[4],row[5],row[6],row[7],relkind)
+
+	cpout += '''
+          <div id="container" class="container">
+            <div class="signal-drawer">
+              <div id="signal-list"> </div>
+              <form class="signal-drawer__create-new">
+                <div class="signal-drawer__row">
+                  <label class="signal-drawer__label" for="type">Type:</label>
+                  <select id="type" name="type" class="signal-drawer__select"> </select>
+                </div>
+                <div class="signal-drawer__row">
+                  <label class="signal-drawer__label" for="type">Subtype:</label>
+                  <select id="subtype" name="subtype" class="signal-drawer__select"> </select>
+                </div>
+			    <div class="signal-drawer__row">
+			      <button id="new-signal" class="signal-drawer__create-new-button">
+  			        <i class="fa fa-plus" title="New Signal"> </i>
+			        New Signal
+			      </button>
+			    </div>
+              </form>
+			  <div class="signal-drawer__row" style="text-align: center;padding-top:20px;">
+  		        <button id="save-signals" class="signal-drawer__save-button">
+  		          <i class="fa fa-check"> </i>
+  		          Save Changes
+  		        </button>
+  		        <button id="discard-signals" class="signal-drawer__discard-button">
+  		          <i class="fa fa-ban"> </i>
+  		          Discard Changes
+  		        </button>
+  		      </div>
+            </div>
+    '''
+
+	cpout += '''<div id="canvas" class="canvas">'''
+	cpout += '\t<p>Document: <b>'+current_doc+'</b> (project: <i>'+current_project+'</i>)</p>'
+	cpout += '''<div id="inner_canvas">'''
+	cpout += '<script src="./script/structure.js"></script>'
 
 	# Remove floating non-terminal nodes if found
 	# (e.g. due to browsing back and re-submitting old actions or other data corruption)
@@ -166,8 +212,20 @@ def structure_main(user, admin, mode, **kwargs):
 						insert_parent(params[0],def_multirel,"multinuc",current_doc,current_project,user)
 					elif action_type == "rl":
 						update_rel(params[0],params[1],current_doc,current_project,user)
+					elif action_type == "sg":
+						update_signals(action.split(":")[1:], current_doc, current_project, user)
 					else:
 						cpout += '<script>alert("the action was: " + theform["action"]);</script>\n'
+
+	signals = {}
+	for signal in get_signals(current_doc, current_project, user):
+		s_id, s_type, subtype, tokens = signal
+		if s_id not in signals:
+			signals[s_id] = list()
+		signals[s_id].append({'type': s_type,
+							  'subtype': subtype,
+							  'tokens': map(int, tokens.split(",")) if tokens else []})
+	cpout += '<script>window.rstWebSignals = ' + json.dumps(signals) + ';</script>'
 
 	if "logging" in theform and not refresh:
 		if len(theform["logging"]) > 1:
@@ -179,18 +237,6 @@ def structure_main(user, admin, mode, **kwargs):
 	if "reset" in theform or user == "demo":
 		if len(theform["reset"]) > 1 or user == "demo":
 			reset_rst_doc(current_doc,current_project,user)
-
-	nodes={}
-	rows = get_rst_doc(current_doc,current_project,user)
-	for row in rows:
-		if row[7] in rel_kinds:
-			relkind = rel_kinds[row[7]]
-		else:
-			relkind = "span"
-		if row[5] == "edu":
-			nodes[row[0]] = NODE(row[0],row[1],row[2],row[3],row[4],row[5],row[6],row[7],relkind)
-		else:
-			nodes[row[0]] = NODE(row[0],0,0,row[3],row[4],row[5],row[6],row[7],relkind)
 
 	for key in nodes:
 		node = nodes[key]
@@ -257,7 +303,9 @@ def structure_main(user, admin, mode, **kwargs):
 		lambda_button = "Λ".decode("utf-8")
 	else:
 		lambda_button = "Λ"
-	for key in nodes:
+
+	tok_count = 0
+	for key in sorted(nodes.keys(), key=int):
 		node = nodes[key]
 		if node.kind != "edu":
 			g_wid = str(int((node.right- node.left+1) *100 -4 ))
@@ -278,7 +326,13 @@ def structure_main(user, admin, mode, **kwargs):
 			cpout += '</tr>'
 			if use_multinuc_buttons:
 				cpout += '<tr><td><button id="amulti_'+ node.id+'" title="add multinuc above" class="minibtn" onclick="act('+"'mn:"+node.id+"'"+');">' + lambda_button + '</button></td></tr>'
-			cpout += '</table></div>'+node.text+'</div>'
+			cpout += '</table></div>'
+
+			for tok in node.text.split(" "):
+				tok_count += 1
+				cpout += '<span id="tok' + str(tok_count) + '" class="tok">' + tok + '</span> '
+
+			cpout += '</div>'
 
 
 	max_right = get_max_right(current_doc,current_project,user)
@@ -324,7 +378,19 @@ def structure_main(user, admin, mode, **kwargs):
 	cpout += '		return options.replace("<option value='+"'" +'"' + '+my_rel+'+'"' +"'"+'","<option selected='+"'"+'selected'+"'"+' value='+"'" +'"'+ '+my_rel+'+'"' +"'"+'");'
 	cpout += '			}\n'
 	cpout += '''function make_relchooser(id,option_type,rel){
-	    return $("<select class='rst_rel' id='sel"+id.replace("n","")+"' onchange='crel(" + id.replace("n","") + ",this.options[this.selectedIndex].value);'>" + select_my_rel(option_type,rel) + "</select>");
+	    var s = "<div style='white-space:nowrap;' id='sel"+id.replace("n","")+"'>";
+	    s += make_signal_button(id);
+	    s += "<select class='rst_rel' onchange='crel(" + id.replace("n","") + ",this.options[this.selectedIndex].value);'>" + select_my_rel(option_type,rel) + "</select>";
+	    return $(s);
+	}'''
+	# todo: make a flag that controls whether signals are on
+	cpout += 'var signalsEnabled = ' + ('true;' if True else 'false;')
+	cpout += '''function make_signal_button(id) {
+		if (signalsEnabled) {
+			return '<button title="add signals" class="minibtn" onclick="open_signal_drawer(' + id + ')">S</button>';
+		} else {
+			return '';
+		}
 	}'''
 	cpout += '''
 			jsPlumb.importDefaults({
@@ -375,7 +441,6 @@ def structure_main(user, admin, mode, **kwargs):
 				cpout += 'jsPlumb.connect({source:"'+node_id_str+'",target:"'+parent_id_str+ '", connector:"Straight", anchors: ["Top","Bottom"], overlays: [ ["Custom", {create:function(component) {return make_relchooser("'+node.id+'","multi","'+node.relname+'");},location:0.2,id:"customOverlay"}]]});'
 			else:
 				cpout += 'jsPlumb.connect({source:"'+node_id_str+'",target:"'+parent_id_str+'", overlays: [ ["Arrow" , { width:12, length:12, location:0.95 }],["Custom", {create:function(component) {return make_relchooser("'+node.id+'","rst","'+node.relname+'");},location:0.1,id:"customOverlay"}]]});'
-
 
 	cpout += '''
 
@@ -438,6 +503,7 @@ def structure_main(user, admin, mode, **kwargs):
 '''
 
 	cpout += '''
+			</div>
 			</div>
 			</div>
 			<div id="anim_catch" class="anim_catch">&nbsp;</div>

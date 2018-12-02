@@ -9,6 +9,8 @@ html{width:100%}
     -o-user-select: none;
     user-select: none;
     z-index: 2;
+		transition-property: all;
+		transition-duration: 0.35s;
     }
 
 .whisker{border-left: solid; border-right: solid; height:2px;display: table-cell;margin:0;border-collapse:collapse}
@@ -30,8 +32,6 @@ html{width:100%}
 .group:hover{border-color: red;}
 .num_cont:hover .num_id{border: 1px solid red;border-color: red;z-index:200}
 .group:hover .whisker{border-color: red;}
-.edu .num_id{z-index:200}
-.edu:hover .num_id{border: 1px solid red;border-color: red}
 .edu:hover .whisker{border-color: red;z-index:200}
 .group:hover .whisker{border-color: red;}
 
@@ -93,15 +93,213 @@ h2 {	font-weight:bold;
 .minibtn{z-index:120;width:13px;height:13px;padding:0px;border:0px;font-size:9px; border:solid 1px}
 .minibtn:hover{background-color:#C0C0C0}
 
-
-.canvas{width:100%; position: absolute; top: 80px; bottom: 45px;}
-#inner_canvas{position:relative;overflow-x:auto;height:100%; min-height:80%;overflow-y:visible;
+.container {
+		white-space: nowrap;
+		width: 100%;
+}
+.canvas {
+		position: relative; /* so that the shield of justice can position relative to it */
+		left: 0;
+    display: inline-block;
+		white-space: initial;
+		height: calc(100% - 86px); /* height of bars above */
+		vertical-align: top;
+		overflow-x: scroll;
+		overflow-y: visible;
+		transition-duration: 0.35s;
+		transition-property: left;
+		padding-left: 10px;
+		width: calc(100% - 10px);
+}
+.canvas--shifted {
+		left: 308px;
+		transition-duration: 0.35s;
+		transition-property: left;
+}
+#inner_canvas{
+		position:relative;
     -moz-user-select: -moz-none;
     -khtml-user-select: none;
     -webkit-user-select: none;
     -o-user-select: none;
     user-select: none;
-    margin-left:10px
+}
+
+/* signal drawer classes */
+
+div.shield-of-justice {
+		position: fixed;
+		top: 86px;
+		left: 0;
+		width: 100%;
+		height: 100%;
+		z-index: 10000;
+		background: rgba(0,0,0,0.12);
+		pointer-events: none;
+}
+
+.sel--active {
+		pointer-events: none;
+		z-index: 10001;
+}
+
+.edu--clickable {
+		font-size: 18px;
+		transition-property: all;
+		transition-duration: 0.35s;
+}
+
+.edu--clickable {
+		z-index: 10001;
+}
+
+.edu--clickable .edu_num_cont {
+		pointer-events: none;
+		opacity: 0.8;
+}
+
+.edu--clickable .tok {
+		padding: 0 4px;
+		margin: 0 -3px;
+		transition-duration: 0.2s;
+		transition-property: background;
+}
+
+.edu--clickable .tok:not(.tok--selected):hover {
+		background: rgba(255,255,0,0.3);
+}
+
+.edu--clickable .tok--selected {
+		background: rgba(255,255,0,0.7);
+}
+
+
+@keyframes drawer-close {
+		from {
+				left: 0;
+		}
+		to {
+				left: -308px;
+		}
+}
+
+.signal-drawer {
+		z-index: 10001;
+		box-shadow: 0 0 1px 2px gray;
+		padding: 4px;
+		vertical-align: top;
+		height: calc(100% - 96px); /* height of bars above plus margin and padding */
+		position: absolute;
+		background: white;
+		width: 300px;
+		top: 86px;
+		left: -308px;
+}
+
+@keyframes drawer-reveal {
+		from {
+				left: -308px;
+		}
+		to {
+				left: 0;
+		}
+}
+
+.signal-drawer--active {
+		left: 0px;
+		animation-duration: 0.35s;
+		animation-timing-function: ease-out;
+		animation-name: drawer-reveal;
+}
+
+.signal-drawer--active + .canvas {
+		width: calc(100% - 318px);
+}
+
+.signal-drawer__item {
+		font-size: 16px;
+		white-space: pre-line;
+		padding: 10px;
+		margin: 10px 8px;
+		border-radius: 8px;
+		background: rgba(0,0,0,0.15);
+		transition-property: background;
+		transition-duration: 0.2s;
+}
+
+.signal-drawer__item:not(.signal-drawer__item--selected):hover {
+		background: rgba(255,255,0,0.3);
+}
+
+.signal-drawer__item--selected {
+		background: yellow;
+}
+
+.signal-drawer__item-type {
+		font-weight: 700;
+		padding-left: 10px;
+}
+
+.signal-drawer__item-type:after {
+		content: ", "
+}
+
+.signal-drawer__item-subtype {
+}
+
+.signal-drawer__create-new {
+		padding-top: 40px;
+}
+
+.signal-drawer__row {
+    padding-bottom: 10px;
+}
+
+.signal-drawer__create-new-button {
+		margin-left: 80px;
+		height: 30px;
+		width: 108px;
+}
+
+button.disabled {
+		background: linear-gradient(#a0a0a0, #808080);
+		color: #333;
+}
+
+.signal-drawer__save-button {
+		height: 40px;
+		width: 130px;
+		background: linear-gradient(#f7f7f7, lightgreen);
+}
+
+.signal-drawer__discard-button {
+		height: 40px;
+		width: 130px;
+		background: linear-gradient(#f7f7f7, lightpink);
+}
+
+.signal-drawer__label {
+		color: black;
+		font-size: 14px;
+
+		display: inline-block;
+		width: 80px;
+		text-align: right;
+}
+
+.signal-drawer__select {
+		width: 200px;
+		height: 30px;
+		color: black;
+		font-size: 14px;
+}
+
+
+
+
+
+select.rst_rel {
+		width: 70px;
 }
 .span_div{width:2px; background-color:black; height: 60px; position:absolute}
 .top_scroll{height: 20px; overflow-x:scroll; overflow-y:visible}
@@ -317,3 +515,4 @@ input:checked + .slider:before {
   overflow:hidden;
   padding:8px;
 }
+
