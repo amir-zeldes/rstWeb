@@ -98,7 +98,7 @@ h2 {	font-weight:bold;
 		width: 100%;
 }
 .canvas {
-		position: relative; /* so that the curtain can position relative to it */
+		position: relative; /* so that the shield of justice can position relative to it */
 		left: 0;
     display: inline-block;
 		white-space: initial;
@@ -127,7 +127,7 @@ h2 {	font-weight:bold;
 
 /* signal drawer classes */
 
-div.curtain {
+div.shield-of-justice {
 		position: fixed;
 		top: 86px;
 		left: 0;
@@ -161,9 +161,11 @@ div.curtain {
 .edu--clickable .tok {
 		padding: 0 4px;
 		margin: 0 -3px;
+		transition-duration: 0.2s;
+		transition-property: background;
 }
 
-.edu--clickable .tok:hover {
+.edu--clickable .tok:not(.tok--selected):hover {
 		background: rgba(255,255,0,0.3);
 }
 
@@ -221,9 +223,11 @@ div.curtain {
 		margin: 10px 8px;
 		border-radius: 8px;
 		background: rgba(0,0,0,0.15);
+		transition-property: background;
+		transition-duration: 0.2s;
 }
 
-.signal-drawer__item:hover {
+.signal-drawer__item:not(.signal-drawer__item--selected):hover {
 		background: rgba(255,255,0,0.3);
 }
 
@@ -244,7 +248,7 @@ div.curtain {
 }
 
 .signal-drawer__create-new {
-		padding-top: 100px;
+		padding-top: 40px;
 }
 
 .signal-drawer__row {
@@ -255,6 +259,11 @@ div.curtain {
 		margin-left: 80px;
 		height: 30px;
 		width: 108px;
+}
+
+button.disabled {
+		background: linear-gradient(#a0a0a0, #808080);
+		color: #333;
 }
 
 .signal-drawer__save-button {

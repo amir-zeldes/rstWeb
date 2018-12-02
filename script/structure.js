@@ -974,238 +974,283 @@ function is_ancestor(new_parent_id,node_id){
     return false;
 }
 
+var open_signal_drawer;
+
 // signals handling
-
-function create_curtain () {
-    var div = document.createElement("div");
-    //div.addEventListener('click', close_signal_drawer);
-    div.setAttribute('class', 'curtain');
-    div.setAttribute('id', 'curtain');
-    document.getElementById("container").appendChild(div);
-}
-
-function close_curtain() {
-    var div = document.getElementById("curtain");
-    div.parentNode.removeChild(div);
-}
-
-function deselect_tokens() {
-    $(".tok")
-        .unbind("click")
-        .removeClass("tok--selected");
-}
-
-function create_signal_item(id, type, subtype, signals) {
-    var item = $('<div class="signal-drawer__item"></div>');
-    var delete_button = $('<button class="button" title="delete signal">X</button>');
-    var type = $('<span class="signal-drawer__item-type">' + type + '</span>');
-    var subtype = $('<span class="signal-drawer__item-subtype">' + subtype + '</span>');
-    item.append(delete_button);
-    item.append(type);
-    item.append(subtype);
-    $("#signal-list").append(item);
-
-    item.click(function (e) {
-        var item = $(this);
-        var index = item.index();
-        if (!item.hasClass("signal-drawer__item--selected")) {
-            $(".signal-drawer__item").removeClass("signal-drawer__item--selected");
-            deselect_tokens();
-            item.addClass("signal-drawer__item--selected");
-
-            signals[id][index].tokens.forEach(function(tindex) {
-                $("#tok" + tindex).addClass("tok--selected");
-            });
-
-            $(".tok").click(function(e) {
-                var tok = $(this);
-                var tok_id = parseInt(tok.attr("id").substring(3));
-                var tok_list = signals[id][index].tokens;
-                var tok_list_index = tok_list.indexOf(tok_id);
-
-                if (tok_list_index > -1) {
-                    tok_list.pop(tok_list_index);
-                    tok.removeClass("tok--selected");
-                }
-                else {
-                    tok_list.push(tok_id);
-                    tok.addClass("tok--selected");
-                }
-            });
-        }
-    });
-
-    delete_button.click(function (e) {
-        var item = $(this).parent();
-        var index = item.index();
-
-        // ensure we have it selected
-        item.removeClass('signal-drawer__item--selected')
-            .trigger('click');
-
-        deselect_tokens();
-        signals[id].splice(index, 1);
-        item.remove();
-    });
-
-    return item;
-}
-
-
-var sel;
-var signalsWhenOpened;
-function open_signal_drawer(id, event) {
-    create_curtain();
-		$('.canvas').find('button').attr("disabled", "disabled");
-		$('.canvas').find('select').attr("disabled", "disabled");
-    $('.edu').addClass('edu--clickable');
-    $('.signal-drawer').addClass('signal-drawer--active');
-    $('.canvas').addClass("canvas--shifted");
-    sel = $("#sel" + id);
-    sel.addClass("sel--active");
-
-    var signals = window.rstWebSignals;
-    signalsWhenOpened = JSON.stringify(signals);
-
-    var new_signal_button = $("#new-signal");
-    new_signal_button.unbind('click');
-    new_signal_button.click(function (e) {
-        e.preventDefault();
-        var type = $("#type").val();
-        var subtype = $("#subtype").val();
-        if (!signals[id]) {
-            signals[id] = [];
-        }
-        signals[id].push({type: type, subtype: subtype, tokens: []});
-        create_signal_item(id, type, subtype, signals).trigger('click');
-    });
-
-    var list = $("#signal-list");
-    list.empty();
-    signals[id] && signals[id].forEach(function (signal) {
-        create_signal_item(id, signal.type, signal.subtype, signals);
-    });
-
-}
-
-function makeSaveSignalsAction(signals) {
-    var s = "sg:";
-
-    Object.keys(signals).forEach(function(id) {
-        signals[id].forEach(function(signal) {
-            s += id + ",";
-            s += signal.type + ",";
-            s += signal.subtype + ",";
-            s += signal.tokens.join("-") + ":";
-        });
-    });
-
-    if (s.endsWith(":")) {
-        s = s.substring(0, s.length - 1);
+$(document).ready(function(){
+    function raise_shield_of_justice () {
+        var div = document.createElement("div");
+        div.setAttribute('class', 'shield-of-justice');
+        div.setAttribute('id', 'shield-of-justice');
+        document.getElementById("container").appendChild(div);
     }
-    return s;
-}
 
-function close_signal_drawer(should_save) {
-    close_curtain();
-		$('.canvas').find('button').removeAttr("disabled");
-		$('.canvas').find('select').removeAttr("disabled");
-    $('.edu').removeClass('edu--clickable');
-    $('.signal-drawer').removeClass('signal-drawer--active');
-    $('.canvas').removeClass("canvas--shifted");
-    sel.removeClass("sel--active");
-    deselect_tokens();
-
-    if (should_save) {
-        if (JSON.stringify(window.rstWebSignals) !== signalsWhenOpened) {
-            act(makeSaveSignalsAction(window.rstWebSignals));
-        }
-    } else {
-        window.rstWebSignals = JSON.parse(signalsWhenOpened);
+    function lower_shield_of_justice() {
+        var div = document.getElementById("shield-of-justice");
+        div.parentNode.removeChild(div);
     }
-}
 
-function init_signal_drawer() {
+    function disable_buttons() {
+        $('.canvas').find('button').attr("disabled", "disabled");
+        $('.canvas').find('select').attr("disabled", "disabled");
+    }
 
-    // these MUST NOT contain commas or colons
-    var signal_types = {
-        'DM': ['DM'],
-        'Reference': ['Personal reference',
-                      'Demonstrative reference',
-                      'Comparative reference',
-                      'Propositional reference'],
-        'Lexical': ['Indicative word',
-                    'Alternate expression'],
-        'Semantic': ['Synonymy',
-                     'Antonymy',
-                     'Meronymy',
-                     'Repetition',
-                     'Indicative word pair',
-                     'Lexical chain',
-                     'General word'],
-        'Morphological': ['Tense'],
-        'Syntactic': ['Relative clause',
-                      'Infinitival clause',
-                      'Present participial clause',
-                      'Past participial clause',
-                      'Imperative clause',
-                      'Interrupted matrix clause',
-                      'Parallel syntactic construction',
-                      'Reported speech',
-                      'Subject auxiliary inversion',
-                      'Nominal modifier',
-                      'Adjectival modifier'],
-        'Graphical': ['Colon',
-                      'Semicolon',
-                      'Dash',
-                      'Parentheses',
-                      'Items in sequence'],
-        'Genre': ['Inverted pyramid scheme',
-                  'Newspaper layout',
-                  'Newspaper style attribution',
-                   'Newspaper style definition'],
-        'Numerical': ['Same count'],
-        'Reference + syntactic': ['Personal reference + subject NP',
-                                  'Demonstrative reference + subject NP',
-                                  'Comparative reference + subject NP',
-                                  'Propositional reference + subject NP'],
-        'Semantic + syntactic': ['Repetition + subject NP',
-                                 'Lexical chain + subject NP',
-                                 'Synonymy + subject NP',
-                                 'Meronymy + subject NP',
-                                 'General word + subject NP'],
-        'Lexical + syntactic': ['Indicative word + present participial clause'],
-        'Syntactic + semantic': ['Past participial clause + beginning',
-                                 'Present participial clause + beginning'],
-        'Graphical + syntactic': ['Comma + present participial clause',
-                                  'Comma + past participial clause'],
-        'Unsure': ['Unsure']
-    };
+    function enable_buttons() {
+        $('.canvas').find('button').removeAttr("disabled");
+        $('.canvas').find('select').removeAttr("disabled");
+    }
 
-    var type_select = $("#type");
-    var subtype_select = $("#subtype");
+    function add_classes() {
+        $('.edu').addClass('edu--clickable');
+        $('.signal-drawer').addClass('signal-drawer--active');
+        $('.canvas').addClass("canvas--shifted");
+    }
 
-    $.each(signal_types, function (type, subtypes) {
-        type_select.append($("<option/>").text(type).val(type));
-    });
+    function remove_classes() {
+        $('.edu').removeClass('edu--clickable');
+        $('.signal-drawer').removeClass('signal-drawer--active');
+        $('.canvas').removeClass("canvas--shifted");
+    }
 
-    type_select.change(function(e) {
-        subtype_select.empty();
-        $.each(signal_types[e.target.value], function(i, subtype) {
-            subtype_select.append($("<option/>").text(subtype).val(subtype));
+    function deselect_and_unbind_tokens() {
+        $(".tok")
+            .unbind("click")
+            .unbind("mouseover")
+            .removeClass("tok--selected");
+    }
+
+    var sel;
+    var signalsWhenOpened;
+
+    function open_signal_drawer_inner(id, event) {
+        raise_shield_of_justice();
+        disable_buttons();
+        add_classes();
+        sel = $("#sel" + id);
+        sel.addClass("sel--active");
+
+        var signals = window.rstWebSignals;
+        signalsWhenOpened = JSON.stringify(signals);
+
+        // draw the list of signals that already exist
+        var list = $("#signal-list");
+        list.empty();
+        signals[id] && signals[id].forEach(function (signal) {
+            create_signal_item(id, signal.type, signal.subtype, signals);
         });
-    });
-    type_select.trigger('change');
 
-    $("#save-signals").click(function(e) {
-        e.preventDefault();
-        close_signal_drawer(true);
-    });
+        // rewire new signal button so they're associated with this sel
+        $("#new-signal")
+            .unbind('click')
+            .click(function (e) {
+                e.preventDefault();
+                var type = $("#type").val();
+                var subtype = $("#subtype").val();
+                signals[id] = signals[id] || [];
+                signals[id].push({type: type, subtype: subtype, tokens: []});
+                create_signal_item(id, type, subtype, signals).trigger('click');
 
-    $("#discard-signals").click(function(e) {
-        e.preventDefault();
-        close_signal_drawer(false);
-    });
-}
+                var button = $(this);
+                button.addClass("disabled");
+                button.attr("disabled", "disabled");
+                setTimeout(function() {
+                    button.removeClass("disabled");
+                    button.removeAttr("disabled");
+                }, 500);
+            });
+    }
 
-$(document).ready(init_signal_drawer);
+    function make_signal_action(signals) {
+        var s = "sg:";
+
+        Object.keys(signals).forEach(function(id) {
+            signals[id].forEach(function(signal) {
+                s += id + ",";
+                s += signal.type + ",";
+                s += signal.subtype + ",";
+                s += signal.tokens.join("-") + ":";
+            });
+        });
+
+        if (s.endsWith(":")) {
+            s = s.substring(0, s.length - 1);
+        }
+        return s;
+    }
+
+    function close_signal_drawer(should_save) {
+        lower_shield_of_justice();
+        enable_buttons();
+        remove_classes();
+        sel.removeClass("sel--active");
+        deselect_and_unbind_tokens();
+
+        if (should_save) {
+            if (JSON.stringify(window.rstWebSignals) !== signalsWhenOpened) {
+                act(make_signal_action(window.rstWebSignals));
+            }
+        } else {
+            window.rstWebSignals = JSON.parse(signalsWhenOpened);
+        }
+    }
+
+    function create_signal_item(id, type, subtype, signals) {
+        var item = $('<div class="signal-drawer__item"></div>');
+        var delete_button = $('<button class="button" title="delete signal">X</button>');
+        var type = $('<span class="signal-drawer__item-type">' + type + '</span>');
+        var subtype = $('<span class="signal-drawer__item-subtype">' + subtype + '</span>');
+        item.append(delete_button);
+        item.append(type);
+        item.append(subtype);
+        $("#signal-list").append(item);
+
+        item.click(function (e) {
+            var item = $(this);
+            var index = item.index();
+            if (!item.hasClass("signal-drawer__item--selected")) {
+                // deselect previous signal
+                $(".signal-drawer__item").removeClass("signal-drawer__item--selected");
+                deselect_and_unbind_tokens();
+
+                // select this one
+                item.addClass("signal-drawer__item--selected");
+
+                // highlight words already selected for this signal
+                signals[id][index].tokens.forEach(function(tindex) {
+                    $("#tok" + tindex).addClass("tok--selected");
+                });
+
+                // reroute token clicks to this signal
+                $(".tok").click(function(e) {
+                    var tok = $(this);
+                    var tok_id = parseInt(tok.attr("id").substring(3));
+                    var tok_list = signals[id][index].tokens;
+                    var tok_list_index = tok_list.indexOf(tok_id);
+
+                    if (tok_list_index > -1) {
+                        tok_list.pop(tok_list_index);
+                        tok.removeClass("tok--selected");
+                    } else {
+                        tok_list.push(tok_id);
+                        tok.addClass("tok--selected");
+                    }
+                });
+
+                // allow selecting tokens by click and drag
+                $(".tok").mouseover(function(e) {
+                    if (e.buttons === 3 || e.buttons === 1) {
+                        var tok = $(this);
+                        var tok_id = parseInt(tok.attr("id").substring(3));
+                        var tok_list = signals[id][index].tokens;
+
+                        tok_list.push(tok_id);
+                        tok.addClass("tok--selected");
+                    }
+                });
+            }
+        });
+
+        // remove signal if x is clicked
+        delete_button.click(function (e) {
+            var item = $(this).parent();
+            var index = item.index();
+
+            // ensure we have it selected
+            item.removeClass('signal-drawer__item--selected')
+                .trigger('click');
+
+            deselect_and_unbind_tokens();
+            signals[id].splice(index, 1);
+            item.remove();
+        });
+
+        return item;
+    }
+
+    function init_signal_drawer() {
+        // these MUST NOT contain commas or colons
+        var signal_types = {
+            'DM': ['DM'],
+            'Reference': ['Personal reference',
+                          'Demonstrative reference',
+                          'Comparative reference',
+                          'Propositional reference'],
+            'Lexical': ['Indicative word',
+                        'Alternate expression'],
+            'Semantic': ['Synonymy',
+                         'Antonymy',
+                         'Meronymy',
+                         'Repetition',
+                         'Indicative word pair',
+                         'Lexical chain',
+                         'General word'],
+            'Morphological': ['Tense'],
+            'Syntactic': ['Relative clause',
+                          'Infinitival clause',
+                          'Present participial clause',
+                          'Past participial clause',
+                          'Imperative clause',
+                          'Interrupted matrix clause',
+                          'Parallel syntactic construction',
+                          'Reported speech',
+                          'Subject auxiliary inversion',
+                          'Nominal modifier',
+                          'Adjectival modifier'],
+            'Graphical': ['Colon',
+                          'Semicolon',
+                          'Dash',
+                          'Parentheses',
+                          'Items in sequence'],
+            'Genre': ['Inverted pyramid scheme',
+                      'Newspaper layout',
+                      'Newspaper style attribution',
+                      'Newspaper style definition'],
+            'Numerical': ['Same count'],
+            'Reference + syntactic': ['Personal reference + subject NP',
+                                      'Demonstrative reference + subject NP',
+                                      'Comparative reference + subject NP',
+                                      'Propositional reference + subject NP'],
+            'Semantic + syntactic': ['Repetition + subject NP',
+                                     'Lexical chain + subject NP',
+                                     'Synonymy + subject NP',
+                                     'Meronymy + subject NP',
+                                     'General word + subject NP'],
+            'Lexical + syntactic': ['Indicative word + present participial clause'],
+            'Syntactic + semantic': ['Past participial clause + beginning',
+                                     'Present participial clause + beginning'],
+            'Graphical + syntactic': ['Comma + present participial clause',
+                                      'Comma + past participial clause'],
+            'Unsure': ['Unsure']
+        };
+
+        var type_select = $("#type");
+        var subtype_select = $("#subtype");
+
+        $.each(signal_types, function (type, subtypes) {
+            type_select.append($("<option/>").text(type).val(type));
+        });
+
+        type_select.change(function(e) {
+            subtype_select.empty();
+            $.each(signal_types[e.target.value], function(i, subtype) {
+                subtype_select.append($("<option/>").text(subtype).val(subtype));
+            });
+        });
+        type_select.trigger('change');
+
+        // modal button click events
+        $("#save-signals").click(function(e) {
+            e.preventDefault();
+            close_signal_drawer(true);
+        });
+
+        $("#discard-signals").click(function(e) {
+            e.preventDefault();
+            close_signal_drawer(false);
+        });
+
+        open_signal_drawer = open_signal_drawer_inner;
+    }
+
+    init_signal_drawer();
+});
