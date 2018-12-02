@@ -146,18 +146,13 @@ def structure_main(user, admin, mode, **kwargs):
 			nodes[row[0]] = NODE(row[0],0,0,row[3],row[4],row[5],row[6],row[7],relkind)
 
 	signals = {}
-	for key in nodes:
-		node = nodes[key]
-		if node.parent!="0":
-			parent = nodes[node.parent]
-
-			if node.relname == "span" or (parent.kind == "multinuc" and node.relkind=="multinuc"):
-				signals[node.id] = []
-				# todo: needs to be a list of dicts:
-				# {'type': str(),
-			    #  'subtype': str(),
-			    #  'tokens': [int(), int()]}
-
+	for signal in get_signals(current_doc, current_project, user):
+		s_id, s_type, subtype, tokens = signal
+		if s_id not in signals:
+			signals[s_id] = list()
+		signals[s_id].append({'type': s_type,
+							  'subtype': subtype,
+							  'tokens': map(int, tokens.split(",")) if tokens else []})
 
 	cpout += '''
           <div class="container">
@@ -228,6 +223,8 @@ def structure_main(user, admin, mode, **kwargs):
 						insert_parent(params[0],def_multirel,"multinuc",current_doc,current_project,user)
 					elif action_type == "rl":
 						update_rel(params[0],params[1],current_doc,current_project,user)
+					elif action_type == "sg":
+						update_signals(action.split(":")[1:], current_doc, current_project, user)
 					else:
 						cpout += '<script>alert("the action was: " + theform["action"]);</script>\n'
 
