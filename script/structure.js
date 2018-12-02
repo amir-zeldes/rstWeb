@@ -1016,6 +1016,7 @@ $(document).ready(function(){
         $(".tok")
             .unbind("click")
             .unbind("mouseover")
+            .unbind("mouseout")
             .removeClass("tok--selected");
     }
 
@@ -1137,16 +1138,20 @@ $(document).ready(function(){
                 });
 
                 // allow selecting tokens by click and drag
-                $(".tok").mouseover(function(e) {
+                function selectTok(e) {
                     if (e.buttons === 3 || e.buttons === 1) {
                         var tok = $(this);
                         var tok_id = parseInt(tok.attr("id").substring(3));
                         var tok_list = signals[id][index].tokens;
 
-                        tok_list.push(tok_id);
-                        tok.addClass("tok--selected");
+                        if (tok_list.indexOf(tok_id) === -1) {
+                            tok_list.push(tok_id);
+                            tok.addClass("tok--selected");
+                        }
                     }
-                });
+                }
+                $(".tok").mouseover(selectTok);
+                $(".tok").mouseout(selectTok);
             }
         });
 
