@@ -1056,6 +1056,8 @@ var sel;
 var signalsWhenOpened;
 function open_signal_drawer(id, event) {
     create_curtain();
+		$('.canvas').find('button').attr("disabled", "disabled");
+		$('.canvas').find('select').attr("disabled", "disabled");
     $('.edu').addClass('edu--clickable');
     $('.signal-drawer').addClass('signal-drawer--active');
     $('.canvas').addClass("canvas--shifted");
@@ -1106,6 +1108,8 @@ function makeSaveSignalsAction(signals) {
 
 function close_signal_drawer(should_save) {
     close_curtain();
+		$('.canvas').find('button').removeAttr("disabled");
+		$('.canvas').find('select').removeAttr("disabled");
     $('.edu').removeClass('edu--clickable');
     $('.signal-drawer').removeClass('signal-drawer--active');
     $('.canvas').removeClass("canvas--shifted");

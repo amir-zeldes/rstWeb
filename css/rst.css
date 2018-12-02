@@ -135,6 +135,7 @@ div.curtain {
 		height: 100%;
 		z-index: 10000;
 		background: rgba(0,0,0,0.12);
+		pointer-events: none;
 }
 
 .sel--active {
