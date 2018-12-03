@@ -787,5 +787,7 @@ def update_signals(signals_blob, doc, project, user):
 		generic_query("INSERT INTO rst_signals VALUES (?,?,?,?,?,?,?)",params)
 
 def get_signals(doc, project, user):
-    return generic_query("SELECT source, type, subtype, tokens FROM rst_signals WHERE doc=? and project=? and user=?", (doc,project,user))
-
+	schema = get_schema()
+	if schema < 6:
+		update_schema()
+	return generic_query("SELECT source, type, subtype, tokens FROM rst_signals WHERE doc=? and project=? and user=?", (doc,project,user))
