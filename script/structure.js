@@ -1023,7 +1023,7 @@ $(document).ready(function(){
     var sel;
     var signalsWhenOpened;
 
-    function open_signal_drawer_inner(id, event) {
+    function open_signal_drawer_inner(id) {
         raise_shield_of_justice();
         disable_buttons();
         add_classes();
@@ -1249,7 +1249,7 @@ $(document).ready(function(){
             close_signal_drawer(true);
         });
 
-        $("#discard-signals").click(function(e) {
+        $("#cancel-signals").click(function(e) {
             e.preventDefault();
             close_signal_drawer(false);
         });

@@ -272,7 +272,7 @@ button.disabled {
 		background: linear-gradient(#f7f7f7, lightgreen);
 }
 
-.signal-drawer__discard-button {
+.signal-drawer__cancel-button {
 		height: 40px;
 		width: 130px;
 		background: linear-gradient(#f7f7f7, lightpink);
