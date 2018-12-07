@@ -1000,19 +1000,72 @@ $(document).ready(function(){
         $('.canvas').find('select').removeAttr("disabled");
     }
 
-    function add_classes() {
+    function add_classes(id) {
         $('.edu').addClass('edu--clickable');
         $('.signal-drawer').addClass('signal-drawer--active');
         $('.canvas').addClass("canvas--shifted");
+        $("#sel" + id).addClass("sel--active");
     }
 
     function remove_classes() {
         $('.edu').removeClass('edu--clickable');
         $('.signal-drawer').removeClass('signal-drawer--active');
         $('.canvas').removeClass("canvas--shifted");
+        $(".sel--active").removeClass("sel--active");
     }
 
-    function deselect_and_unbind_tokens() {
+    function bind_tok_events(signals, id, index) {
+        var row_selected = !!signals;
+
+        // reroute token clicks to this signal
+        $(".tok").click(function(e) {
+            var tok = $(this);
+            var tok_id = parseInt(tok.attr("id").substring(3));
+
+            if (row_selected) {
+                var tok_list = signals[id][index].tokens;
+                var tok_list_index = tok_list.indexOf(tok_id);
+
+                if (tok_list_index > -1) {
+                    tok_list.pop(tok_list_index);
+                    tok.removeClass("tok--selected");
+                } else {
+                    tok_list.push(tok_id);
+                    tok.addClass("tok--selected");
+                }
+            } else {
+                if (tok.hasClass("tok--selected")) {
+                    tok.removeClass("tok--selected");
+                } else {
+                    tok.addClass("tok--selected");
+                }
+            }
+        });
+
+        // allow selecting tokens by click and drag
+        function selectTok(e) {
+            if (e.buttons === 3 || e.buttons === 1) {
+                var tok = $(this);
+                var tok_id = parseInt(tok.attr("id").substring(3));
+
+                if (row_selected) {
+                    var tok_list = signals[id][index].tokens;
+                    if (tok_list.indexOf(tok_id) === -1) {
+                        tok_list.push(tok_id);
+                        tok.addClass("tok--selected");
+                    }
+                } else {
+                    if (!tok.hasClass("tok--selected")) {
+                        tok.addClass("tok--selected");
+                    }
+                }
+            }
+        }
+        $(".tok").mouseover(selectTok);
+        $(".tok").mouseout(selectTok);
+    }
+
+    function deselect_and_unbind_toks() {
         $(".tok")
             .unbind("click")
             .unbind("mouseover")
@@ -1020,15 +1073,12 @@ $(document).ready(function(){
             .removeClass("tok--selected");
     }
 
-    var sel;
     var signalsWhenOpened;
 
     function open_signal_drawer_inner(id) {
         raise_shield_of_justice();
         disable_buttons();
-        add_classes();
-        sel = $("#sel" + id);
-        sel.addClass("sel--active");
+        add_classes(id);
 
         var signals = window.rstWebSignals;
         signalsWhenOpened = JSON.stringify(signals);
@@ -1040,6 +1090,9 @@ $(document).ready(function(){
             create_signal_item(id, signal.type, signal.subtype, signals);
         });
 
+        // allow highlighting
+        bind_tok_events();
+
         // rewire new signal button so they're associated with this sel
         $("#new-signal")
             .unbind('click')
@@ -1047,10 +1100,22 @@ $(document).ready(function(){
                 e.preventDefault();
                 var type = $("#type").val();
                 var subtype = $("#subtype").val();
+
+                // add highlighted tokens when no signal is selected
+                var selected_tokens = [];
+                if ($(".signal-drawer__item--selected").length === 0) {
+                    $(".tok--selected").each(function() {
+                        var tok_id = parseInt($(this).attr("id").substring(3));
+                        selected_tokens.push(tok_id);
+                    });
+                }
+
+                // add to global signals data structure
                 signals[id] = signals[id] || [];
-                signals[id].push({type: type, subtype: subtype, tokens: []});
+                signals[id].push({type: type, subtype: subtype, tokens: selected_tokens});
                 create_signal_item(id, type, subtype, signals).trigger('click');
 
+                // 0.5s cooldown before making a new signal--prevent double clicks
                 var button = $(this);
                 button.addClass("disabled");
                 button.attr("disabled", "disabled");
@@ -1083,8 +1148,7 @@ $(document).ready(function(){
         lower_shield_of_justice();
         enable_buttons();
         remove_classes();
-        sel.removeClass("sel--active");
-        deselect_and_unbind_tokens();
+        deselect_and_unbind_toks();
 
         if (should_save) {
             if (JSON.stringify(window.rstWebSignals) !== signalsWhenOpened) {
@@ -1111,7 +1175,7 @@ $(document).ready(function(){
             if (!item.hasClass("signal-drawer__item--selected")) {
                 // deselect previous signal
                 $(".signal-drawer__item").removeClass("signal-drawer__item--selected");
-                deselect_and_unbind_tokens();
+                deselect_and_unbind_toks();
 
                 // select this one
                 item.addClass("signal-drawer__item--selected");
@@ -1121,37 +1185,8 @@ $(document).ready(function(){
                     $("#tok" + tindex).addClass("tok--selected");
                 });
 
-                // reroute token clicks to this signal
-                $(".tok").click(function(e) {
-                    var tok = $(this);
-                    var tok_id = parseInt(tok.attr("id").substring(3));
-                    var tok_list = signals[id][index].tokens;
-                    var tok_list_index = tok_list.indexOf(tok_id);
-
-                    if (tok_list_index > -1) {
-                        tok_list.pop(tok_list_index);
-                        tok.removeClass("tok--selected");
-                    } else {
-                        tok_list.push(tok_id);
-                        tok.addClass("tok--selected");
-                    }
-                });
-
-                // allow selecting tokens by click and drag
-                function selectTok(e) {
-                    if (e.buttons === 3 || e.buttons === 1) {
-                        var tok = $(this);
-                        var tok_id = parseInt(tok.attr("id").substring(3));
-                        var tok_list = signals[id][index].tokens;
-
-                        if (tok_list.indexOf(tok_id) === -1) {
-                            tok_list.push(tok_id);
-                            tok.addClass("tok--selected");
-                        }
-                    }
-                }
-                $(".tok").mouseover(selectTok);
-                $(".tok").mouseout(selectTok);
+                // setup clicking etc.
+                bind_tok_events(signals, id, index);
             }
         });
 
@@ -1164,7 +1199,7 @@ $(document).ready(function(){
             item.removeClass('signal-drawer__item--selected')
                 .trigger('click');
 
-            deselect_and_unbind_tokens();
+            deselect_and_unbind_toks();
             signals[id].splice(index, 1);
             item.remove();
         });
@@ -1221,10 +1256,12 @@ $(document).ready(function(){
                                      'Meronymy + subject NP',
                                      'General word + subject NP'],
             'Lexical + syntactic': ['Indicative word + present participial clause'],
-            'Syntactic + semantic': ['Past participial clause + beginning',
-                                     'Present participial clause + beginning'],
+            'Syntactic + positional': ['Past participial clause + beginning',
+                                       'Present participial clause + beginning'],
+            'Syntactic + semantic': ['parallel syntactic construction + lexical chain'],
             'Graphical + syntactic': ['Comma + present participial clause',
                                       'Comma + past participial clause'],
+
             'Unsure': ['Unsure']
         };
 
