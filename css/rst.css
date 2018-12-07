@@ -141,6 +141,10 @@ div.shield-of-justice {
 .sel--active {
 		pointer-events: none;
 		z-index: 10001;
+		border: 6px yellow solid;
+		padding: 2px;
+		transition-property: all;
+		transition-duration: 0.35s;
 }
 
 .edu--clickable {
