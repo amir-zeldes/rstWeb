@@ -169,7 +169,15 @@ div.shield-of-justice {
 		transition-property: background;
 }
 
+.minibtn--with-signals {
+		background-image: -webkit-linear-gradient(top, #f7f7f7, cyan);
+}
+
 .edu--clickable .tok:not(.tok--selected):hover {
+		background: rgba(255,255,0,0.3);
+}
+
+.tok--highlighted {
 		background: rgba(255,255,0,0.3);
 }
 
@@ -229,6 +237,13 @@ div.shield-of-justice {
 		background: rgba(0,0,0,0.15);
 		transition-property: background;
 		transition-duration: 0.2s;
+		position: relative;
+}
+
+.signal-drawer__item-delete {
+	position: absolute;
+	top: 10px;
+	right: 10px;
 }
 
 .signal-drawer__item:not(.signal-drawer__item--selected):hover {
@@ -239,20 +254,8 @@ div.shield-of-justice {
 		background: yellow;
 }
 
-.signal-drawer__item-type {
-		font-weight: 700;
-		padding-left: 10px;
-}
-
-.signal-drawer__item-type:after {
-		content: ", "
-}
-
-.signal-drawer__item-subtype {
-}
-
-.signal-drawer__create-new {
-		padding-top: 40px;
+.signal-drawer__signal {
+	padding-top: 10px;
 }
 
 .signal-drawer__row {
@@ -260,7 +263,7 @@ div.shield-of-justice {
 }
 
 .signal-drawer__create-new-button {
-		margin-left: 80px;
+		margin-left: 10px;
 		height: 30px;
 		width: 108px;
 }
@@ -292,7 +295,7 @@ button.disabled {
 }
 
 .signal-drawer__select {
-		width: 200px;
+		width: 150px;
 		height: 30px;
 		color: black;
 		font-size: 14px;
@@ -519,4 +522,3 @@ input:checked + .slider:before {
   overflow:hidden;
   padding:8px;
 }
-

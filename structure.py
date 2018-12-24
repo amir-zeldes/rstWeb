@@ -149,22 +149,13 @@ def structure_main(user, admin, mode, **kwargs):
           <div id="container" class="container">
             <div class="signal-drawer">
               <div id="signal-list"> </div>
-              <form class="signal-drawer__create-new">
-                <div class="signal-drawer__row">
-                  <label class="signal-drawer__label" for="type">Type:</label>
-                  <select id="type" name="type" class="signal-drawer__select"> </select>
-                </div>
-                <div class="signal-drawer__row">
-                  <label class="signal-drawer__label" for="type">Subtype:</label>
-                  <select id="subtype" name="subtype" class="signal-drawer__select"> </select>
-                </div>
-			    <div class="signal-drawer__row">
-			      <button id="new-signal" class="signal-drawer__create-new-button">
-  			        <i class="fa fa-plus" title="New Signal"> </i>
-			        New Signal
-			      </button>
-			    </div>
-              </form>
+
+			  <div class="signal-drawer__row">
+			    <button id="new-signal" class="signal-drawer__create-new-button">
+  			      <i class="fa fa-plus" title="New Signal"> </i>
+			      New Signal
+			    </button>
+			  </div>
 			  <div class="signal-drawer__row" style="text-align: center;padding-top:20px;">
   		        <button id="save-signals" class="signal-drawer__save-button">
   		          <i class="fa fa-check"> </i>
@@ -387,7 +378,13 @@ def structure_main(user, admin, mode, **kwargs):
 	cpout += 'var signalsEnabled = ' + ('true;' if True else 'false;')
 	cpout += '''function make_signal_button(id) {
 		if (signalsEnabled) {
-			return '<button title="add signals" class="minibtn" onclick="open_signal_drawer(\\'' + id + '\\')">S</button>';
+			var text = window.rstWebSignals[id]
+					? window.rstWebSignals[id].length
+					: "S";
+			var classes = window.rstWebSignals[id] && window.rstWebSignals[id].length > 0
+					? "minibtn minibtn--with-signals"
+					: "minibtn";
+			return '<button title="add signals" class="' + classes + '" onclick="open_signal_drawer(\\'' + id + '\\')">' + text + '</button>';
 		} else {
 			return '';
 		}
