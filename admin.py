@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# -*- coding: UTF-8 -*-
+# -*- coding: utf-8 -*-
 
 """
 Administration functions and interface to create and delete users, import and export documents,
@@ -130,6 +130,7 @@ def admin_main(user, admin, mode, **kwargs):
 		<input type="hidden" name="delete_user" id="delete_user" value=""/>
 		<input type="hidden" name="export" id="export" value=""/>
 		<input type="hidden" name="wipe" id="wipe" value=""/>
+		<input type="hidden" name="switch_signals" id="switch_signals" value=""/>
 		<input type="hidden" name="switch_logging" id="switch_logging" value=""/>
 		<input type="hidden" name="switch_span_buttons" id="switch_span_buttons" value=""/>
 		<input type="hidden" name="switch_multinuc_buttons" id="switch_multinuc_buttons" value=""/>
@@ -590,8 +591,36 @@ def admin_main(user, admin, mode, **kwargs):
 		if len(theform["new_user_data"]) > 0:
 			cpout += user_create_message
 
-
+	### database
 	cpout += '</div><div class="tab_btn" id="database_btn" onclick="open_tab('+"'"+"database"+"'"+');">Database</div><div id="database" class="tab">'
+
+	# signals
+	cpout += '''<h2>Signals</h2>
+	<p>Turn signal display and editing signals on/off.</p>'''
+
+	try:
+		signals_state = get_setting("signals")
+	except IndexError:
+		signals_state="False"
+
+	if "switch_signals" in theform:
+		if theform["switch_signals"] == "switch_signals":
+
+			if signals_state == "True":
+				signals_state = "False"
+			else:
+				signals_state = "True"
+			save_setting("signals",signals_state)
+
+	if signals_state == "True":
+		opposite_signals = "False"
+	else:
+		opposite_signals = "True"
+
+	cpout += '''<button onclick="admin('switch_signals')">Turn ''' + ('on' if opposite_signals == "True" else 'off') +'''</button>'''
+
+
+	# logging
 	cpout += '''<h2>Logging</h2>
 	<p>Turn detailed action logging on/off.</p>'''
 
@@ -616,6 +645,8 @@ def admin_main(user, admin, mode, **kwargs):
 
 	cpout += '''<button onclick="admin('switch_logging')">Turn '''+ opposite_logging +'''</button>'''
 
+
+	# spans/multinucs
 	cpout += '''<h2>Disable spans or multinucs</h2>
 	<p>Turn on/off add span and multinuc buttons (for non-RST annotation).</p>'''
 

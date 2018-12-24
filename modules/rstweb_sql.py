@@ -121,6 +121,7 @@ def set_schema(version):
 def initialize_settings():
 	# Initialize settings to default values
 	save_setting("logging", "off")
+	save_setting("signals", "False")
 	save_setting("use_span_buttons", "True")
 	save_setting("use_multinuc_buttons", "True")
 	set_schema('6')
@@ -788,4 +789,3 @@ def update_signals(signals_blob, doc, project, user):
 
 def get_signals(doc, project, user):
     return generic_query("SELECT source, type, subtype, tokens FROM rst_signals WHERE doc=? and project=? and user=?", (doc,project,user))
-

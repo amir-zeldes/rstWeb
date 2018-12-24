@@ -375,7 +375,7 @@ def structure_main(user, admin, mode, **kwargs):
 	    return $(s);
 	}'''
 	# todo: make a flag that controls whether signals are on
-	cpout += 'var signalsEnabled = ' + ('true;' if True else 'false;')
+	cpout += 'var signalsEnabled = ' + ('true;' if get_setting("signals") == "True" else 'false;')
 	cpout += '''function make_signal_button(id) {
 		if (signalsEnabled) {
 			var text = window.rstWebSignals[id]
