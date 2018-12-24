@@ -29,6 +29,7 @@ def setup_db():
 	# Drop tables if they exist
 	cur.execute("DROP TABLE IF EXISTS rst_nodes")
 	cur.execute("DROP TABLE IF EXISTS rst_signals")
+	cur.execute("DROP TABLE IF EXISTS rst_signal_types")
 	cur.execute("DROP TABLE IF EXISTS rst_relations")
 	cur.execute("DROP TABLE IF EXISTS docs")
 	cur.execute("DROP TABLE IF EXISTS perms")
@@ -43,6 +44,8 @@ def setup_db():
 	             (id text, left real, right real, parent text, depth real, kind text, contents text, relname text, doc text, project text, user text, UNIQUE (id, doc, project, user) ON CONFLICT REPLACE)''')
 	cur.execute('''CREATE TABLE IF NOT EXISTS rst_signals
 	             (source text, type text, subtype text, tokens text, doc text, project text, user text, UNIQUE (source, type, subtype, tokens, doc, project, user) ON CONFLICT REPLACE)''')
+	cur.execute('''CREATE TABLE IF NOT EXISTS rst_signal_types
+	             (majtype text, subtype text, doc text, project text, UNIQUE (majtype, subtype, doc, project) ON CONFLICT REPLACE)''')
 	cur.execute('''CREATE TABLE IF NOT EXISTS rst_relations
 	             (relname text, reltype text, doc text, project text, UNIQUE (relname, reltype, doc, project) ON CONFLICT REPLACE)''')
 	cur.execute('''CREATE TABLE IF NOT EXISTS docs
@@ -74,6 +77,8 @@ def update_schema():
 	             (relname text, reltype text, doc text, project text, UNIQUE (relname, reltype, doc, project) ON CONFLICT REPLACE)''')
 	cur.execute('''CREATE TABLE IF NOT EXISTS rst_signals
 	             (source text, type text, subtype text, tokens text, doc text, project text, user text, UNIQUE (source, type, subtype, tokens, doc, project, user) ON CONFLICT REPLACE)''')
+	cur.execute('''CREATE TABLE IF NOT EXISTS rst_signal_types
+	             (majtype text, subtype text, doc text, project text, UNIQUE (majtype, subtype, doc, project) ON CONFLICT REPLACE)''')
 	cur.execute('''CREATE TABLE IF NOT EXISTS docs
 	             (doc text, project text, user text,  UNIQUE (doc, project, user) ON CONFLICT REPLACE)''')
 	cur.execute('''CREATE TABLE IF NOT EXISTS users
@@ -788,4 +793,7 @@ def update_signals(signals_blob, doc, project, user):
 		generic_query("INSERT INTO rst_signals VALUES (?,?,?,?,?,?,?)",params)
 
 def get_signals(doc, project, user):
-    return generic_query("SELECT source, type, subtype, tokens FROM rst_signals WHERE doc=? and project=? and user=?", (doc,project,user))
+	schema = get_schema()
+	if schema < 6:
+		update_schema()
+	return generic_query("SELECT source, type, subtype, tokens FROM rst_signals WHERE doc=? and project=? and user=?", (doc,project,user))
