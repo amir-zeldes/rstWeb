@@ -138,6 +138,10 @@ function admin(action){
             document.getElementById("edit_validation").value = toggle_action;
             document.getElementById("sel_tab").value = "project";
 			break;
+		case "select_signals_file":
+			var signals_file = document.getElementById("signals_file_select").value
+			document.getElementById("signals_file").value = signals_file;
+			break;
 		case "assign_user":
             if ($('#userlist_select').length == 0) {
                 alert("No users available!");
@@ -228,27 +232,31 @@ function admin(action){
             }
             document.getElementById("wipe").value = "wipe";
             document.getElementById("sel_tab").value = "database";
-			break;
+            break;
+        case "switch_signals":
+            document.getElementById("switch_signals").value = "switch_signals";
+            document.getElementById("sel_tab").value = "database";
+            break;
         case "switch_logging":
             document.getElementById("switch_logging").value = "switch_logging";
             document.getElementById("sel_tab").value = "database";
-			break;
+            break;
         case "switch_span_buttons":
             document.getElementById("switch_span_buttons").value = "switch_span_buttons";
             document.getElementById("sel_tab").value = "database";
-			break;
+            break;
         case "switch_multinuc_buttons":
             document.getElementById("switch_multinuc_buttons").value = "switch_multinuc_buttons";
             document.getElementById("sel_tab").value = "database";
-			break;
+            break;
         case "update_schema":
             document.getElementById("update_schema").value = "update_schema";
             document.getElementById("sel_tab").value = "database";
-			break;
-		default:
-			break;
-	}
-	document.getElementById("admin_form").submit();
+            break;
+        default:
+            break;
+    }
+    document.getElementById("admin_form").submit();
 }
 
 function build_from_select(select_id){//creates semicolon separated value list from a select control
@@ -301,5 +309,3 @@ function validateEmail(email) {
     var re = /^([\w-]+(?:\.[\w-]+)*)@((?:[\w-]+\.)*\w[\w-]{0,66})\.([a-z]{2,6}(?:\.[a-z]{2})?)$/i;
     return re.test(email);
 }
-
-

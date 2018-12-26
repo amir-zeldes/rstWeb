@@ -149,22 +149,13 @@ def structure_main(user, admin, mode, **kwargs):
           <div id="container" class="container">
             <div class="signal-drawer">
               <div id="signal-list"> </div>
-              <form class="signal-drawer__create-new">
-                <div class="signal-drawer__row">
-                  <label class="signal-drawer__label" for="type">Type:</label>
-                  <select id="type" name="type" class="signal-drawer__select"> </select>
-                </div>
-                <div class="signal-drawer__row">
-                  <label class="signal-drawer__label" for="type">Subtype:</label>
-                  <select id="subtype" name="subtype" class="signal-drawer__select"> </select>
-                </div>
-			    <div class="signal-drawer__row">
-			      <button id="new-signal" class="signal-drawer__create-new-button">
-  			        <i class="fa fa-plus" title="New Signal"> </i>
-			        New Signal
-			      </button>
-			    </div>
-              </form>
+
+			  <div class="signal-drawer__row">
+			    <button id="new-signal" class="signal-drawer__create-new-button">
+  			      <i class="fa fa-plus" title="New Signal"> </i>
+			      New Signal
+			    </button>
+			  </div>
 			  <div class="signal-drawer__row" style="text-align: center;padding-top:20px;">
   		        <button id="save-signals" class="signal-drawer__save-button">
   		          <i class="fa fa-check"> </i>
@@ -225,7 +216,10 @@ def structure_main(user, admin, mode, **kwargs):
 		signals[s_id].append({'type': s_type,
 							  'subtype': subtype,
 							  'tokens': map(int, tokens.split(",")) if tokens else []})
-	cpout += '<script>window.rstWebSignals = ' + json.dumps(signals) + ';</script>'
+	cpout += '<script>'
+	cpout += 'window.rstWebSignals = ' + json.dumps(signals) + ';'
+	cpout += 'window.rstWebSignalTypes = ' + json.dumps(get_signal_types_dict(current_doc, current_project), sort_keys=True) + ';'
+	cpout += '</script>'
 
 	if "logging" in theform and not refresh:
 		if len(theform["logging"]) > 1:
@@ -384,10 +378,16 @@ def structure_main(user, admin, mode, **kwargs):
 	    return $(s);
 	}'''
 	# todo: make a flag that controls whether signals are on
-	cpout += 'var signalsEnabled = ' + ('true;' if True else 'false;')
+	cpout += 'var signalsEnabled = ' + ('true;' if get_setting("signals") == "True" else 'false;')
 	cpout += '''function make_signal_button(id) {
 		if (signalsEnabled) {
-			return '<button title="add signals" class="minibtn" onclick="open_signal_drawer(\\'' + id + '\\')">S</button>';
+			var text = window.rstWebSignals[id]
+					? window.rstWebSignals[id].length
+					: "S";
+			var classes = window.rstWebSignals[id] && window.rstWebSignals[id].length > 0
+					? "minibtn minibtn--with-signals"
+					: "minibtn";
+			return '<button title="add signals" class="' + classes + '" onclick="open_signal_drawer(\\'' + id + '\\')">' + text + '</button>';
 		} else {
 			return '';
 		}

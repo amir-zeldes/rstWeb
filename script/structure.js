@@ -974,10 +974,11 @@ function is_ancestor(new_parent_id,node_id){
     return false;
 }
 
-var open_signal_drawer;
 
 // signals handling
+var open_signal_drawer;
 $(document).ready(function(){
+
     function raise_shield_of_justice () {
         var div = document.createElement("div");
         div.setAttribute('class', 'shield-of-justice');
@@ -1012,6 +1013,69 @@ $(document).ready(function(){
         $('.signal-drawer').removeClass('signal-drawer--active');
         $('.canvas').removeClass("canvas--shifted");
         $(".sel--active").removeClass("sel--active");
+    }
+
+    // this hack is necessary because it was too complicated to make
+    // all this happen in the jsplumb code--but that is the more correct
+    // solution
+    function attempt_to_bind_token_reveal_until_success() {
+        function attempt_to_bind_token_reveal() {
+            var ids = [];
+            Object.keys(window.rstWebSignals).forEach(function(id) {
+                if (window.rstWebSignals[id].length > 0) {
+                    ids.push(id);
+                }
+            });
+
+            if (ids.length > 0) {
+                var testSel = document.getElementById('sel' + ids[0]);
+                if (!testSel._jsPlumb) {
+                    return false;
+                }
+            }
+
+            ids.forEach(function(id) {
+                var sel = document.getElementById('sel' + id);
+                bind_token_reveal_on_hover(sel);
+            });
+            return true;
+        }
+
+        setTimeout(function() {
+            var success = attempt_to_bind_token_reveal();
+            if (!success) {
+                attempt_to_bind_token_reveal_until_success();
+            }
+        }, 400);
+    }
+
+    function bind_token_reveal_on_hover(sel) {
+        var id = sel.getAttribute('id').slice(3);
+        sel._jsPlumb.bind('mouseover', function() {
+            window.rstWebSignals[id].forEach(function(signal) {
+                signal.tokens.forEach(function(tid) {
+                    var tok = $('#tok' + tid);
+                    tok.addClass('tok--highlighted');
+                });
+            });
+        });
+        sel._jsPlumb.bind('mouseout', function() {
+            window.rstWebSignals[id].forEach(function(signal) {
+                signal.tokens.forEach(function(tid) {
+                    var tok = $('#tok' + tid);
+                    tok.removeClass('tok--highlighted');
+                });
+            });
+        });
+    }
+
+    function unhighlight_tokens() {
+        $(".tok--highlighted").removeClass("tok--highlighted");
+    }
+
+    function unbind_token_reveal_on_hover(sel) {
+        sel.unbind('mouseenter')
+            .unbind('mouseexit');
     }
 
     function bind_tok_events(signals, id, index) {
@@ -1073,12 +1137,27 @@ $(document).ready(function(){
             .removeClass("tok--selected");
     }
 
+    function update_signal_button(sel) {
+        var id = sel.attr('id').slice(3);
+        var btn = sel.find("button.minibtn");
+
+        var numSigs = window.rstWebSignals[id] && window.rstWebSignals[id].length;
+        if (numSigs > 0) {
+            btn.addClass("minibtn--with-signals");
+            btn.text(numSigs);
+        } else {
+            btn.removeClass("minibtn--with-signals");
+            btn.text("S");
+        }
+    }
+
     var signalsWhenOpened;
 
     function open_signal_drawer_inner(id) {
         raise_shield_of_justice();
         disable_buttons();
         add_classes(id);
+        unhighlight_tokens();
 
         var signals = window.rstWebSignals;
         signalsWhenOpened = JSON.stringify(signals);
@@ -1086,44 +1165,26 @@ $(document).ready(function(){
         // draw the list of signals that already exist
         var list = $("#signal-list");
         list.empty();
-        signals[id] && signals[id].forEach(function (signal) {
-            create_signal_item(id, signal.type, signal.subtype, signals);
-        });
+
+        if (signals[id] && signals[id].length > 0) {
+            signals[id].forEach(function (signal) {
+                create_signal_item(id, signal.type, signal.subtype, signals)
+                    .trigger('click');
+            });
+        }
+        else {
+            var signal = {
+                type: window.rstWebDefaultSignalType,
+                subtype: window.rstWebDefaultSignalSubtype,
+                tokens: []
+            };
+            signals[id] = [signal];
+            create_signal_item(id, undefined, undefined, signals)
+                .trigger('click');
+        }
 
         // allow highlighting
         bind_tok_events();
-
-        // rewire new signal button so they're associated with this sel
-        $("#new-signal")
-            .unbind('click')
-            .click(function (e) {
-                e.preventDefault();
-                var type = $("#type").val();
-                var subtype = $("#subtype").val();
-
-                // add highlighted tokens when no signal is selected
-                var selected_tokens = [];
-                if ($(".signal-drawer__item--selected").length === 0) {
-                    $(".tok--selected").each(function() {
-                        var tok_id = parseInt($(this).attr("id").substring(3));
-                        selected_tokens.push(tok_id);
-                    });
-                }
-
-                // add to global signals data structure
-                signals[id] = signals[id] || [];
-                signals[id].push({type: type, subtype: subtype, tokens: selected_tokens});
-                create_signal_item(id, type, subtype, signals).trigger('click');
-
-                // 0.5s cooldown before making a new signal--prevent double clicks
-                var button = $(this);
-                button.addClass("disabled");
-                button.attr("disabled", "disabled");
-                setTimeout(function() {
-                    button.removeClass("disabled");
-                    button.removeAttr("disabled");
-                }, 500);
-            });
     }
 
     function make_signal_action(signals) {
@@ -1145,6 +1206,7 @@ $(document).ready(function(){
     }
 
     function close_signal_drawer(should_save) {
+        var sel = $(".sel--active");
         lower_shield_of_justice();
         enable_buttons();
         remove_classes();
@@ -1157,18 +1219,77 @@ $(document).ready(function(){
         } else {
             window.rstWebSignals = JSON.parse(signalsWhenOpened);
         }
+
+        update_signal_button(sel);
+
+        // reset token highlighting
+        unbind_token_reveal_on_hover(sel);
+        attempt_to_bind_token_reveal_until_success();
     }
 
     function create_signal_item(id, type, subtype, signals) {
-        var item = $('<div class="signal-drawer__item"></div>');
-        var delete_button = $('<button class="button" title="delete signal">X</button>');
-        var type = $('<span class="signal-drawer__item-type">' + type + '</span>');
-        var subtype = $('<span class="signal-drawer__item-subtype">' + subtype + '</span>');
-        item.append(delete_button);
-        item.append(type);
-        item.append(subtype);
+        var item =
+            $('<div class="signal-drawer__item">'
+              + '<div class="signal-drawer__row">'
+              + '<label class="signal-drawer__label" for="type">Type:</label>'
+              + '<select class="signal-drawer__select signal-drawer__select--type">'
+              + '</select>'
+              + '</div>'
+              + '<button class="button signal-drawer__item-delete" title="delete signal">X</button>'
+              + '<div class="signal-drawer__row">'
+              + '<label class="signal-drawer__label" for="type">Subtype:</label>'
+              + '<select class="signal-drawer__select signal-drawer__select--subtype">'
+              + '</select>'
+              + '</div>'
+              + '</div>');
+
         $("#signal-list").append(item);
 
+        var signal_types = window.rstWebSignalTypes;
+        var type_select = item.find(".signal-drawer__select--type");
+        var subtype_select = item.find(".signal-drawer__select--subtype");
+        var delete_button= item.find("button");
+
+        var index = item.index();
+        var signal = signals[id][index];
+
+        $.each(signal_types, function (type, subtypes) {
+            var option = $("<option/>").text(type).val(type);
+            if (signal && signal.type === type) {
+                option.attr('selected', 'selected');
+            }
+            type_select.append(option);
+        });
+        $.each(signal_types[type_select.first().val()], function(i, subtype) {
+            var option = $("<option/>").text(subtype).val(subtype);
+            if (signal && signal.subtype === subtype) {
+                option.attr('selected', 'selected');
+            }
+            subtype_select.append(option);
+        });
+
+        // for when a <select> item is changed
+        function typeUpdated(e) {
+            var index = item.index();
+            console.log(index, signals[id]);
+            var signal = signals[id][index];
+            var typeVal = type_select.val();
+            var subtypeVal = subtype_select.val();
+            signal.type = typeVal;
+            signal.subtype = subtypeVal;
+        }
+
+        type_select.change(function(e) {
+            subtype_select.empty();
+            $.each(signal_types[e.target.value], function(i, subtype) {
+                subtype_select.append($("<option/>").text(subtype).val(subtype));
+            });
+            typeUpdated(e);
+        });
+
+        subtype_select.change(typeUpdated);
+
+        // handle click by revealing tokens and making them interactive
         item.click(function (e) {
             var item = $(this);
             var index = item.index();
@@ -1204,82 +1325,45 @@ $(document).ready(function(){
             item.remove();
         });
 
+        // rewire new signal button so they're associated with this sel
+        $("#new-signal")
+            .unbind('click')
+            .click(function (e) {
+                e.preventDefault();
+
+                // add highlighted tokens when no signal is selected
+                var selected_tokens = [];
+                if ($(".signal-drawer__item--selected").length === 0) {
+                    $(".tok--selected").each(function() {
+                        var tok_id = parseInt($(this).attr("id").substring(3));
+                        selected_tokens.push(tok_id);
+                    });
+                }
+
+                var signal = {
+                    type: window.rstWebDefaultSignalType,
+                    subtype: window.rstWebDefaultSignalSubtype,
+                    tokens: selected_tokens
+                };
+                signals[id].push(signal);
+
+                create_signal_item(id, type, subtype, signals).trigger('click');
+
+                // 0.5s cooldown before making a new signal--prevent double clicks
+                var button = $(this);
+                button.addClass("disabled");
+                button.attr("disabled", "disabled");
+                setTimeout(function() {
+                    button.removeClass("disabled");
+                    button.removeAttr("disabled");
+                }, 500);
+            });
+
+
         return item;
     }
 
     function init_signal_drawer() {
-        // these MUST NOT contain commas or colons
-        var signal_types = {
-            'DM': ['DM'],
-            'Reference': ['Personal reference',
-                          'Demonstrative reference',
-                          'Comparative reference',
-                          'Propositional reference'],
-            'Lexical': ['Indicative word',
-                        'Alternate expression'],
-            'Semantic': ['Synonymy',
-                         'Antonymy',
-                         'Meronymy',
-                         'Repetition',
-                         'Indicative word pair',
-                         'Lexical chain',
-                         'General word'],
-            'Morphological': ['Tense'],
-            'Syntactic': ['Relative clause',
-                          'Infinitival clause',
-                          'Present participial clause',
-                          'Past participial clause',
-                          'Imperative clause',
-                          'Interrupted matrix clause',
-                          'Parallel syntactic construction',
-                          'Reported speech',
-                          'Subject auxiliary inversion',
-                          'Nominal modifier',
-                          'Adjectival modifier'],
-            'Graphical': ['Colon',
-                          'Semicolon',
-                          'Dash',
-                          'Parentheses',
-                          'Items in sequence'],
-            'Genre': ['Inverted pyramid scheme',
-                      'Newspaper layout',
-                      'Newspaper style attribution',
-                      'Newspaper style definition'],
-            'Numerical': ['Same count'],
-            'Reference + syntactic': ['Personal reference + subject NP',
-                                      'Demonstrative reference + subject NP',
-                                      'Comparative reference + subject NP',
-                                      'Propositional reference + subject NP'],
-            'Semantic + syntactic': ['Repetition + subject NP',
-                                     'Lexical chain + subject NP',
-                                     'Synonymy + subject NP',
-                                     'Meronymy + subject NP',
-                                     'General word + subject NP'],
-            'Lexical + syntactic': ['Indicative word + present participial clause'],
-            'Syntactic + positional': ['Past participial clause + beginning',
-                                       'Present participial clause + beginning'],
-            'Syntactic + semantic': ['parallel syntactic construction + lexical chain'],
-            'Graphical + syntactic': ['Comma + present participial clause',
-                                      'Comma + past participial clause'],
-
-            'Unsure': ['Unsure']
-        };
-
-        var type_select = $("#type");
-        var subtype_select = $("#subtype");
-
-        $.each(signal_types, function (type, subtypes) {
-            type_select.append($("<option/>").text(type).val(type));
-        });
-
-        type_select.change(function(e) {
-            subtype_select.empty();
-            $.each(signal_types[e.target.value], function(i, subtype) {
-                subtype_select.append($("<option/>").text(subtype).val(subtype));
-            });
-        });
-        type_select.trigger('change');
-
         // modal button click events
         $("#save-signals").click(function(e) {
             e.preventDefault();
@@ -1291,8 +1375,13 @@ $(document).ready(function(){
             close_signal_drawer(false);
         });
 
+        attempt_to_bind_token_reveal_until_success();
+
         open_signal_drawer = open_signal_drawer_inner;
     }
 
     init_signal_drawer();
 });
+
+window.rstWebDefaultSignalType = Object.keys(window.rstWebSignalTypes)[0];
+window.rstWebDefaultSignalSubtype = window.rstWebSignalTypes[window.rstWebDefaultSignalType][0];
