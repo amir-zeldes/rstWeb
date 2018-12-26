@@ -131,6 +131,7 @@ def admin_main(user, admin, mode, **kwargs):
 		<input type="hidden" name="export" id="export" value=""/>
 		<input type="hidden" name="wipe" id="wipe" value=""/>
 		<input type="hidden" name="switch_signals" id="switch_signals" value=""/>
+		<input type="hidden" name="signals_file" id="signals_file" value=""/>
 		<input type="hidden" name="switch_logging" id="switch_logging" value=""/>
 		<input type="hidden" name="switch_span_buttons" id="switch_span_buttons" value=""/>
 		<input type="hidden" name="switch_multinuc_buttons" id="switch_multinuc_buttons" value=""/>
@@ -619,6 +620,25 @@ def admin_main(user, admin, mode, **kwargs):
 
 	cpout += '''<button onclick="admin('switch_signals')">Turn ''' + ('on' if opposite_signals == "True" else 'off') +'''</button>'''
 
+	if "signals_file" in theform and theform["signals_file"]:
+		save_setting("signals_file", theform["signals_file"])
+
+	cpout += '''<div>
+	<br>
+	<span>Signal types: </span>
+	<select name="signals_file_select" id="signals_file_select" class="doclist"
+	        onchange="admin('select_signals_file')">'''
+	signals_files = [fname for fname in os.listdir('signals')
+					 if fname.endswith('.json')]
+	signals_file = get_setting("signals_file")
+	for fname in signals_files:
+
+		selected_string = (' selected="selected"'
+						   if signals_file and signals_file == fname
+						   else '')
+		cpout += '<option value="' + fname + '"' + selected_string + '>' + fname[:-5] + '</option>'
+	cpout += '''</select>
+	</div>'''
 
 	# logging
 	cpout += '''<h2>Logging</h2>
