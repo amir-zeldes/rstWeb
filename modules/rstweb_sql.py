@@ -754,7 +754,10 @@ def update_log(doc,project,user,logging,mode,time):
 def get_setting(setting):
 	schema = get_schema()
 	if schema > 1:
-		return generic_query("SELECT svalue FROM settings where setting=?",(setting,))[0][0]
+		try:
+			return generic_query("SELECT svalue FROM settings where setting=?",(setting,))[0][0]
+		except IndexError:
+			return ""
 	else:
 		return ""
 
