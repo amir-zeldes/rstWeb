@@ -12,6 +12,7 @@ from modules.rstweb_reader import *
 import codecs
 import os
 import re
+import json
 
 try:
 	basestring
@@ -127,6 +128,7 @@ def initialize_settings():
 	# Initialize settings to default values
 	save_setting("logging", "off")
 	save_setting("signals", "False")
+	save_setting("signals_file", "default.json")
 	save_setting("use_span_buttons", "True")
 	save_setting("use_multinuc_buttons", "True")
 	set_schema('6')
@@ -185,6 +187,15 @@ def set_project_validations(project,validations):
 	generic_query("UPDATE projects SET validations=? WHERE project=?;",(validations,project))
 
 
+def read_signals_file():
+	fname = get_setting('signals_file') or 'default.json'
+	path = 'signals' + os.sep + fname
+	try:
+		with open(path, 'r') as f:
+			return json.load(f)
+	except IOError:
+		return {}
+
 def import_document(filename, project, user):
 	dbpath = os.path.dirname(os.path.realpath(__file__)) + os.sep +".."+os.sep+"rstweb.db"
 	conn = sqlite3.connect(dbpath)
@@ -214,6 +225,12 @@ def import_document(filename, project, user):
 	for signal in rst_signals:
 		cur.execute("INSERT INTO rst_signals VALUES(?,?,?,?,?,?,?)", (signal[0],signal[1],signal[2],signal[3],doc,project,user)) #user's instance
 		cur.execute("INSERT INTO rst_signals VALUES(?,?,?,?,?,?,?)", (signal[0],signal[1],signal[2],signal[3],doc,project,"_orig")) #backup instance
+
+	signal_types = read_signals_file()
+	for majtype, subtypes in signal_types.items():
+		for subtype in subtypes:
+			cur.execute("INSERT INTO rst_signal_types VALUES(?,?,?,?)",
+			(majtype, subtype, doc, project))
 
 	for key in rel_hash:
 		rel_name = key
@@ -797,3 +814,18 @@ def get_signals(doc, project, user):
 	if schema < 6:
 		update_schema()
 	return generic_query("SELECT source, type, subtype, tokens FROM rst_signals WHERE doc=? and project=? and user=?", (doc,project,user))
+
+def get_signal_types(doc, project):
+	schema = get_schema()
+	if schema < 6:
+		update_schema()
+	return generic_query("SELECT majtype, subtype FROM rst_signal_types WHERE doc=? and project=?", (doc,project))
+
+def get_signal_types_dict(doc, project):
+	d = {}
+	for majtype, subtype in get_signal_types(doc, project):
+		if majtype not in d:
+			d[majtype] = []
+		d[majtype].append(subtype)
+
+	return d
