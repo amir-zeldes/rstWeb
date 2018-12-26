@@ -260,6 +260,12 @@ def import_plaintext(filename, project, user, rel_hash):
 		rel_type = rel_hash[key]
 		generic_query("INSERT INTO rst_relations VALUES(?,?,?,?)", (rel_name, rel_type, doc, project))
 
+	signal_types = read_signals_file()
+	for majtype, subtypes in signal_types.items():
+		for subtype in subtypes:
+			cur.execute("INSERT INTO rst_signal_types VALUES(?,?,?,?)",
+			(majtype, subtype, doc, project))
+
 	generic_query("INSERT INTO docs VALUES (?,?,?)", (doc,project,user))
 
 
