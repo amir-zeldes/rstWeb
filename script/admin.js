@@ -138,6 +138,10 @@ function admin(action){
             document.getElementById("edit_validation").value = toggle_action;
             document.getElementById("sel_tab").value = "project";
 			break;
+		case "select_signals_file":
+			var signals_file = document.getElementById("signals_file_select").value
+			document.getElementById("signals_file").value = signals_file;
+			break;
 		case "assign_user":
             if ($('#userlist_select').length == 0) {
                 alert("No users available!");
