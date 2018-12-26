@@ -216,7 +216,10 @@ def structure_main(user, admin, mode, **kwargs):
 		signals[s_id].append({'type': s_type,
 							  'subtype': subtype,
 							  'tokens': map(int, tokens.split(",")) if tokens else []})
-	cpout += '<script>window.rstWebSignals = ' + json.dumps(signals) + ';</script>'
+	cpout += '<script>'
+	cpout += 'window.rstWebSignals = ' + json.dumps(signals) + ';'
+	cpout += 'window.rstWebSignalTypes = ' + json.dumps(get_signal_types_dict(current_doc, current_project), sort_keys=True) + ';'
+	cpout += '</script>'
 
 	if "logging" in theform and not refresh:
 		if len(theform["logging"]) > 1:
