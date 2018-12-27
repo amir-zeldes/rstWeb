@@ -9,8 +9,8 @@ html{width:100%}
     -o-user-select: none;
     user-select: none;
     z-index: 2;
-		transition-property: all;
-		transition-duration: 0.35s;
+    transition-property: font-size;
+    transition-duration: 0.35s;
     }
 
 .whisker{border-left: solid; border-right: solid; height:2px;display: table-cell;margin:0;border-collapse:collapse}
@@ -148,13 +148,13 @@ div.shield-of-justice {
 }
 
 .edu--clickable {
-		font-size: 18px;
-		transition-property: all;
-		transition-duration: 0.35s;
+		z-index: 10001;
 }
 
 .edu--clickable {
-		z-index: 10001;
+		font-size: 18px;
+		transition-property: font-size;
+		transition-duration: 0.35s;
 }
 
 .edu--clickable .edu_num_cont {

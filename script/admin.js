@@ -139,8 +139,9 @@ function admin(action){
             document.getElementById("sel_tab").value = "project";
 			break;
 		case "select_signals_file":
-			var signals_file = document.getElementById("signals_file_select").value
+			var signals_file = document.getElementById("signals_file_select").value;
 			document.getElementById("signals_file").value = signals_file;
+			document.getElementById("sel_tab").value = "database";
 			break;
 		case "assign_user":
             if ($('#userlist_select').length == 0) {
