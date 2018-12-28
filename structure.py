@@ -219,6 +219,8 @@ def structure_main(user, admin, mode, **kwargs):
 	cpout += '<script>'
 	cpout += 'window.rstWebSignals = ' + json.dumps(signals) + ';'
 	cpout += 'window.rstWebSignalTypes = ' + json.dumps(get_signal_types_dict(current_doc, current_project), sort_keys=True) + ';'
+	cpout += 'window.rstWebDefaultSignalType = Object.keys(window.rstWebSignalTypes)[0];'
+	cpout += 'window.rstWebDefaultSignalSubtype = window.rstWebSignalTypes[window.rstWebDefaultSignalType][0];'
 	cpout += '</script>'
 
 	if "logging" in theform and not refresh:

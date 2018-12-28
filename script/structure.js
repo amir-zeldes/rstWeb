@@ -1364,9 +1364,6 @@ $(document).ready(function(){
     }
 
     function init_signal_drawer() {
-		window.rstWebDefaultSignalType = Object.keys(window.rstWebSignalTypes)[0];
-		window.rstWebDefaultSignalSubtype = window.rstWebSignalTypes[window.rstWebDefaultSignalType][0];
-
         // modal button click events
         $("#save-signals").click(function(e) {
             e.preventDefault();
