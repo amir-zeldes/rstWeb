@@ -118,33 +118,6 @@ def structure_main(user, admin, mode, **kwargs):
 		cpout += '<p class="warn">No file found - please select a file to open</p>'
 		return cpout
 
-	rels = get_rst_rels(current_doc, current_project)
-	def_multirel = get_def_rel("multinuc",current_doc, current_project)
-	def_rstrel = get_def_rel("rst",current_doc, current_project)
-	multi_options =""
-	rst_options =""
-	rel_kinds = {}
-	for rel in rels:
-		if rel[1]=="multinuc":
-			multi_options += "<option value='"+rel[0]+"'>"+rel[0].replace("_m","")+'</option>\n'
-			rel_kinds[rel[0]] = "multinuc"
-		else:
-			rst_options += "<option value='"+rel[0]+"'>"+rel[0].replace("_r","")+'</option>\n'
-			rel_kinds[rel[0]] = "rst"
-	multi_options += "<option value='"+def_rstrel+"'>(satellite...)</option>\n"
-
-	nodes={}
-	rows = get_rst_doc(current_doc,current_project,user)
-	for row in rows:
-		if row[7] in rel_kinds:
-			relkind = rel_kinds[row[7]]
-		else:
-			relkind = "span"
-		if row[5] == "edu":
-			nodes[row[0]] = NODE(row[0],row[1],row[2],row[3],row[4],row[5],row[6],row[7],relkind)
-		else:
-			nodes[row[0]] = NODE(row[0],0,0,row[3],row[4],row[5],row[6],row[7],relkind)
-
 	cpout += '''
           <div id="container" class="container">
             <div class="signal-drawer">
@@ -178,6 +151,21 @@ def structure_main(user, admin, mode, **kwargs):
 	# (e.g. due to browsing back and re-submitting old actions or other data corruption)
 	clean_floating_nodes(current_doc, current_project, user)
 
+	rels = get_rst_rels(current_doc, current_project)
+	def_multirel = get_def_rel("multinuc",current_doc, current_project)
+	def_rstrel = get_def_rel("rst",current_doc, current_project)
+	multi_options =""
+	rst_options =""
+	rel_kinds = {}
+	for rel in rels:
+		if rel[1]=="multinuc":
+			multi_options += "<option value='"+rel[0]+"'>"+rel[0].replace("_m","")+'</option>\n'
+			rel_kinds[rel[0]] = "multinuc"
+		else:
+			rst_options += "<option value='"+rel[0]+"'>"+rel[0].replace("_r","")+'</option>\n'
+			rel_kinds[rel[0]] = "rst"
+	multi_options += "<option value='"+def_rstrel+"'>(satellite...)</option>\n"
+
 	timestamp = ""
 	if "timestamp" in theform:
 		if len(theform["timestamp"]) > 1:
@@ -208,6 +196,37 @@ def structure_main(user, admin, mode, **kwargs):
 					else:
 						cpout += '<script>alert("the action was: " + theform["action"]);</script>\n'
 
+	if "logging" in theform and not refresh:
+		if len(theform["logging"]) > 1:
+			if get_setting("logging") == "on":
+				logging = theform["logging"]
+				if len(logging) > 0:
+					update_log(current_doc,current_project,user,logging,"structure",str(datetime.datetime.now()))
+
+	if "reset" in theform or user == "demo":
+		if len(theform["reset"]) > 1 or user == "demo":
+			reset_rst_doc(current_doc,current_project,user)
+
+	nodes={}
+	rows = get_rst_doc(current_doc,current_project,user)
+	for row in rows:
+		if row[7] in rel_kinds:
+			relkind = rel_kinds[row[7]]
+		else:
+			relkind = "span"
+		if row[5] == "edu":
+			nodes[row[0]] = NODE(row[0],row[1],row[2],row[3],row[4],row[5],row[6],row[7],relkind)
+		else:
+			nodes[row[0]] = NODE(row[0],0,0,row[3],row[4],row[5],row[6],row[7],relkind)
+
+	for key in nodes:
+		node = nodes[key]
+		get_depth(node,node,nodes)
+
+	for key in nodes:
+		if nodes[key].kind == "edu":
+			get_left_right(key, nodes,0,0,rel_kinds)
+
 	signals = {}
 	for signal in get_signals(current_doc, current_project, user):
 		s_id, s_type, subtype, tokens = signal
@@ -222,25 +241,6 @@ def structure_main(user, admin, mode, **kwargs):
 	cpout += 'window.rstWebDefaultSignalType = Object.keys(window.rstWebSignalTypes)[0];'
 	cpout += 'window.rstWebDefaultSignalSubtype = window.rstWebSignalTypes[window.rstWebDefaultSignalType][0];'
 	cpout += '</script>'
-
-	if "logging" in theform and not refresh:
-		if len(theform["logging"]) > 1:
-			if get_setting("logging") == "on":
-				logging = theform["logging"]
-				if len(logging) > 0:
-					update_log(current_doc,current_project,user,logging,"structure",str(datetime.datetime.now()))
-
-	if "reset" in theform or user == "demo":
-		if len(theform["reset"]) > 1 or user == "demo":
-			reset_rst_doc(current_doc,current_project,user)
-
-	for key in nodes:
-		node = nodes[key]
-		get_depth(node,node,nodes)
-
-	for key in nodes:
-		if nodes[key].kind == "edu":
-			get_left_right(key, nodes,0,0,rel_kinds)
 
 	anchors = {}
 	pix_anchors = {}
@@ -374,9 +374,9 @@ def structure_main(user, admin, mode, **kwargs):
 	cpout += '		return options.replace("<option value='+"'" +'"' + '+my_rel+'+'"' +"'"+'","<option selected='+"'"+'selected'+"'"+' value='+"'" +'"'+ '+my_rel+'+'"' +"'"+'");'
 	cpout += '			}\n'
 	cpout += '''function make_relchooser(id,option_type,rel){
-	    var s = "<div style='white-space:nowrap;' id='sel"+id.replace("n","")+"'>";
+	    var s = "<div id='seldiv"+id.replace("n","")+"' style='white-space:nowrap;'>";
 	    s += make_signal_button(id);
-	    s += "<select class='rst_rel' onchange='crel(" + id.replace("n","") + ",this.options[this.selectedIndex].value);'>" + select_my_rel(option_type,rel) + "</select>";
+	    s += "<select id='sel"+id.replace("n","")+"' class='rst_rel' onchange='crel(" + id.replace("n","") + ",this.options[this.selectedIndex].value);'>" + select_my_rel(option_type,rel) + "</select>";
 	    return $(s);
 	}'''
 	# todo: make a flag that controls whether signals are on
@@ -389,7 +389,7 @@ def structure_main(user, admin, mode, **kwargs):
 			var classes = window.rstWebSignals[id] && window.rstWebSignals[id].length > 0
 					? "minibtn minibtn--with-signals"
 					: "minibtn";
-			return '<button title="add signals" class="' + classes + '" onclick="open_signal_drawer(\\'' + id + '\\')">' + text + '</button>';
+			return '<button title="add signals" class="' + classes + '" onclick="open_signal_drawer(\\'' + id.replace('n','') + '\\')">' + text + '</button>';
 		} else {
 			return '';
 		}
