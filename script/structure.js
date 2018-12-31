@@ -1005,14 +1005,14 @@ $(document).ready(function(){
         $('.edu').addClass('edu--clickable');
         $('.signal-drawer').addClass('signal-drawer--active');
         $('.canvas').addClass("canvas--shifted");
-        $("#sel" + id).addClass("sel--active");
+        $("#seldiv" + id).addClass("seldiv--active");
     }
 
     function remove_classes() {
         $('.edu').removeClass('edu--clickable');
         $('.signal-drawer').removeClass('signal-drawer--active');
         $('.canvas').removeClass("canvas--shifted");
-        $(".sel--active").removeClass("sel--active");
+        $(".seldiv--active").removeClass("seldiv--active");
     }
 
     // this hack is necessary because it was too complicated to make
@@ -1028,15 +1028,15 @@ $(document).ready(function(){
             });
 
             if (ids.length > 0) {
-                var testSel = document.getElementById('sel' + ids[0]);
-                if (!testSel._jsPlumb) {
+                var testSelDiv = document.getElementById('seldiv' + ids[0]);
+                if (!testSelDiv || !testSelDiv._jsPlumb) {
                     return false;
                 }
             }
 
             ids.forEach(function(id) {
-                var sel = document.getElementById('sel' + id);
-                bind_token_reveal_on_hover(sel);
+                var selDiv = document.getElementById('seldiv' + id);
+                bind_token_reveal_on_hover(selDiv);
             });
             return true;
         }
@@ -1049,9 +1049,10 @@ $(document).ready(function(){
         }, 400);
     }
 
-    function bind_token_reveal_on_hover(sel) {
-        var id = sel.getAttribute('id').slice(3);
-        sel._jsPlumb.bind('mouseover', function() {
+    function bind_token_reveal_on_hover(selDiv) {
+        var id = selDiv.getAttribute('id').slice(6);
+
+        selDiv._jsPlumb.bind('mouseover', function() {
             window.rstWebSignals[id].forEach(function(signal) {
                 signal.tokens.forEach(function(tid) {
                     var tok = $('#tok' + tid);
@@ -1059,7 +1060,7 @@ $(document).ready(function(){
                 });
             });
         });
-        sel._jsPlumb.bind('mouseout', function() {
+        selDiv._jsPlumb.bind('mouseout', function() {
             window.rstWebSignals[id].forEach(function(signal) {
                 signal.tokens.forEach(function(tid) {
                     var tok = $('#tok' + tid);
@@ -1073,8 +1074,8 @@ $(document).ready(function(){
         $(".tok--highlighted").removeClass("tok--highlighted");
     }
 
-    function unbind_token_reveal_on_hover(sel) {
-        sel.unbind('mouseenter')
+    function unbind_token_reveal_on_hover(selDiv) {
+        selDiv.unbind('mouseenter')
             .unbind('mouseexit');
     }
 
@@ -1137,9 +1138,9 @@ $(document).ready(function(){
             .removeClass("tok--selected");
     }
 
-    function update_signal_button(sel) {
-        var id = sel.attr('id').slice(3);
-        var btn = sel.find("button.minibtn");
+    function update_signal_button(selDiv) {
+        var id = selDiv.attr('id').slice(6);
+        var btn = selDiv.find("button.minibtn");
 
         var numSigs = window.rstWebSignals[id] && window.rstWebSignals[id].length;
         if (numSigs > 0) {
@@ -1206,7 +1207,7 @@ $(document).ready(function(){
     }
 
     function close_signal_drawer(should_save) {
-        var sel = $(".sel--active");
+        var selDiv = $(".seldiv--active");
         lower_shield_of_justice();
         enable_buttons();
         remove_classes();
@@ -1220,10 +1221,10 @@ $(document).ready(function(){
             window.rstWebSignals = JSON.parse(signalsWhenOpened);
         }
 
-        update_signal_button(sel);
+        update_signal_button(selDiv);
 
         // reset token highlighting
-        unbind_token_reveal_on_hover(sel);
+        unbind_token_reveal_on_hover(selDiv);
         attempt_to_bind_token_reveal_until_success();
     }
 
@@ -1364,9 +1365,6 @@ $(document).ready(function(){
     }
 
     function init_signal_drawer() {
-		window.rstWebDefaultSignalType = Object.keys(window.rstWebSignalTypes)[0];
-		window.rstWebDefaultSignalSubtype = window.rstWebSignalTypes[window.rstWebDefaultSignalType][0];
-
         // modal button click events
         $("#save-signals").click(function(e) {
             e.preventDefault();

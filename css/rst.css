@@ -138,7 +138,7 @@ div.shield-of-justice {
 		pointer-events: none;
 }
 
-.sel--active {
+.seldiv--active {
 		pointer-events: none;
 		z-index: 10001;
 		border: 6px yellow solid;
