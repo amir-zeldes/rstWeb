@@ -103,7 +103,20 @@ def update_schema():
 	conn.commit()
 	conn.close()
 
+	if schema < 6:
+		initialize_signal_types_on_existing_docs()
+
 	initialize_settings()
+
+
+def initialize_signal_types_on_existing_docs():
+	types = read_signals_file()
+
+	for doc, project in get_all_docs_by_project():
+		for majtype in types:
+			for subtype in types[majtype]:
+				generic_query('INSERT INTO rst_signal_types VALUES(?,?,?,?)',
+								(majtype, subtype, doc, project))
 
 
 def get_schema():
@@ -825,9 +838,6 @@ def get_signals(doc, project, user):
 	return generic_query("SELECT source, type, subtype, tokens FROM rst_signals WHERE doc=? and project=? and user=?", (doc,project,user))
 
 def get_signal_types(doc, project):
-	schema = get_schema()
-	if schema < 6:
-		update_schema()
 	return generic_query("SELECT majtype, subtype FROM rst_signal_types WHERE doc=? and project=?", (doc,project))
 
 def get_signal_types_dict(doc, project):
