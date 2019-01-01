@@ -237,7 +237,7 @@ function remove_node_data(node_id){
 function get_multirel(multinuc_id,exclude_child,nodes){
     found = false;
     for (node_id in nodes){
-        if (node_id != exclude_child && nodes[node_id].parent == multinuc_id){
+        if (node_id != exclude_child && nodes[node_id].parent == multinuc_id && nodes[node_id].reltype == "multinuc"){
             found ==true;
             return nodes[node_id].relname;
         }
@@ -257,7 +257,8 @@ function get_def_rstrel(){
     return document.getElementById("def_rst_rel").value;
 }
 
-function update_rel(node_id,new_rel,nodes){
+function update_rel(node_id,new_rel,nodes,multinuc_insertion){
+	if (typeof multinuc_insertion === 'undefined') { multinuc_insertion = false; }
 	parent_id = nodes[node_id].parent;
     if (parent_id == "n0"){
         parent_kind = "none";
@@ -302,12 +303,14 @@ function update_rel(node_id,new_rel,nodes){
                     detach_source(element_id);
                     jsPlumb.connect({source: element_id,target:parent_element_id, connector:"Straight", anchors: ["Top","Bottom"], overlays: [ ["Custom", {create:function(component) {return make_relchooser(node_id,"multi",new_rel);},location:0.2,id:"customOverlay"}]]});
                 }
-                children = get_children(parent_id,nodes);
-                for (var i=0; i<children.length; i++){
-                    if (nodes[children[i]].reltype == "multinuc" && nodes[children[i]].id != node_id){
-                        update_data(children[i],children[i]+","+nodes[children[i]].parent+","+nodes[children[i]].kind.substring(0,1)+","+nodes[children[i]].left.toString()+","+new_rel+","+new_rel_type);
-                        if ($("#sel"+children[i].replace("n","")).length > 0){
-                            document.getElementById('sel'+children[i].replace("n","")).value = new_rel;
+                if (!(multinuc_insertion)){
+                    children = get_children(parent_id,nodes);
+                    for (var i=0; i<children.length; i++){
+                        if (nodes[children[i]].reltype == "multinuc" && nodes[children[i]].id != node_id){
+                            update_data(children[i],children[i]+","+nodes[children[i]].parent+","+nodes[children[i]].kind.substring(0,1)+","+nodes[children[i]].left.toString()+","+new_rel+","+new_rel_type);
+                            if ($("#sel"+children[i].replace("n","")).length > 0){
+                                document.getElementById('sel'+children[i].replace("n","")).value = new_rel;
+                            }
                         }
                     }
                 }
@@ -843,7 +846,7 @@ function insert_parent(node_id,new_rel,node_kind){
 
     //Update rel before updating parent, since reltype is important for left-right calculation
     //Do this last because the select overlay to update will not necessarily exist before connections are made
-	update_rel(node_id,new_rel,nodes);
+	update_rel(node_id,new_rel,nodes,true); // Use optional argument in update_rel indicating that this is a multinuc insertion, to avoid sibling relation updates
 	update_parent(node_id,new_parent);
 	nodes = parse_data();
 	modify_undo("+qrl:"+node_id.replace("n","")+","+nodes[node_id].relname+";",";"); //qrl is spurious for insert_parent, remove it
