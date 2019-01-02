@@ -181,7 +181,7 @@ def structure_main(user, admin, mode, **kwargs):
 				set_timestamp(user,timestamp)
 				for action in actions:
 					action_type = action.split(":")[0]
-					action_params = action.split(":")[1]
+					action_params = action.split(":")[1] if len(action.split(":")) > 1 else ""
 					params = action_params.split(",")
 					if action_type == "up":
 						update_parent(params[0],params[1],current_doc,current_project,user)
