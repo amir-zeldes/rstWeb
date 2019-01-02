@@ -29,7 +29,7 @@ function act(action){
 
     var action_type = action.split(":")[0];
     var action_params = action.split(":")[1];
-    var params = action_params.split(",");
+    var params = action_params && action_params.split(",");
     nodes = parse_data();
 
     document.getElementById("logging").value += action;
