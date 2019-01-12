@@ -526,17 +526,18 @@ def export_document(doc, project,exportdir):
 def get_export_string(doc, project, user):
 	rels = get_rst_rels(doc,project)
 	nodes = get_rst_doc(doc,project,user)
+	signals = get_signals(doc,project,user)
 	rst_out = '''<rst>
-<header>
-	<relations>
+\t<header>
+\t\t<relations>
 '''
 	for rel in rels:
 		relname_string = re.sub(r'_[rm]$','',rel[0])
 		rst_out += '\t\t\t<rel name="' + relname_string + '" type="' + rel[1] + '"/>\n'
 
 	rst_out += '''\t\t</relations>
-</header>
-<body>
+\t</header>
+\t<body>
 '''
 	for node in nodes:
 		if node[5] == "edu":
@@ -573,7 +574,13 @@ def get_export_string(doc, project, user):
 				parent_string += ' '
 			rst_out += '\t\t<group id="'+node[0]+'" type="'+node[5]+'" ' + parent_string + relname_string+'/>\n'
 
-	rst_out += '''  </body>
+	if len(signals) > 0:
+		rst_out += "\t\t<signals>\n"
+		for signal in signals:
+			source, signal_type, signal_subtype, tokens = signal
+			rst_out += '\t\t\t<signal source="' + source + '" type="' + signal_type + '" subtype="' + signal_subtype + '" tokens="' + tokens + '"/>\n'
+		rst_out += "\t\t</signals>\n"
+	rst_out += '''\t</body>
 </rst>'''
 	return rst_out
 
