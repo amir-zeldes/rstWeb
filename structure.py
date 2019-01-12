@@ -232,9 +232,13 @@ def structure_main(user, admin, mode, **kwargs):
 		s_id, s_type, subtype, tokens = signal
 		if s_id not in signals:
 			signals[s_id] = list()
+		if tokens:
+			tokens = list(map(int, tokens.split(",")))
+		else:
+			tokens = []
 		signals[s_id].append({'type': s_type,
 							  'subtype': subtype,
-							  'tokens': map(int, tokens.split(",")) if tokens else []})
+							  'tokens': tokens})
 	cpout += '<script>'
 	cpout += 'window.rstWebSignals = ' + json.dumps(signals) + ';'
 	cpout += 'window.rstWebSignalTypes = ' + json.dumps(get_signal_types_dict(current_doc, current_project), sort_keys=True) + ';'
