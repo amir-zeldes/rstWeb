@@ -1186,9 +1186,6 @@ $(document).ready(function(){
             create_signal_item(id, undefined, undefined, signals)
                 .trigger('click');
         }
-
-        // allow highlighting
-        bind_tok_events();
     }
 
     function make_signal_action(signals) {
