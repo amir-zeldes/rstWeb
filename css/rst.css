@@ -96,6 +96,7 @@ h2 {	font-weight:bold;
 .container {
 		white-space: nowrap;
 		width: 100%;
+		position: relative;
 }
 .canvas {
 		position: relative; /* so that the shield of justice can position relative to it */
@@ -126,6 +127,12 @@ h2 {	font-weight:bold;
 }
 
 /* signal drawer classes */
+#show-all-signals {
+    position: absolute;
+	top: 10px;
+	right: 10px;
+	z-index: 1;
+}
 
 div.shield-of-justice {
 		position: fixed;
@@ -181,6 +188,10 @@ div.shield-of-justice {
 		background: rgba(255,255,0,0.3);
 }
 
+.tok--highlighted-by-button {
+	background: rgba(255,255,0,0.2);
+}
+
 .edu--clickable .tok--selected {
 		background: rgba(255,255,0,0.7);
 }
@@ -200,11 +211,10 @@ div.shield-of-justice {
 		box-shadow: 0 0 1px 2px gray;
 		padding: 4px;
 		vertical-align: top;
-		height: calc(100% - 96px); /* height of bars above plus margin and padding */
+		height: calc(100% - 10px);
 		position: absolute;
 		background: white;
 		width: 300px;
-		top: 86px;
 		left: -308px;
 }
 

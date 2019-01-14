@@ -120,6 +120,9 @@ def structure_main(user, admin, mode, **kwargs):
 
 	cpout += '''
           <div id="container" class="container">
+            <button id="show-all-signals">
+              Show All Signal Tokens
+            </button>
             <div class="signal-drawer">
               <div id="signal-list"> </div>
 

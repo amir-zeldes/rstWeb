@@ -1162,6 +1162,7 @@ $(document).ready(function(){
         disable_buttons();
         add_classes(id);
         unhighlight_tokens();
+		unhighlight_all_tokens();
 
         var signals = window.rstWebSignals;
         signalsWhenOpened = JSON.stringify(signals);
@@ -1226,6 +1227,9 @@ $(document).ready(function(){
         // reset token highlighting
         unbind_token_reveal_on_hover(selDiv);
         attempt_to_bind_token_reveal_until_success();
+		if (all_tokens_are_highlighted()) {
+			highlight_all_tokens();
+		}
     }
 
     function create_signal_item(id, type, subtype, signals) {
@@ -1381,5 +1385,39 @@ $(document).ready(function(){
         open_signal_drawer = open_signal_drawer_inner;
     }
 
+	function all_tokens_are_highlighted() {
+		var btn = $("#show-all-signals");
+		return btn.text() === "Hide Signal Tokens";
+	}
+
+	function highlight_all_tokens() {
+		Object.keys(window.rstWebSignals).forEach(function(id) {
+			window.rstWebSignals[id].forEach(function(signal) {
+				signal.tokens.forEach(function(tid) {
+					var tok = $('#tok' + tid);
+					tok.addClass('tok--highlighted-by-button');
+				});
+			});
+		});
+	}
+
+	function unhighlight_all_tokens() {
+		$(".tok--highlighted-by-button") .removeClass("tok--highlighted-by-button");
+	}
+
+	function init_show_all_tokens_button() {
+		var btn = $("#show-all-signals");
+		btn.click(function(e) {
+			if (!all_tokens_are_highlighted()) {
+				btn.text("Hide Signal Tokens");
+				highlight_all_tokens();
+			} else {
+				btn.text("Show All Signal Tokens");
+				unhighlight_all_tokens();
+			}
+		});
+	}
+
     init_signal_drawer();
+	init_show_all_tokens_button();
 });
