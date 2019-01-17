@@ -136,7 +136,7 @@ function do_quickexp(){
 
 function do_screenshot(){
     var canvasDivCopy = $("#canvas").clone();
-		var offscreenDiv = $('<div style=""></div>');
+		var offscreenDiv = $('<div></div>');
 		offscreenDiv.append(canvasDivCopy);
 		offscreenDiv.insertAfter($("#canvas"));
 
