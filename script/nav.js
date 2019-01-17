@@ -136,8 +136,12 @@ function do_quickexp(){
 
 function do_screenshot(){
     var canvasDiv = $("#canvas");
+		// ideally we'd make changes to a cloned copy and then screenshot it, but html2canvas requires
+		// that an element have a parent document. So, we'll save a copy, make mutations to the real
+		// copy, and then restore the old copy once we're done with the screnshot.
 		var oldCanvasDiv = canvasDiv[0].cloneNode(true);
 
+		// need to replace svg elements with canvas elements or else they won't show up in html2canvas
     // https://github.com/niklasvh/html2canvas/issues/1179
     var elements = canvasDiv.find('svg').map(function() {
         var svg = $(this);
