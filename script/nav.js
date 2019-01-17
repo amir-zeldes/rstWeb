@@ -165,8 +165,13 @@ function do_screenshot(){
         });
 
         var url = canvas.toDataURL("image/png");
-        var w = window.open('about:blank', 'RST Screenshot');
-        w.document.write("<img src='" + url + "' alt='RST Screenshot'/>");
+
+        // use anchor to download it
+        var a = document.createElement('a');
+        var filename = document.getElementById('current_doc').value.replace(".rs3","");
+        a.setAttribute('href', url);
+        a.setAttribute('download', filename + ".png");
+        a.click();
     });
 }
 
