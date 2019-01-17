@@ -139,7 +139,7 @@ def structure_main(user, admin, mode, **kwargs):
     '''
 
 	cpout += '''<div id="canvas" class="canvas">'''
-	cpout += '\t<p>Document: <b>'+current_doc+'</b> (project: <i>'+current_project+'</i>)</p>'
+	cpout += '\t<p id="document_name">Document: <b>'+current_doc+'</b> (project: <i>'+current_project+'</i>)</p>'
 	cpout += '''<div id="inner_canvas">'''
 	cpout += '<script src="./script/structure.js"></script>'
 

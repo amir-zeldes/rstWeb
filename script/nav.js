@@ -135,15 +135,14 @@ function do_quickexp(){
 }
 
 function do_screenshot(){
-    var canvasDiv = $("#canvas");
-    // ideally we'd make changes to a cloned copy and then screenshot it, but html2canvas requires
-    // that an element have a parent document. So, we'll save a copy, make mutations to the real
-    // copy, and then restore the old copy once we're done with the screnshot.
-    var oldCanvasDiv = canvasDiv[0].cloneNode(true);
+    var canvasDivCopy = $("#canvas").clone();
+		var offscreenDiv = $('<div style=""></div>');
+		offscreenDiv.append(canvasDivCopy);
+		offscreenDiv.insertAfter($("#canvas"));
 
     // need to replace svg elements with canvas elements or else they won't show up in html2canvas
     // https://github.com/niklasvh/html2canvas/issues/1179
-    var elements = canvasDiv.find('svg').map(function() {
+    var elements = canvasDivCopy.find('svg').map(function() {
         var svg = $(this);
         var canvas = $('<canvas></canvas>').css({position: 'absolute', left:svg.css('left'), top: svg.css('top')});
 
@@ -162,17 +161,45 @@ function do_screenshot(){
     });
 
     // remove ui elements that we don't want in the picture
-    canvasDiv.find(".minibtn").remove();
-    canvasDiv.find(".rst_rel").replaceWith(function(i, htmlStr) {
+    canvasDivCopy.find("#document_name").remove();
+    canvasDivCopy.find("#show-all-signals").remove();
+    canvasDivCopy.find(".minibtn").remove();
+    canvasDivCopy.find(".rst_rel").replaceWith(function(i, htmlStr) {
         var select = $(htmlStr);
         var text = select.val();
         return '<div class="select_replacement">' + text + '</div>';
     });
 
-    html2canvas($("#inner_canvas")[0],
-                {height: canvasDiv[0].scrollHeight,
-                 width: canvasDiv[0].scrollWidth})
-    .then(function(canvas){
+		// workaround for html2canvas bug
+		canvasDivCopy.find(".tok").css("font-size", "9pt");
+
+		// since the contents of #inner_canvas are positioned absolutely, it does not
+		// scale its width and height automatically to the content. we have to
+		// detect this rather crudely: for the width we find the left offsets of
+		// EDU's
+		var width = 100;
+		var canvasDivLeftOffset = canvasDivCopy.offset().left;
+		canvasDivCopy.find(".edu").each(function() {
+				var div = $(this);
+				var divWidth = (div.offset().left - canvasDivLeftOffset) + div.outerWidth() + 16;
+				if (divWidth > width) {
+						width = divWidth;
+				}
+		});
+
+		var height = 100;
+		var canvasDivTopOffset = canvasDivCopy.offset().top;
+		canvasDivCopy.find(".tok").each(function() {
+				var tok = $(this);
+				var tokHeight = (tok.offset().top - canvasDivTopOffset) + tok.outerHeight() + 100;
+				if (tokHeight > height) {
+						console.log(height);
+						height = tokHeight;
+				}
+		});
+
+    html2canvas(canvasDivCopy[0], {height: height, width: width, scale: 2})
+		.then(function(canvas){
         elements.each(function() {
             canvas.replaceWith(this.svg);
         });
@@ -186,7 +213,7 @@ function do_screenshot(){
         a.setAttribute('download', filename + ".png");
         a.click();
 
-        canvasDiv.replaceWith(oldCanvasDiv);
+				offscreenDiv.remove();
     });
 }
 
