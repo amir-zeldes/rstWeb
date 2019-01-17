@@ -135,13 +135,13 @@ function do_quickexp(){
 }
 
 function do_screenshot(){
-		// create a deep copy of the canvas (the root html element of the rst tree)
-		// so that we can change and discard it once we're done without affecting
-		// the real html elements
+    // create a deep copy of the canvas (the root html element of the rst tree)
+    // so that we can change and discard it once we're done without affecting
+    // the real html elements
     var canvasDivCopy = $("#canvas").clone();
-		var offscreenDiv = $('<div></div>');
-		offscreenDiv.append(canvasDivCopy);
-		offscreenDiv.insertAfter($("#canvas"));
+    var offscreenDiv = $('<div></div>');
+    offscreenDiv.append(canvasDivCopy);
+    offscreenDiv.insertAfter($("#canvas"));
 
     // need to replace svg elements with canvas elements or else they won't show up in html2canvas
     // https://github.com/niklasvh/html2canvas/issues/1179
@@ -173,38 +173,38 @@ function do_screenshot(){
         return '<div class="select_replacement">' + text + '</div>';
     });
 
-		// workaround for html2canvas bug
-		canvasDivCopy.find(".tok").css("font-size", "9pt");
+    // workaround for html2canvas bug
+    canvasDivCopy.find(".tok").css("font-size", "9pt");
 
-		// since the contents of #inner_canvas are positioned absolutely, it does not
-		// scale its width and height automatically to the content. we have to
-		// detect this rather crudely: for the width we find the left offsets of
-		// EDU's, and for height we use toks
-		var width = 100;
-		var canvasDivLeftOffset = canvasDivCopy.offset().left;
-		canvasDivCopy.find(".edu").each(function() {
-				var div = $(this);
-				// 16 gives some padding on the right
-				var divWidth = (div.offset().left - canvasDivLeftOffset) + div.outerWidth() + 16;
-				if (divWidth > width) {
-						width = divWidth;
-				}
-		});
+    // since the contents of #inner_canvas are positioned absolutely, it does not
+    // scale its width and height automatically to the content. we have to
+    // detect this rather crudely: for the width we find the left offsets of
+    // EDU's, and for height we use toks
+    var width = 100;
+    var canvasDivLeftOffset = canvasDivCopy.offset().left;
+    canvasDivCopy.find(".edu").each(function() {
+        var div = $(this);
+        // 16 gives some padding on the right
+        var divWidth = (div.offset().left - canvasDivLeftOffset) + div.outerWidth() + 16;
+        if (divWidth > width) {
+            width = divWidth;
+        }
+    });
 
-		var height = 100;
-		var canvasDivTopOffset = canvasDivCopy.offset().top;
-		canvasDivCopy.find(".tok").each(function() {
-				var tok = $(this);
-				// 100 is an arbitrarily chosen number that worked when toks were highlighted and
-				// when they were not highlighted. 
-				var tokHeight = (tok.offset().top - canvasDivTopOffset) + tok.outerHeight() + 100;
-				if (tokHeight > height) {
-						height = tokHeight;
-				}
-		});
+    var height = 100;
+    var canvasDivTopOffset = canvasDivCopy.offset().top;
+    canvasDivCopy.find(".tok").each(function() {
+        var tok = $(this);
+        // 100 is an arbitrarily chosen number that worked when toks were highlighted and
+        // when they were not highlighted. 
+        var tokHeight = (tok.offset().top - canvasDivTopOffset) + tok.outerHeight() + 100;
+        if (tokHeight > height) {
+            height = tokHeight;
+        }
+    });
 
     html2canvas(canvasDivCopy[0], {height: height, width: width, scale: 2})
-		.then(function(canvas){
+    .then(function(canvas){
         elements.each(function() {
             canvas.replaceWith(this.svg);
         });
@@ -218,7 +218,7 @@ function do_screenshot(){
         a.setAttribute('download', filename + ".png");
         a.click();
 
-				offscreenDiv.remove();
+        offscreenDiv.remove();
     });
 }
 
