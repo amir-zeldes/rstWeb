@@ -176,11 +176,12 @@ function do_screenshot(){
 		// since the contents of #inner_canvas are positioned absolutely, it does not
 		// scale its width and height automatically to the content. we have to
 		// detect this rather crudely: for the width we find the left offsets of
-		// EDU's
+		// EDU's, and for height we use toks
 		var width = 100;
 		var canvasDivLeftOffset = canvasDivCopy.offset().left;
 		canvasDivCopy.find(".edu").each(function() {
 				var div = $(this);
+				// 16 gives some padding on the right
 				var divWidth = (div.offset().left - canvasDivLeftOffset) + div.outerWidth() + 16;
 				if (divWidth > width) {
 						width = divWidth;
@@ -191,9 +192,10 @@ function do_screenshot(){
 		var canvasDivTopOffset = canvasDivCopy.offset().top;
 		canvasDivCopy.find(".tok").each(function() {
 				var tok = $(this);
+				// 100 is an arbitrarily chosen number that worked when toks were highlighted and
+				// when they were not highlighted. 
 				var tokHeight = (tok.offset().top - canvasDivTopOffset) + tok.outerHeight() + 100;
 				if (tokHeight > height) {
-						console.log(height);
 						height = tokHeight;
 				}
 		});
