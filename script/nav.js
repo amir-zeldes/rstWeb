@@ -135,22 +135,39 @@ function do_quickexp(){
 }
 
 function do_screenshot(){
-    if (document.getElementById("dirty").value=="dirty"){
-        var r = confirm("You have unsaved work - really capture image without saved work? Changes will be omitted.");
-        if (r == false) {
-            return;
-        }
-    }
-    current_project = document.getElementById('current_project').value;
-    current_doc = document.getElementById('current_doc').value;
-    if(document.getElementById("serve_mode").value=="server"){
-        loc='structure.py';
-    }
-    else {
-        loc='structure';
-    }
-    img_url = loc + '?current_doc=' + current_doc + '&current_project=' + current_project + '&screenshot=screenshot';
-    window.open(img_url, '_rst_download');
+    var canvasDiv = $("#canvas");
+
+    // https://github.com/niklasvh/html2canvas/issues/1179
+    var elements = canvasDiv.find('svg').map(function() {
+        var svg = $(this);
+        var canvas = $('<canvas></canvas>').css({position: 'absolute', left:svg.css('left'), top: svg.css('top')});
+
+        svg.replaceWith(canvas);
+
+        // Get the raw SVG string and curate it
+        var content = svg.wrap('<p></p>').parent().html();
+        svg.unwrap();
+
+        canvg(canvas[0], content);
+
+        return {
+            svg: svg,
+            canvas: canvas
+        };
+    });
+
+    html2canvas($("#inner_canvas")[0],
+                {height: canvasDiv[0].scrollHeight,
+                 width: canvasDiv[0].scrollWidth})
+    .then(function(canvas){
+        elements.each(function() {
+            canvas.replaceWith(this.svg);
+        });
+
+        var url = canvas.toDataURL("image/png");
+        var w = window.open('about:blank', 'RST Screenshot');
+        w.document.write("<img src='" + url + "' alt='RST Screenshot'/>");
+    });
 }
 
 function undo(){
