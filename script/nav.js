@@ -136,6 +136,7 @@ function do_quickexp(){
 
 function do_screenshot(){
     var canvasDiv = $("#canvas");
+		var oldCanvasDiv = canvasDiv[0].cloneNode(true);
 
     // https://github.com/niklasvh/html2canvas/issues/1179
     var elements = canvasDiv.find('svg').map(function() {
@@ -156,6 +157,14 @@ function do_screenshot(){
         };
     });
 
+		// remove ui elements that we don't want in the picture
+		canvasDiv.find(".minibtn").remove();
+		canvasDiv.find(".rst_rel").replaceWith(function(i, htmlStr) {
+				var select = $(htmlStr);
+				var text = select.val();
+				return '<div class="select_replacement">' + text + '</div>';
+		});
+
     html2canvas($("#inner_canvas")[0],
                 {height: canvasDiv[0].scrollHeight,
                  width: canvasDiv[0].scrollWidth})
@@ -172,6 +181,8 @@ function do_screenshot(){
         a.setAttribute('href', url);
         a.setAttribute('download', filename + ".png");
         a.click();
+
+				canvasDiv.replaceWith(oldCanvasDiv);
     });
 }
 

@@ -37,6 +37,7 @@ html{width:100%}
 
 .warn{color:red;font-weight:bold}
 select {font-size: 8pt; color:red; z-index:10; background-color: rgba(256, 256, 256, 0.85);}
+.select_replacement {font-size: 8pt; color:red; z-index:10; background-color: rgba(256, 256, 256, 0.85);}
 select.doclist {font-size: 10pt; color:black; }
 
 .banner table{}
