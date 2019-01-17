@@ -135,6 +135,9 @@ function do_quickexp(){
 }
 
 function do_screenshot(){
+		// create a deep copy of the canvas (the root html element of the rst tree)
+		// so that we can change and discard it once we're done without affecting
+		// the real html elements
     var canvasDivCopy = $("#canvas").clone();
 		var offscreenDiv = $('<div></div>');
 		offscreenDiv.append(canvasDivCopy);
