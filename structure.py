@@ -60,13 +60,6 @@ def structure_main(user, admin, mode, **kwargs):
 		current_project = ""
 		current_guidelines = ""
 
-
-	if "screenshot" in theform:
-		if len(theform["screenshot"]) > 1:
-			from screenshot import get_png
-			return get_png(current_doc,current_project,user,mode)
-
-
 	UTF8Writer = codecs.getwriter('utf8')
 	sys.stdout = UTF8Writer(sys.stdout)
 
@@ -120,6 +113,9 @@ def structure_main(user, admin, mode, **kwargs):
 
 	cpout += '''
           <div id="container" class="container">
+            <button id="show-all-signals">
+              Show All Signal Tokens
+            </button>
             <div class="signal-drawer">
               <div id="signal-list"> </div>
 
@@ -143,7 +139,7 @@ def structure_main(user, admin, mode, **kwargs):
     '''
 
 	cpout += '''<div id="canvas" class="canvas">'''
-	cpout += '\t<p>Document: <b>'+current_doc+'</b> (project: <i>'+current_project+'</i>)</p>'
+	cpout += '\t<p id="document_name">Document: <b>'+current_doc+'</b> (project: <i>'+current_project+'</i>)</p>'
 	cpout += '''<div id="inner_canvas">'''
 	cpout += '<script src="./script/structure.js"></script>'
 
@@ -536,12 +532,7 @@ def structure_main_server():
 		kwargs[key] = theform[key].value
 	output = structure_main(user, admin, 'server', **kwargs)
 
-	if "screenshot" in theform:
-		print("Content-type: image/png")
-		print('Content-Disposition: attachment; filename="image.png"\n')
-		print(output)
-	else:
-		print(output)
+	print(output)
 
 
 if "/" in os.environ.get('SCRIPT_NAME', ''):

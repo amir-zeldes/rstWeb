@@ -135,22 +135,91 @@ function do_quickexp(){
 }
 
 function do_screenshot(){
-    if (document.getElementById("dirty").value=="dirty"){
-        var r = confirm("You have unsaved work - really capture image without saved work? Changes will be omitted.");
-        if (r == false) {
-            return;
+    // create a deep copy of the canvas (the root html element of the rst tree)
+    // so that we can change and discard it once we're done without affecting
+    // the real html elements
+    var canvasDivCopy = $("#canvas").clone();
+    var offscreenDiv = $('<div></div>');
+    offscreenDiv.append(canvasDivCopy);
+    offscreenDiv.insertAfter($("#canvas"));
+
+    // need to replace svg elements with canvas elements or else they won't show up in html2canvas
+    // https://github.com/niklasvh/html2canvas/issues/1179
+    var elements = canvasDivCopy.find('svg').map(function() {
+        var svg = $(this);
+        var canvas = $('<canvas></canvas>').css({position: 'absolute', left:svg.css('left'), top: svg.css('top')});
+
+        svg.replaceWith(canvas);
+
+        // Get the raw SVG string and curate it
+        var content = svg.wrap('<p></p>').parent().html();
+        svg.unwrap();
+
+        canvg(canvas[0], content);
+
+        return {
+            svg: svg,
+            canvas: canvas
+        };
+    });
+
+    // remove ui elements that we don't want in the picture
+    canvasDivCopy.find("#document_name").remove();
+    canvasDivCopy.find("#show-all-signals").remove();
+    canvasDivCopy.find(".minibtn").remove();
+    canvasDivCopy.find(".rst_rel").replaceWith(function(i, htmlStr) {
+        var select = $(htmlStr);
+        var text = select.val();
+        return '<div class="select_replacement">' + text + '</div>';
+    });
+
+    // workaround for html2canvas bug
+    canvasDivCopy.find(".tok").css("font-size", "9pt");
+
+    // since the contents of #inner_canvas are positioned absolutely, it does not
+    // scale its width and height automatically to the content. we have to
+    // detect this rather crudely: for the width we find the left offsets of
+    // EDU's, and for height we use toks
+    var width = 100;
+    var canvasDivLeftOffset = canvasDivCopy.offset().left;
+    canvasDivCopy.find(".edu").each(function() {
+        var div = $(this);
+        // 16 gives some padding on the right
+        var divWidth = (div.offset().left - canvasDivLeftOffset) + div.outerWidth() + 16;
+        if (divWidth > width) {
+            width = divWidth;
         }
-    }
-    current_project = document.getElementById('current_project').value;
-    current_doc = document.getElementById('current_doc').value;
-    if(document.getElementById("serve_mode").value=="server"){
-        loc='structure.py';
-    }
-    else {
-        loc='structure';
-    }
-    img_url = loc + '?current_doc=' + current_doc + '&current_project=' + current_project + '&screenshot=screenshot';
-    window.open(img_url, '_rst_download');
+    });
+
+    var height = 100;
+    var canvasDivTopOffset = canvasDivCopy.offset().top;
+    canvasDivCopy.find(".tok").each(function() {
+        var tok = $(this);
+        // 100 is an arbitrarily chosen number that worked when toks were highlighted and
+        // when they were not highlighted. 
+        var tokHeight = (tok.offset().top - canvasDivTopOffset) + tok.outerHeight() + 100;
+        if (tokHeight > height) {
+            height = tokHeight;
+        }
+    });
+
+    html2canvas(canvasDivCopy[0], {height: height, width: width, scale: 2})
+    .then(function(canvas){
+        elements.each(function() {
+            canvas.replaceWith(this.svg);
+        });
+
+        var url = canvas.toDataURL("image/png");
+
+        // use anchor to download it
+        var a = document.createElement('a');
+        var filename = document.getElementById('current_doc').value.replace(".rs3","");
+        a.setAttribute('href', url);
+        a.setAttribute('download', filename + ".png");
+        a.click();
+
+        offscreenDiv.remove();
+    });
 }
 
 function undo(){
