@@ -733,8 +733,7 @@ def copy_doc_to_user(doc, project, user):
 		dbpath = os.path.dirname(os.path.realpath(__file__)) + os.sep +".."+os.sep+"rstweb.db"
 		conn = sqlite3.connect(dbpath)
 		cur = conn.cursor()
-		cur.executemany('INSERT INTO rst_nodes VALUES(?,?,?,?,?,?,?,?,?,?,?)', copy)
-		cur.execute("INSERT INTO docs VALUES (?,?,?)", (doc,project,user))
+		cur.executemany('INSERT INTO rst_signals VALUES(?,?,?,?,?,?,?)', copy)
 		conn.commit()
 
 
