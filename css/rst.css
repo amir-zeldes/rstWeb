@@ -98,13 +98,13 @@ h2 {	font-weight:bold;
 		white-space: nowrap;
 		width: 100%;
 		position: relative;
+		height: calc(100% - 86px);
 }
 .canvas {
 		position: relative; /* so that the shield of justice can position relative to it */
 		left: 0;
     display: inline-block;
 		white-space: initial;
-		height: calc(100% - 86px); /* height of bars above */
 		vertical-align: top;
 		overflow-x: scroll;
 		overflow-y: visible;
@@ -112,6 +112,7 @@ h2 {	font-weight:bold;
 		transition-property: left;
 		padding-left: 10px;
 		width: calc(100% - 10px);
+    height: 100%;
 }
 .canvas--shifted {
 		left: 308px;
@@ -125,6 +126,7 @@ h2 {	font-weight:bold;
     -webkit-user-select: none;
     -o-user-select: none;
     user-select: none;
+		height: calc(100% - 86px);
 }
 
 /* signal drawer classes */
