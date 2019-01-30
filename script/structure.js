@@ -986,7 +986,7 @@ $(document).ready(function(){
         var div = document.createElement("div");
         div.setAttribute('class', 'shield-of-justice');
         div.setAttribute('id', 'shield-of-justice');
-        document.getElementById("container").appendChild(div);
+        document.getElementById("inner_canvas").appendChild(div);
     }
 
     function lower_shield_of_justice() {
