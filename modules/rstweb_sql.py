@@ -209,7 +209,7 @@ def read_signals_file():
 	except IOError:
 		return {}
 
-def import_document(filename, project, user):
+def import_document(filename, project, user, do_tokenize=False):
 	dbpath = os.path.dirname(os.path.realpath(__file__)) + os.sep +".."+os.sep+"rstweb.db"
 	conn = sqlite3.connect(dbpath)
 
@@ -223,7 +223,7 @@ def import_document(filename, project, user):
 	if schema < 6:  # Schemas below 6 do not support importing signals
 		update_schema()
 
-	rst_nodes, rst_signals = read_rst(filename, rel_hash)
+	rst_nodes, rst_signals = read_rst(filename, rel_hash, do_tokenize=do_tokenize)
 	if isinstance(rst_nodes,basestring):
 		return rst_nodes
 
@@ -257,11 +257,11 @@ def import_document(filename, project, user):
 	conn.close()
 
 
-def import_plaintext(filename, project, user, rel_hash):
+def import_plaintext(filename, project, user, rel_hash, do_tokenize=False):
 
 	doc=os.path.basename(filename)
 
-	rst_nodes = read_text(filename, rel_hash)
+	rst_nodes = read_text(filename, rel_hash, do_tokenize=do_tokenize)
 
 	for key in rst_nodes:
 		node = rst_nodes[key]

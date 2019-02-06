@@ -44,6 +44,9 @@ function admin(action){
             document.getElementById("sel_tab").value = "import";
             document.getElementById("imp_project").value = document.getElementById("imp_project_select").value;
             document.getElementById("import_file_type").value = document.getElementById("import_file_type_select").value;
+            if (document.getElementById("tokenize").checked) {
+                document.getElementById("do_tokenize").value = "tokenize";
+            }
 			break;
 		case "delete_doc":
             if ($('#doclist_select').length == 0) {

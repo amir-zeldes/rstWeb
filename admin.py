@@ -138,6 +138,7 @@ def admin_main(user, admin, mode, **kwargs):
 		<input type="hidden" name="update_schema" id="update_schema" value=""/>
 		<input type="hidden" name="imp_project" id="imp_project" value=""/>
 		<input type="hidden" name="import_file_type" id="import_file_type" value=""/>
+		<input type="hidden" name="do_tokenize" id="do_tokenize" value=""/>
 		<input type="hidden" name="doclist" id="doclist" value="'''
 	cpout += current_doc
 	cpout += '''"/>
@@ -317,7 +318,8 @@ def admin_main(user, admin, mode, **kwargs):
 	<h2>Import a Document</h2>
 	<p>1. Upload .rs3 or plain text file(s): </p>
 	<p>2. Choose file type: <select id="import_file_type_select" class="doclist"><option value="rs3">rs3</option><option value="plain">plain text (EDU per line)</option></select> </p>
-	<p>3. Import document(s) into this project:
+	<p>3. Tokenize words automatically? <input type="checkbox" name="tokenize" id="tokenize"></p>
+	<p>4. Import document(s) into this project:
 	'''
 
 
@@ -341,6 +343,7 @@ def admin_main(user, admin, mode, **kwargs):
 	if "file" in theform and "imp_project" in theform:
 		fileitem = theform['file']
 		imp_project = theform["imp_project"]
+		do_tokenize = theform["do_tokenize"] == "tokenize"
 		if isinstance(fileitem,list):
 			message = ""
 			for filelist_item in fileitem:
@@ -350,13 +353,13 @@ def admin_main(user, admin, mode, **kwargs):
 					open(importdir + fn, 'wb').write(filelist_item.file.read())
 					message += 'The file "' + fn + '" was uploaded successfully<br/>'
 					if theform['import_file_type'] == "rs3":
-						fail = import_document(importdir + fn,imp_project,user)
+						fail = import_document(importdir + fn,imp_project,user,do_tokenize=do_tokenize)
 					elif theform['import_file_type'] == "plain":
 						if len(def_relfile) > 0:
 							rel_hash = read_relfile(def_relfile)
 						else:
 							rel_hash = {}
-						fail = import_plaintext(importdir + fn,imp_project,user,rel_hash)
+						fail = import_plaintext(importdir + fn,imp_project,user,rel_hash,do_tokenize=do_tokenize)
 				else:
 					message = 'No file was uploaded'
 		else:
@@ -366,13 +369,13 @@ def admin_main(user, admin, mode, **kwargs):
 				open(importdir + fn, 'wb').write(fileitem.file.read())
 				message = 'The file "' + fn + '" was uploaded successfully'
 				if theform['import_file_type'] == "rs3":
-					fail = import_document(importdir + fn,imp_project,user)
+					fail = import_document(importdir + fn,imp_project,user,do_tokenize=do_tokenize)
 				elif theform['import_file_type'] == "plain":
 					if len(def_relfile) > 0:
 						rel_hash = read_relfile(def_relfile)
 					else:
 						rel_hash = {}
-					fail = import_plaintext(importdir + fn,imp_project,user,rel_hash)
+					fail = import_plaintext(importdir + fn,imp_project,user,rel_hash,do_tokenize=do_tokenize)
 			else:
 				message = 'No file was uploaded'
 

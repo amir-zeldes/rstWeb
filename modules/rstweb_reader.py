@@ -12,9 +12,10 @@ import collections
 from xml.dom import minidom
 from xml.parsers.expat import ExpatError
 from modules.rstweb_classes import *
+from modules.whitespace_tokenize import tokenize
 
 
-def read_rst(filename, rel_hash):
+def read_rst(filename, rel_hash, do_tokenize=False):
 
 	f = codecs.open(filename, "r", "utf-8")
 	try:
@@ -103,6 +104,9 @@ def read_rst(filename, rel_hash):
 			contents = contents.replace('<', '&lt;')
 			contents = re.sub(r'&([^ ;]* )', r'&amp;\1', contents)
 			contents = re.sub(r'&$', r'&amp;', contents)
+		if do_tokenize:
+			contents = tokenize(contents)
+			contents = " ".join(contents.strip().split("\n"))
 
 		total_toks += contents.strip().count(" ") + 1
 		nodes.append([str(ordered_id[edu_id]), id_counter, id_counter, str(ordered_id[parent]), 0, "edu", contents, relname])
@@ -166,7 +170,7 @@ def read_rst(filename, rel_hash):
 	return elements, signals
 
 
-def read_text(filename,rel_hash):
+def read_text(filename,rel_hash,do_tokenize=False):
 	id_counter = 0
 	nodes = {}
 	f = codecs.open(filename, "r", "utf-8")
@@ -188,6 +192,9 @@ def read_text(filename,rel_hash):
 				contents = contents.replace('<', '&lt;')
 				contents = re.sub(r'&([^ ;]* )', r'&amp;\1', contents)
 				contents = re.sub(r'&$', r'&amp;', contents)
+			if do_tokenize:
+				contents = tokenize(contents)
+				contents = " ".join(contents)
 
 			nodes[str(id_counter)] = NODE(str(id_counter),id_counter,id_counter,"0",0,"edu",contents,list(rels.keys())[0],list(rels.values())[0])
 
