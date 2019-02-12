@@ -219,6 +219,7 @@ div.shield-of-justice {
 		background: white;
 		width: 300px;
 		left: -308px;
+    overflow-y: scroll;
 }
 
 @keyframes drawer-reveal {
