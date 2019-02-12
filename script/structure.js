@@ -1095,7 +1095,7 @@ $(document).ready(function(){
                 var tok_list_index = tok_list.indexOf(tok_id);
 
                 if (tok_list_index > -1) {
-                    tok_list.pop(tok_list_index);
+                    tok_list.splice(tok_list_index, 1);
                     tok.removeClass("tok--selected");
                 } else {
                     tok_list.push(tok_id);
@@ -1162,7 +1162,7 @@ $(document).ready(function(){
         disable_buttons();
         add_classes(id);
         unhighlight_tokens();
-    unhighlight_all_tokens();
+        unhighlight_all_tokens();
 
         var signals = window.rstWebSignals;
         signalsWhenOpened = JSON.stringify(signals);
@@ -1227,9 +1227,9 @@ $(document).ready(function(){
         // reset token highlighting
         unbind_token_reveal_on_hover(selDiv);
         attempt_to_bind_token_reveal_until_success();
-    if (all_tokens_are_highlighted()) {
-      highlight_all_tokens();
-    }
+        if (all_tokens_are_highlighted()) {
+          highlight_all_tokens();
+        }
     }
 
     function create_signal_item(id, type, subtype, signals) {
