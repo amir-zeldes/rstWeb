@@ -169,7 +169,7 @@ function do_screenshot(){
     canvasDivCopy.find(".minibtn").remove();
     canvasDivCopy.find(".rst_rel").replaceWith(function(i, htmlStr) {
         var select = $(htmlStr);
-        var text = select.val();
+        var text = select.find('option:selected').text();
         return '<div class="select_replacement">' + text + '</div>';
     });
 
@@ -216,8 +216,11 @@ function do_screenshot(){
         var filename = document.getElementById('current_doc').value.replace(".rs3","");
         a.setAttribute('href', url);
         a.setAttribute('download', filename + ".png");
+        a.setAttribute('download', filename + ".png");
+        $(a).insertAfter($("#canvas"));
         a.click();
 
+        $(a).remove();
         offscreenDiv.remove();
     });
 }
