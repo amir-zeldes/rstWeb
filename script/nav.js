@@ -216,7 +216,6 @@ function do_screenshot(){
         var filename = document.getElementById('current_doc').value.replace(".rs3","");
         a.setAttribute('href', url);
         a.setAttribute('download', filename + ".png");
-        a.setAttribute('download', filename + ".png");
         $(a).insertAfter($("#canvas"));
         a.click();
 
