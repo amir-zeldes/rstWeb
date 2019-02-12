@@ -481,7 +481,6 @@ def admin_main(user, admin, mode, **kwargs):
 		if len(theform["unassign_user"]) > 0:
 			user_to_unassign = theform["unassign_user"]
 			doc_to_unassign = theform["unassign_doc"]
-			print(theform)
 			delete_doc_user_version(doc_to_unassign.split("/")[1],doc_to_unassign.split("/")[0],user_to_unassign)
 
 	if "new_user_data" in theform:
