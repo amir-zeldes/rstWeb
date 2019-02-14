@@ -96,7 +96,12 @@ def read_rst(filename, rel_hash, do_tokenize=False):
 			if not relname.endswith("_r") and len(relname)>0:
 				relname = relname+"_r"
 		edu_id = segment.attributes["id"].value
-		contents = segment.childNodes[0].data.strip()
+		if len(segment.childNodes) > 0:  # Check the node is not empty
+			contents = segment.childNodes[0].data.strip()
+			if len(contents) == 0:
+				continue
+		else:
+			continue
 
 		# Check for invalid XML in segment contents
 		if "<" in contents or ">" in contents or "&" in contents:
