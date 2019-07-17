@@ -9,6 +9,8 @@ html{width:100%}
     -o-user-select: none;
     user-select: none;
     z-index: 2;
+    transition-property: font-size;
+    transition-duration: 0.35s;
     }
 
 .whisker{border-left: solid; border-right: solid; height:2px;display: table-cell;margin:0;border-collapse:collapse}
@@ -30,13 +32,12 @@ html{width:100%}
 .group:hover{border-color: red;}
 .num_cont:hover .num_id{border: 1px solid red;border-color: red;z-index:200}
 .group:hover .whisker{border-color: red;}
-.edu .num_id{z-index:200}
-.edu:hover .num_id{border: 1px solid red;border-color: red}
 .edu:hover .whisker{border-color: red;z-index:200}
 .group:hover .whisker{border-color: red;}
 
 .warn{color:red;font-weight:bold}
 select {font-size: 8pt; color:red; z-index:10; background-color: rgba(256, 256, 256, 0.85);}
+.select_replacement {font-size: 8pt; color:red; z-index:10; background-color: rgba(256, 256, 256, 0.85);}
 select.doclist {font-size: 10pt; color:black; }
 
 .banner table{}
@@ -93,15 +94,233 @@ h2 {	font-weight:bold;
 .minibtn{z-index:120;width:13px;height:13px;padding:0px;border:0px;font-size:9px; border:solid 1px}
 .minibtn:hover{background-color:#C0C0C0}
 
-
-.canvas{width:100%; position: absolute; top: 80px; bottom: 45px;}
-#inner_canvas{position:relative;overflow-x:auto;height:100%; min-height:80%;overflow-y:visible;
+.container {
+		white-space: nowrap;
+		width: 100%;
+		position: relative;
+		height: calc(100% - 86px);
+}
+.canvas {
+		position: relative; /* so that the shield of justice can position relative to it */
+		left: 0;
+    display: inline-block;
+		white-space: initial;
+		vertical-align: top;
+		overflow-x: scroll;
+		overflow-y: visible;
+		transition-duration: 0.35s;
+		transition-property: left;
+		padding-left: 10px;
+		width: calc(100% - 10px);
+    height: 100%;
+}
+.canvas--shifted {
+		left: 308px;
+		transition-duration: 0.35s;
+		transition-property: left;
+}
+#inner_canvas{
+		position:relative;
     -moz-user-select: -moz-none;
     -khtml-user-select: none;
     -webkit-user-select: none;
     -o-user-select: none;
     user-select: none;
-    margin-left:10px
+		height: calc(100% - 86px);
+}
+
+/* signal drawer classes */
+#show-all-signals {
+    position: absolute;
+	top: 10px;
+	right: 10px;
+	z-index: 1;
+}
+
+div.shield-of-justice {
+		position: fixed;
+		top: 86px;
+		left: 0;
+		width: 100%;
+		height: 100%;
+		z-index: 10000;
+		background: rgba(0,0,0,0.12);
+		pointer-events: none;
+}
+
+.seldiv--active {
+		pointer-events: none;
+		z-index: 10001;
+		border: 6px yellow solid;
+		padding: 2px;
+		transition-property: all;
+		transition-duration: 0.35s;
+}
+
+.edu--clickable {
+		z-index: 10001;
+}
+
+.edu--clickable {
+		font-size: 18px;
+		transition-property: font-size;
+		transition-duration: 0.35s;
+}
+
+.edu--clickable .edu_num_cont {
+		pointer-events: none;
+		opacity: 0.8;
+}
+
+.edu--clickable .tok {
+		padding: 0 4px;
+		margin: 0 -3px;
+		transition-duration: 0.2s;
+		transition-property: background;
+}
+
+.minibtn--with-signals {
+		background-image: -webkit-linear-gradient(top, #f7f7f7, cyan);
+}
+
+.edu--clickable .tok:not(.tok--selected):hover {
+		background: rgba(255,255,0,0.3);
+}
+
+.tok--highlighted {
+		background: rgba(255,255,0,0.3);
+}
+
+.tok--highlighted-by-button {
+	background: rgba(255,255,0,0.2);
+}
+
+.edu--clickable .tok--selected {
+		background: rgba(255,255,0,0.7);
+}
+
+
+@keyframes drawer-close {
+		from {
+				left: 0;
+		}
+		to {
+				left: -308px;
+		}
+}
+
+.signal-drawer {
+		z-index: 10001;
+		box-shadow: 0 0 1px 2px gray;
+		padding: 4px;
+		vertical-align: top;
+		height: calc(100% - 10px);
+		position: absolute;
+		background: white;
+		width: 300px;
+		left: -308px;
+    overflow-y: scroll;
+}
+
+@keyframes drawer-reveal {
+		from {
+				left: -308px;
+		}
+		to {
+				left: 0;
+		}
+}
+
+.signal-drawer--active {
+		left: 0px;
+		animation-duration: 0.35s;
+		animation-timing-function: ease-out;
+		animation-name: drawer-reveal;
+}
+
+.signal-drawer--active + .canvas {
+		width: calc(100% - 318px);
+}
+
+.signal-drawer__item {
+		font-size: 16px;
+		white-space: pre-line;
+		padding: 10px;
+		margin: 10px 8px;
+		border-radius: 8px;
+		background: rgba(0,0,0,0.15);
+		transition-property: background;
+		transition-duration: 0.2s;
+		position: relative;
+}
+
+.signal-drawer__item-delete {
+	position: absolute;
+	top: 10px;
+	right: 10px;
+}
+
+.signal-drawer__item:not(.signal-drawer__item--selected):hover {
+		background: rgba(255,255,0,0.3);
+}
+
+.signal-drawer__item--selected {
+		background: yellow;
+}
+
+.signal-drawer__signal {
+	padding-top: 10px;
+}
+
+.signal-drawer__row {
+    padding-bottom: 10px;
+}
+
+.signal-drawer__create-new-button {
+		margin-left: 10px;
+		height: 30px;
+		width: 108px;
+}
+
+button.disabled {
+		background: linear-gradient(#a0a0a0, #808080);
+		color: #333;
+}
+
+.signal-drawer__save-button {
+		height: 40px;
+		width: 130px;
+		background: linear-gradient(#f7f7f7, lightgreen);
+}
+
+.signal-drawer__cancel-button {
+		height: 40px;
+		width: 130px;
+		background: linear-gradient(#f7f7f7, lightpink);
+}
+
+.signal-drawer__label {
+		color: black;
+		font-size: 14px;
+
+		display: inline-block;
+		width: 80px;
+		text-align: right;
+}
+
+.signal-drawer__select {
+		width: 150px;
+		height: 30px;
+		color: black;
+		font-size: 14px;
+}
+
+
+
+
+
+select.rst_rel {
+		width: 70px;
 }
 .span_div{width:2px; background-color:black; height: 60px; position:absolute}
 .top_scroll{height: 20px; overflow-x:scroll; overflow-y:visible}

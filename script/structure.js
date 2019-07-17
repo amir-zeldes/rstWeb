@@ -29,7 +29,7 @@ function act(action){
 
     var action_type = action.split(":")[0];
     var action_params = action.split(":")[1];
-    var params = action_params.split(",");
+    var params = action_params && action_params.split(",");
     nodes = parse_data();
 
     document.getElementById("logging").value += action;
@@ -99,6 +99,10 @@ function act(action){
         document.getElementById("g"+params[0]).style.display = "none";
         recalculate_depth(parse_data());
     }
+		else if (action_type=="sg") {
+				// do nothing--all client-side UI changes handled elsewhere
+				// TODO: support undo
+		}
 
     // anim_catch replaces jquery promise to monitor animation queue
     // enable buttons once this final animation is complete
@@ -233,7 +237,7 @@ function remove_node_data(node_id){
 function get_multirel(multinuc_id,exclude_child,nodes){
     found = false;
     for (node_id in nodes){
-        if (node_id != exclude_child && nodes[node_id].parent == multinuc_id){
+        if (node_id != exclude_child && nodes[node_id].parent == multinuc_id && nodes[node_id].reltype == "multinuc"){
             found ==true;
             return nodes[node_id].relname;
         }
@@ -253,7 +257,8 @@ function get_def_rstrel(){
     return document.getElementById("def_rst_rel").value;
 }
 
-function update_rel(node_id,new_rel,nodes){
+function update_rel(node_id,new_rel,nodes,multinuc_insertion){
+	if (typeof multinuc_insertion === 'undefined') { multinuc_insertion = false; }
 	parent_id = nodes[node_id].parent;
     if (parent_id == "n0"){
         parent_kind = "none";
@@ -298,12 +303,14 @@ function update_rel(node_id,new_rel,nodes){
                     detach_source(element_id);
                     jsPlumb.connect({source: element_id,target:parent_element_id, connector:"Straight", anchors: ["Top","Bottom"], overlays: [ ["Custom", {create:function(component) {return make_relchooser(node_id,"multi",new_rel);},location:0.2,id:"customOverlay"}]]});
                 }
-                children = get_children(parent_id,nodes);
-                for (var i=0; i<children.length; i++){
-                    if (nodes[children[i]].reltype == "multinuc" && nodes[children[i]].id != node_id){
-                        update_data(children[i],children[i]+","+nodes[children[i]].parent+","+nodes[children[i]].kind.substring(0,1)+","+nodes[children[i]].left.toString()+","+new_rel+","+new_rel_type);
-                        if ($("#sel"+children[i].replace("n","")).length > 0){
-                            document.getElementById('sel'+children[i].replace("n","")).value = new_rel;
+                if (!(multinuc_insertion)){
+                    children = get_children(parent_id,nodes);
+                    for (var i=0; i<children.length; i++){
+                        if (nodes[children[i]].reltype == "multinuc" && nodes[children[i]].id != node_id){
+                            update_data(children[i],children[i]+","+nodes[children[i]].parent+","+nodes[children[i]].kind.substring(0,1)+","+nodes[children[i]].left.toString()+","+new_rel+","+new_rel_type);
+                            if ($("#sel"+children[i].replace("n","")).length > 0){
+                                document.getElementById('sel'+children[i].replace("n","")).value = new_rel;
+                            }
                         }
                     }
                 }
@@ -839,7 +846,7 @@ function insert_parent(node_id,new_rel,node_kind){
 
     //Update rel before updating parent, since reltype is important for left-right calculation
     //Do this last because the select overlay to update will not necessarily exist before connections are made
-	update_rel(node_id,new_rel,nodes);
+	update_rel(node_id,new_rel,nodes,true); // Use optional argument in update_rel indicating that this is a multinuc insertion, to avoid sibling relation updates
 	update_parent(node_id,new_parent);
 	nodes = parse_data();
 	modify_undo("+qrl:"+node_id.replace("n","")+","+nodes[node_id].relname+";",";"); //qrl is spurious for insert_parent, remove it
@@ -969,3 +976,448 @@ function is_ancestor(new_parent_id,node_id){
     }
     return false;
 }
+
+
+// signals handling
+var open_signal_drawer;
+$(document).ready(function(){
+
+    function raise_shield_of_justice () {
+        var div = document.createElement("div");
+        div.setAttribute('class', 'shield-of-justice');
+        div.setAttribute('id', 'shield-of-justice');
+        document.getElementById("inner_canvas").appendChild(div);
+    }
+
+    function lower_shield_of_justice() {
+        var div = document.getElementById("shield-of-justice");
+        div.parentNode.removeChild(div);
+    }
+
+    function disable_buttons() {
+        $('.canvas').find('button').attr("disabled", "disabled");
+        $('.canvas').find('select').attr("disabled", "disabled");
+    }
+
+    function enable_buttons() {
+        $('.canvas').find('button').removeAttr("disabled");
+        $('.canvas').find('select').removeAttr("disabled");
+    }
+
+    function add_classes(id) {
+        $('.edu').addClass('edu--clickable');
+        $('.signal-drawer').addClass('signal-drawer--active');
+        $('.canvas').addClass("canvas--shifted");
+        $("#seldiv" + id).addClass("seldiv--active");
+    }
+
+    function remove_classes() {
+        $('.edu').removeClass('edu--clickable');
+        $('.signal-drawer').removeClass('signal-drawer--active');
+        $('.canvas').removeClass("canvas--shifted");
+        $(".seldiv--active").removeClass("seldiv--active");
+    }
+
+    // this hack is necessary because it was too complicated to make
+    // all this happen in the jsplumb code--but that is the more correct
+    // solution
+    function attempt_to_bind_token_reveal_until_success() {
+        function attempt_to_bind_token_reveal() {
+            var ids = [];
+            Object.keys(window.rstWebSignals).forEach(function(id) {
+                if (window.rstWebSignals[id].length > 0) {
+                    ids.push(id);
+                }
+            });
+
+            if (ids.length > 0) {
+                var testSelDiv = document.getElementById('seldiv' + ids[0]);
+                if (!testSelDiv || !testSelDiv._jsPlumb) {
+                    return false;
+                }
+            }
+
+            ids.forEach(function(id) {
+                var selDiv = document.getElementById('seldiv' + id);
+                bind_token_reveal_on_hover(selDiv);
+            });
+            return true;
+        }
+
+        setTimeout(function() {
+            var success = attempt_to_bind_token_reveal();
+            if (!success) {
+                attempt_to_bind_token_reveal_until_success();
+            }
+        }, 400);
+    }
+
+    function bind_token_reveal_on_hover(selDiv) {
+        var id = selDiv.getAttribute('id').slice(6);
+
+        selDiv._jsPlumb.bind('mouseover', function() {
+            window.rstWebSignals[id].forEach(function(signal) {
+                signal.tokens.forEach(function(tid) {
+                    var tok = $('#tok' + tid);
+                    tok.addClass('tok--highlighted');
+                });
+            });
+        });
+        selDiv._jsPlumb.bind('mouseout', function() {
+            window.rstWebSignals[id].forEach(function(signal) {
+                signal.tokens.forEach(function(tid) {
+                    var tok = $('#tok' + tid);
+                    tok.removeClass('tok--highlighted');
+                });
+            });
+        });
+    }
+
+    function unhighlight_tokens() {
+        $(".tok--highlighted").removeClass("tok--highlighted");
+    }
+
+    function unbind_token_reveal_on_hover(selDiv) {
+        selDiv.unbind('mouseenter')
+            .unbind('mouseexit');
+    }
+
+    function bind_tok_events(signals, id, index) {
+        var row_selected = !!signals;
+
+        // reroute token clicks to this signal
+        $(".tok").click(function(e) {
+            var tok = $(this);
+            var tok_id = parseInt(tok.attr("id").substring(3));
+
+            if (row_selected) {
+                var tok_list = signals[id][index].tokens;
+                var tok_list_index = tok_list.indexOf(tok_id);
+
+                if (tok_list_index > -1) {
+                    tok_list.splice(tok_list_index, 1);
+                    tok.removeClass("tok--selected");
+                } else {
+                    tok_list.push(tok_id);
+                    tok.addClass("tok--selected");
+                }
+            } else {
+                if (tok.hasClass("tok--selected")) {
+                    tok.removeClass("tok--selected");
+                } else {
+                    tok.addClass("tok--selected");
+                }
+            }
+        });
+
+        // allow selecting tokens by click and drag
+        function selectTok(e) {
+            if (e.buttons === 3 || e.buttons === 1) {
+                var tok = $(this);
+                var tok_id = parseInt(tok.attr("id").substring(3));
+
+                if (row_selected) {
+                    var tok_list = signals[id][index].tokens;
+                    if (tok_list.indexOf(tok_id) === -1) {
+                        tok_list.push(tok_id);
+                        tok.addClass("tok--selected");
+                    }
+                } else {
+                    if (!tok.hasClass("tok--selected")) {
+                        tok.addClass("tok--selected");
+                    }
+                }
+            }
+        }
+        $(".tok").mouseover(selectTok);
+        $(".tok").mouseout(selectTok);
+    }
+
+    function deselect_and_unbind_toks() {
+        $(".tok")
+            .unbind("click")
+            .unbind("mouseover")
+            .unbind("mouseout")
+            .removeClass("tok--selected");
+    }
+
+    function update_signal_button(selDiv) {
+        var id = selDiv.attr('id').slice(6);
+        var btn = selDiv.find("button.minibtn");
+
+        var numSigs = window.rstWebSignals[id] && window.rstWebSignals[id].length;
+        if (numSigs > 0) {
+            btn.addClass("minibtn--with-signals");
+            btn.text(numSigs);
+        } else {
+            btn.removeClass("minibtn--with-signals");
+            btn.text("S");
+        }
+    }
+
+    var signalsWhenOpened;
+
+    function open_signal_drawer_inner(id) {
+        raise_shield_of_justice();
+        disable_buttons();
+        add_classes(id);
+        unhighlight_tokens();
+        unhighlight_all_tokens();
+
+        var signals = window.rstWebSignals;
+        signalsWhenOpened = JSON.stringify(signals);
+
+        // draw the list of signals that already exist
+        var list = $("#signal-list");
+        list.empty();
+
+        if (signals[id] && signals[id].length > 0) {
+            signals[id].forEach(function (signal) {
+                create_signal_item(id, signal.type, signal.subtype, signals)
+                    .trigger('click');
+            });
+        }
+        else {
+            var signal = {
+                type: window.rstWebDefaultSignalType,
+                subtype: window.rstWebDefaultSignalSubtype,
+                tokens: []
+            };
+            signals[id] = [signal];
+            create_signal_item(id, undefined, undefined, signals)
+                .trigger('click');
+        }
+    }
+
+    function make_signal_action(signals) {
+        var s = "sg:";
+
+        Object.keys(signals).forEach(function(id) {
+            signals[id].forEach(function(signal) {
+                s += id + ",";
+                s += signal.type + ",";
+                s += signal.subtype + ",";
+                s += signal.tokens.join("-") + ":";
+            });
+        });
+
+        if (s.endsWith(":")) {
+            s = s.substring(0, s.length - 1);
+        }
+        return s;
+    }
+
+    function close_signal_drawer(should_save) {
+        var selDiv = $(".seldiv--active");
+        lower_shield_of_justice();
+        enable_buttons();
+        remove_classes();
+        deselect_and_unbind_toks();
+
+        if (should_save) {
+            if (JSON.stringify(window.rstWebSignals) !== signalsWhenOpened) {
+                act(make_signal_action(window.rstWebSignals));
+            }
+        } else {
+            window.rstWebSignals = JSON.parse(signalsWhenOpened);
+        }
+
+        update_signal_button(selDiv);
+
+        // reset token highlighting
+        unbind_token_reveal_on_hover(selDiv);
+        attempt_to_bind_token_reveal_until_success();
+        if (all_tokens_are_highlighted()) {
+          highlight_all_tokens();
+        }
+    }
+
+    function create_signal_item(id, type, subtype, signals) {
+        var item =
+            $('<div class="signal-drawer__item">'
+              + '<div class="signal-drawer__row">'
+              + '<label class="signal-drawer__label" for="type">Type:</label>'
+              + '<select class="signal-drawer__select signal-drawer__select--type">'
+              + '</select>'
+              + '</div>'
+              + '<button class="button signal-drawer__item-delete" title="delete signal">X</button>'
+              + '<div class="signal-drawer__row">'
+              + '<label class="signal-drawer__label" for="type">Subtype:</label>'
+              + '<select class="signal-drawer__select signal-drawer__select--subtype">'
+              + '</select>'
+              + '</div>'
+              + '</div>');
+
+        $("#signal-list").append(item);
+
+        var signal_types = window.rstWebSignalTypes;
+        var type_select = item.find(".signal-drawer__select--type");
+        var subtype_select = item.find(".signal-drawer__select--subtype");
+        var delete_button= item.find("button");
+
+        var index = item.index();
+        var signal = signals[id][index];
+
+        $.each(signal_types, function (type, subtypes) {
+            var option = $("<option/>").text(type).val(type);
+            if (signal && signal.type === type) {
+                option.attr('selected', 'selected');
+            }
+            type_select.append(option);
+        });
+        $.each(signal_types[type_select.first().val()], function(i, subtype) {
+            var option = $("<option/>").text(subtype).val(subtype);
+            if (signal && signal.subtype === subtype) {
+                option.attr('selected', 'selected');
+            }
+            subtype_select.append(option);
+        });
+
+        // for when a <select> item is changed
+        function typeUpdated(e) {
+            var index = item.index();
+            console.log(index, signals[id]);
+            var signal = signals[id][index];
+            var typeVal = type_select.val();
+            var subtypeVal = subtype_select.val();
+            signal.type = typeVal;
+            signal.subtype = subtypeVal;
+        }
+
+        type_select.change(function(e) {
+            subtype_select.empty();
+            $.each(signal_types[e.target.value], function(i, subtype) {
+                subtype_select.append($("<option/>").text(subtype).val(subtype));
+            });
+            typeUpdated(e);
+        });
+
+        subtype_select.change(typeUpdated);
+
+        // handle click by revealing tokens and making them interactive
+        item.click(function (e) {
+            var item = $(this);
+            var index = item.index();
+            if (!item.hasClass("signal-drawer__item--selected")) {
+                // deselect previous signal
+                $(".signal-drawer__item").removeClass("signal-drawer__item--selected");
+                deselect_and_unbind_toks();
+
+                // select this one
+                item.addClass("signal-drawer__item--selected");
+
+                // highlight words already selected for this signal
+                signals[id][index].tokens.forEach(function(tindex) {
+                    $("#tok" + tindex).addClass("tok--selected");
+                });
+
+                // setup clicking etc.
+                bind_tok_events(signals, id, index);
+            }
+        });
+
+        // remove signal if x is clicked
+        delete_button.click(function (e) {
+            var item = $(this).parent();
+            var index = item.index();
+
+            // ensure we have it selected
+            item.removeClass('signal-drawer__item--selected')
+                .trigger('click');
+
+            deselect_and_unbind_toks();
+            signals[id].splice(index, 1);
+            item.remove();
+        });
+
+        // rewire new signal button so they're associated with this sel
+        $("#new-signal")
+            .unbind('click')
+            .click(function (e) {
+                e.preventDefault();
+
+                // add highlighted tokens when no signal is selected
+                var selected_tokens = [];
+                if ($(".signal-drawer__item--selected").length === 0) {
+                    $(".tok--selected").each(function() {
+                        var tok_id = parseInt($(this).attr("id").substring(3));
+                        selected_tokens.push(tok_id);
+                    });
+                }
+
+                var signal = {
+                    type: window.rstWebDefaultSignalType,
+                    subtype: window.rstWebDefaultSignalSubtype,
+                    tokens: selected_tokens
+                };
+                signals[id].push(signal);
+
+                create_signal_item(id, type, subtype, signals).trigger('click');
+
+                // 0.5s cooldown before making a new signal--prevent double clicks
+                var button = $(this);
+                button.addClass("disabled");
+                button.attr("disabled", "disabled");
+                setTimeout(function() {
+                    button.removeClass("disabled");
+                    button.removeAttr("disabled");
+                }, 500);
+            });
+
+
+        return item;
+    }
+
+    function init_signal_drawer() {
+        // modal button click events
+        $("#save-signals").click(function(e) {
+            e.preventDefault();
+            close_signal_drawer(true);
+        });
+
+        $("#cancel-signals").click(function(e) {
+            e.preventDefault();
+            close_signal_drawer(false);
+        });
+
+        attempt_to_bind_token_reveal_until_success();
+
+        open_signal_drawer = open_signal_drawer_inner;
+    }
+
+  function all_tokens_are_highlighted() {
+    var btn = $("#show-all-signals");
+    return btn.text() === "Hide Signal Tokens";
+  }
+
+  function highlight_all_tokens() {
+    Object.keys(window.rstWebSignals).forEach(function(id) {
+      window.rstWebSignals[id].forEach(function(signal) {
+        signal.tokens.forEach(function(tid) {
+          var tok = $('#tok' + tid);
+          tok.addClass('tok--highlighted-by-button');
+        });
+      });
+    });
+  }
+
+  function unhighlight_all_tokens() {
+    $(".tok--highlighted-by-button") .removeClass("tok--highlighted-by-button");
+  }
+
+  function init_show_all_tokens_button() {
+    var btn = $("#show-all-signals");
+    btn.click(function(e) {
+      if (!all_tokens_are_highlighted()) {
+        btn.text("Hide Signal Tokens");
+        highlight_all_tokens();
+      } else {
+        btn.text("Show All Signal Tokens");
+        unhighlight_all_tokens();
+      }
+    });
+  }
+
+  init_signal_drawer();
+  init_show_all_tokens_button();
+});

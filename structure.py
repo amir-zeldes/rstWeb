@@ -16,6 +16,7 @@ import sys
 import cgi
 import os
 import datetime
+import json
 import _version
 from modules.configobj import ConfigObj
 from modules.pathutils import *
@@ -58,13 +59,6 @@ def structure_main(user, admin, mode, **kwargs):
 		current_doc = ""
 		current_project = ""
 		current_guidelines = ""
-
-
-	if "screenshot" in theform:
-		if len(theform["screenshot"]) > 1:
-			from screenshot import get_png
-			return get_png(current_doc,current_project,user,mode)
-
 
 	UTF8Writer = codecs.getwriter('utf8')
 	sys.stdout = UTF8Writer(sys.stdout)
@@ -117,10 +111,41 @@ def structure_main(user, admin, mode, **kwargs):
 		cpout += '<p class="warn">No file found - please select a file to open</p>'
 		return cpout
 
-	cpout += '''<div class="canvas">'''
-	cpout += '\t<p>Document: <b>'+current_doc+'</b> (project: <i>'+current_project+'</i>)</p>'
+	cpout += '''
+          <div id="container" class="container">
+            <button id="show-all-signals">
+              Show All Signal Tokens
+            </button>
+            <div class="signal-drawer">
+              <div id="signal-list"> </div>
+
+			  <div class="signal-drawer__row">
+			    <button id="new-signal" class="signal-drawer__create-new-button">
+  			      <i class="fa fa-plus" title="New Signal"> </i>
+			      New Signal
+			    </button>
+			  </div>
+			  <div class="signal-drawer__row" style="text-align: center;padding-top:20px;">
+  		        <button id="save-signals" class="signal-drawer__save-button">
+  		          <i class="fa fa-check"> </i>
+  		          Save Changes
+  		        </button>
+  		        <button id="cancel-signals" class="signal-drawer__cancel-button">
+  		          <i class="fa fa-ban"> </i>
+  		          Cancel
+  		        </button>
+  		      </div>
+            </div>
+    '''
+
+	cpout += '''<div id="canvas" class="canvas">'''
+	cpout += '\t<p id="document_name">Document: <b>'+current_doc+'</b> (project: <i>'+current_project+'</i>)</p>'
 	cpout += '''<div id="inner_canvas">'''
 	cpout += '<script src="./script/structure.js"></script>'
+
+	# Remove floating non-terminal nodes if found
+	# (e.g. due to browsing back and re-submitting old actions or other data corruption)
+	clean_floating_nodes(current_doc, current_project, user)
 
 	rels = get_rst_rels(current_doc, current_project)
 	def_multirel = get_def_rel("multinuc",current_doc, current_project)
@@ -137,10 +162,6 @@ def structure_main(user, admin, mode, **kwargs):
 			rel_kinds[rel[0]] = "rst"
 	multi_options += "<option value='"+def_rstrel+"'>(satellite...)</option>\n"
 
-	# Remove floating non-terminal nodes if found
-	# (e.g. due to browsing back and re-submitting old actions or other data corruption)
-	clean_floating_nodes(current_doc, current_project, user)
-
 	timestamp = ""
 	if "timestamp" in theform:
 		if len(theform["timestamp"]) > 1:
@@ -156,7 +177,7 @@ def structure_main(user, admin, mode, **kwargs):
 				set_timestamp(user,timestamp)
 				for action in actions:
 					action_type = action.split(":")[0]
-					action_params = action.split(":")[1]
+					action_params = action.split(":")[1] if len(action.split(":")) > 1 else ""
 					params = action_params.split(",")
 					if action_type == "up":
 						update_parent(params[0],params[1],current_doc,current_project,user)
@@ -166,6 +187,8 @@ def structure_main(user, admin, mode, **kwargs):
 						insert_parent(params[0],def_multirel,"multinuc",current_doc,current_project,user)
 					elif action_type == "rl":
 						update_rel(params[0],params[1],current_doc,current_project,user)
+					elif action_type == "sg":
+						update_signals(action.split(":")[1:], current_doc, current_project, user)
 					else:
 						cpout += '<script>alert("the action was: " + theform["action"]);</script>\n'
 
@@ -199,6 +222,25 @@ def structure_main(user, admin, mode, **kwargs):
 	for key in nodes:
 		if nodes[key].kind == "edu":
 			get_left_right(key, nodes,0,0,rel_kinds)
+
+	signals = {}
+	for signal in get_signals(current_doc, current_project, user):
+		s_id, s_type, subtype, tokens = signal
+		if s_id not in signals:
+			signals[s_id] = list()
+		if tokens:
+			tokens = list(map(int, tokens.split(",")))
+		else:
+			tokens = []
+		signals[s_id].append({'type': s_type,
+							  'subtype': subtype,
+							  'tokens': tokens})
+	cpout += '<script>'
+	cpout += 'window.rstWebSignals = ' + json.dumps(signals) + ';'
+	cpout += 'window.rstWebSignalTypes = ' + json.dumps(get_signal_types_dict(current_doc, current_project), sort_keys=True) + ';'
+	cpout += 'window.rstWebDefaultSignalType = Object.keys(window.rstWebSignalTypes)[0];'
+	cpout += 'window.rstWebDefaultSignalSubtype = window.rstWebSignalTypes[window.rstWebDefaultSignalType][0];'
+	cpout += '</script>'
 
 	anchors = {}
 	pix_anchors = {}
@@ -257,7 +299,9 @@ def structure_main(user, admin, mode, **kwargs):
 		lambda_button = "Λ".decode("utf-8")
 	else:
 		lambda_button = "Λ"
-	for key in nodes:
+
+	tok_count = 0
+	for key in sorted(nodes.keys(), key=int):
 		node = nodes[key]
 		if node.kind != "edu":
 			g_wid = str(int((node.right- node.left+1) *100 -4 ))
@@ -278,7 +322,13 @@ def structure_main(user, admin, mode, **kwargs):
 			cpout += '</tr>'
 			if use_multinuc_buttons:
 				cpout += '<tr><td><button id="amulti_'+ node.id+'" title="add multinuc above" class="minibtn" onclick="act('+"'mn:"+node.id+"'"+');">' + lambda_button + '</button></td></tr>'
-			cpout += '</table></div>'+node.text+'</div>'
+			cpout += '</table></div>'
+
+			for tok in node.text.split(" "):
+				tok_count += 1
+				cpout += '<span id="tok' + str(tok_count) + '" class="tok">' + tok + '</span> '
+
+			cpout += '</div>'
 
 
 	max_right = get_max_right(current_doc,current_project,user)
@@ -324,7 +374,25 @@ def structure_main(user, admin, mode, **kwargs):
 	cpout += '		return options.replace("<option value='+"'" +'"' + '+my_rel+'+'"' +"'"+'","<option selected='+"'"+'selected'+"'"+' value='+"'" +'"'+ '+my_rel+'+'"' +"'"+'");'
 	cpout += '			}\n'
 	cpout += '''function make_relchooser(id,option_type,rel){
-	    return $("<select class='rst_rel' id='sel"+id.replace("n","")+"' onchange='crel(" + id.replace("n","") + ",this.options[this.selectedIndex].value);'>" + select_my_rel(option_type,rel) + "</select>");
+	    var s = "<div id='seldiv"+id.replace("n","")+"' style='white-space:nowrap;'>";
+	    s += make_signal_button(id);
+	    s += "<select id='sel"+id.replace("n","")+"' class='rst_rel' onchange='crel(" + id.replace("n","") + ",this.options[this.selectedIndex].value);'>" + select_my_rel(option_type,rel) + "</select>";
+	    return $(s);
+	}'''
+	# todo: make a flag that controls whether signals are on
+	cpout += 'var signalsEnabled = ' + ('true;' if get_setting("signals") == "True" else 'false;')
+	cpout += '''function make_signal_button(id) {
+		if (signalsEnabled) {
+			var text = window.rstWebSignals[id]
+					? window.rstWebSignals[id].length
+					: "S";
+			var classes = window.rstWebSignals[id] && window.rstWebSignals[id].length > 0
+					? "minibtn minibtn--with-signals"
+					: "minibtn";
+			return '<button title="add signals" class="' + classes + '" onclick="open_signal_drawer(\\'' + id.replace('n','') + '\\')">' + text + '</button>';
+		} else {
+			return '';
+		}
 	}'''
 	cpout += '''
 			jsPlumb.importDefaults({
@@ -375,7 +443,6 @@ def structure_main(user, admin, mode, **kwargs):
 				cpout += 'jsPlumb.connect({source:"'+node_id_str+'",target:"'+parent_id_str+ '", connector:"Straight", anchors: ["Top","Bottom"], overlays: [ ["Custom", {create:function(component) {return make_relchooser("'+node.id+'","multi","'+node.relname+'");},location:0.2,id:"customOverlay"}]]});'
 			else:
 				cpout += 'jsPlumb.connect({source:"'+node_id_str+'",target:"'+parent_id_str+'", overlays: [ ["Arrow" , { width:12, length:12, location:0.95 }],["Custom", {create:function(component) {return make_relchooser("'+node.id+'","rst","'+node.relname+'");},location:0.1,id:"customOverlay"}]]});'
-
 
 	cpout += '''
 
@@ -440,6 +507,7 @@ def structure_main(user, admin, mode, **kwargs):
 	cpout += '''
 			</div>
 			</div>
+			</div>
 			<div id="anim_catch" class="anim_catch">&nbsp;</div>
 	</body>
 	</html>
@@ -464,12 +532,7 @@ def structure_main_server():
 		kwargs[key] = theform[key].value
 	output = structure_main(user, admin, 'server', **kwargs)
 
-	if "screenshot" in theform:
-		print("Content-type: image/png")
-		print('Content-Disposition: attachment; filename="image.png"\n')
-		print(output)
-	else:
-		print(output)
+	print(output)
 
 
 if "/" in os.environ.get('SCRIPT_NAME', ''):

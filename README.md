@@ -8,7 +8,7 @@ URL: https://corpling.uis.georgetown.edu/rstweb/info/
 
 ## Introduction
 
-rstWeb is an open source, browser based annotation tool for discourse analyses in Rhetorical Structure Theory. It is meant to support collaborative, online annotation projects using just a Web browser, without the need to install software for annotators, though there is also a standalone local version for offline use if you do not have access to a server. 
+rstWeb is an open source, browser based annotation tool for discourse analyses in Rhetorical Structure Theory and annotation of discourse relation signals, such as connectives / discourse markers. It is meant to support collaborative, online annotation projects using just a Web browser, without the need to install software for annotators, though there is also a standalone local version for offline use if you do not have access to a server. 
 
 ## Local Installation
 
@@ -103,3 +103,34 @@ If you’re having trouble, it’s possible some permissions are set incorrectly
 ### Upgrading
 
 If you have upgraded from an older version of rstWeb, it is recommended to click on admin -> database -> update schema (NOT ‘init DB’). This should not result in data loss, but backing up the rstweb.db is always a good idea. If new features are not working, you should also empty your browser cache to reload all css and javascript updates.
+
+## Citing
+
+If you're using rstWeb to annotate RST trees for a project or article, please cite the following paper:
+
+Zeldes, Amir (2016) [rstWeb - A Browser-based Annotation Interface for Rhetorical Structure Theory and Discourse Relations](https://www.aclweb.org/anthology/N16-3001). In: Proceedings of NAACL-HLT 2016 System Demonstrations. San Diego, CA, 1-5.
+```
+@InProceedings{,
+  author    = {Amir Zeldes},
+  title     = {{rstWeb} - A Browser-based Annotation Interface for Rhetorical Structure Theory and Discourse Relations},
+  booktitle = {Proceedings of NAACL-HLT 2016 System Demonstrations},
+  year      = {2016},
+  address   = {San Diego, CA},
+  pages     = {1--5}
+}
+```
+
+If you are using the system to annotate discourse relation signals, use this paper instead:
+
+Gessler, Luke, Yang Liu and Amir Zeldes (2019) [A Discourse Signal Annotation System for RST Trees](https://www.aclweb.org/anthology/W19-2708). In: Proceedings of Discourse Relation Treebanking and Parsing (DISRPT 2019). Minneapolis, MN, 56-61.
+```
+@InProceedings{,
+  author    = {Luke Gessler and Yang Liu and Amir Zeldes},
+  title     = {A Discourse Signal Annotation System for {RST} Trees},
+  booktitle = {Proceedings of Discourse Relation Treebanking and Parsing (DISRPT 2019)},
+  year      = {2019},
+  address   = {Minneapolis, MN},
+  pages     = {56--61}
+}
+```
+

@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# -*- coding: UTF-8 -*-
+# -*- coding: utf-8 -*-
 
 """
 Administration functions and interface to create and delete users, import and export documents,
@@ -130,12 +130,15 @@ def admin_main(user, admin, mode, **kwargs):
 		<input type="hidden" name="delete_user" id="delete_user" value=""/>
 		<input type="hidden" name="export" id="export" value=""/>
 		<input type="hidden" name="wipe" id="wipe" value=""/>
+		<input type="hidden" name="switch_signals" id="switch_signals" value=""/>
+		<input type="hidden" name="signals_file" id="signals_file" value=""/>
 		<input type="hidden" name="switch_logging" id="switch_logging" value=""/>
 		<input type="hidden" name="switch_span_buttons" id="switch_span_buttons" value=""/>
 		<input type="hidden" name="switch_multinuc_buttons" id="switch_multinuc_buttons" value=""/>
 		<input type="hidden" name="update_schema" id="update_schema" value=""/>
 		<input type="hidden" name="imp_project" id="imp_project" value=""/>
 		<input type="hidden" name="import_file_type" id="import_file_type" value=""/>
+		<input type="hidden" name="do_tokenize" id="do_tokenize" value=""/>
 		<input type="hidden" name="doclist" id="doclist" value="'''
 	cpout += current_doc
 	cpout += '''"/>
@@ -315,7 +318,8 @@ def admin_main(user, admin, mode, **kwargs):
 	<h2>Import a Document</h2>
 	<p>1. Upload .rs3 or plain text file(s): </p>
 	<p>2. Choose file type: <select id="import_file_type_select" class="doclist"><option value="rs3">rs3</option><option value="plain">plain text (EDU per line)</option></select> </p>
-	<p>3. Import document(s) into this project:
+	<p>3. Tokenize words automatically? <input type="checkbox" name="tokenize" id="tokenize"></p>
+	<p>4. Import document(s) into this project:
 	'''
 
 
@@ -339,6 +343,7 @@ def admin_main(user, admin, mode, **kwargs):
 	if "file" in theform and "imp_project" in theform:
 		fileitem = theform['file']
 		imp_project = theform["imp_project"]
+		do_tokenize = theform["do_tokenize"] == "tokenize"
 		if isinstance(fileitem,list):
 			message = ""
 			for filelist_item in fileitem:
@@ -348,13 +353,13 @@ def admin_main(user, admin, mode, **kwargs):
 					open(importdir + fn, 'wb').write(filelist_item.file.read())
 					message += 'The file "' + fn + '" was uploaded successfully<br/>'
 					if theform['import_file_type'] == "rs3":
-						fail = import_document(importdir + fn,imp_project,user)
+						fail = import_document(importdir + fn,imp_project,user,do_tokenize=do_tokenize)
 					elif theform['import_file_type'] == "plain":
 						if len(def_relfile) > 0:
 							rel_hash = read_relfile(def_relfile)
 						else:
 							rel_hash = {}
-						fail = import_plaintext(importdir + fn,imp_project,user,rel_hash)
+						fail = import_plaintext(importdir + fn,imp_project,user,rel_hash,do_tokenize=do_tokenize)
 				else:
 					message = 'No file was uploaded'
 		else:
@@ -364,13 +369,13 @@ def admin_main(user, admin, mode, **kwargs):
 				open(importdir + fn, 'wb').write(fileitem.file.read())
 				message = 'The file "' + fn + '" was uploaded successfully'
 				if theform['import_file_type'] == "rs3":
-					fail = import_document(importdir + fn,imp_project,user)
+					fail = import_document(importdir + fn,imp_project,user,do_tokenize=do_tokenize)
 				elif theform['import_file_type'] == "plain":
 					if len(def_relfile) > 0:
 						rel_hash = read_relfile(def_relfile)
 					else:
 						rel_hash = {}
-					fail = import_plaintext(importdir + fn,imp_project,user,rel_hash)
+					fail = import_plaintext(importdir + fn,imp_project,user,rel_hash,do_tokenize=do_tokenize)
 			else:
 				message = 'No file was uploaded'
 
@@ -476,7 +481,6 @@ def admin_main(user, admin, mode, **kwargs):
 		if len(theform["unassign_user"]) > 0:
 			user_to_unassign = theform["unassign_user"]
 			doc_to_unassign = theform["unassign_doc"]
-			print(theform)
 			delete_doc_user_version(doc_to_unassign.split("/")[1],doc_to_unassign.split("/")[0],user_to_unassign)
 
 	if "new_user_data" in theform:
@@ -590,8 +594,55 @@ def admin_main(user, admin, mode, **kwargs):
 		if len(theform["new_user_data"]) > 0:
 			cpout += user_create_message
 
-
+	### database
 	cpout += '</div><div class="tab_btn" id="database_btn" onclick="open_tab('+"'"+"database"+"'"+');">Database</div><div id="database" class="tab">'
+
+	# signals
+	cpout += '''<h2>Signals</h2>
+	<p>Turn signal display and editing signals on/off.</p>'''
+
+	try:
+		signals_state = get_setting("signals")
+	except IndexError:
+		signals_state="False"
+
+	if "switch_signals" in theform:
+		if theform["switch_signals"] == "switch_signals":
+
+			if signals_state == "True":
+				signals_state = "False"
+			else:
+				signals_state = "True"
+			save_setting("signals",signals_state)
+
+	if signals_state == "True":
+		opposite_signals = "False"
+	else:
+		opposite_signals = "True"
+
+	cpout += '''<button onclick="admin('switch_signals')">Turn ''' + ('on' if opposite_signals == "True" else 'off') +'''</button>'''
+
+	if "signals_file" in theform and theform["signals_file"]:
+		save_setting("signals_file", theform["signals_file"])
+
+	cpout += '''<div>
+	<br>
+	<span>Signal types: </span>
+	<select name="signals_file_select" id="signals_file_select" class="doclist"
+	        onchange="admin('select_signals_file')">'''
+	signals_files = [fname for fname in os.listdir('signals')
+					 if fname.endswith('.json')]
+	signals_file = get_setting("signals_file")
+	for fname in signals_files:
+
+		selected_string = (' selected="selected"'
+						   if signals_file and signals_file == fname
+						   else '')
+		cpout += '<option value="' + fname + '"' + selected_string + '>' + fname[:-5] + '</option>'
+	cpout += '''</select>
+	</div>'''
+
+	# logging
 	cpout += '''<h2>Logging</h2>
 	<p>Turn detailed action logging on/off.</p>'''
 
@@ -616,6 +667,8 @@ def admin_main(user, admin, mode, **kwargs):
 
 	cpout += '''<button onclick="admin('switch_logging')">Turn '''+ opposite_logging +'''</button>'''
 
+
+	# spans/multinucs
 	cpout += '''<h2>Disable spans or multinucs</h2>
 	<p>Turn on/off add span and multinuc buttons (for non-RST annotation).</p>'''
 
