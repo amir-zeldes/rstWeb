@@ -167,6 +167,10 @@ def admin_main(user, admin, mode, **kwargs):
 	'''
 	#cpout += theform
 
+	if "update_schema" in theform:
+		if theform["update_schema"] == "update_schema":
+			update_schema()
+
 	if "del_project" in theform:
 		projects_to_delete = theform["del_project"].split(";")
 		if len(projects_to_delete)>0:
@@ -711,10 +715,6 @@ def admin_main(user, admin, mode, **kwargs):
 
 	cpout += '''<h2>Update schema</h2>
 	<p>Update the schema without losing data between major schema upgrades.</p>'''
-
-	if "update_schema" in theform:
-		if theform["update_schema"] == "update_schema":
-			update_schema()
 
 	cpout += '''<button onclick="admin('update_schema')">Update</button>'''
 

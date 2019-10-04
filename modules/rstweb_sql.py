@@ -259,6 +259,11 @@ def import_document(filename, project, user, do_tokenize=False):
 
 def import_plaintext(filename, project, user, rel_hash, do_tokenize=False):
 
+	dbpath = os.path.dirname(os.path.realpath(__file__)) + os.sep +".."+os.sep+"rstweb.db"
+	conn = sqlite3.connect(dbpath)
+
+	cur = conn.cursor()
+
 	doc=os.path.basename(filename)
 
 	rst_nodes = read_text(filename, rel_hash, do_tokenize=do_tokenize)
@@ -280,6 +285,10 @@ def import_plaintext(filename, project, user, rel_hash, do_tokenize=False):
 			(majtype, subtype, doc, project))
 
 	generic_query("INSERT INTO docs VALUES (?,?,?)", (doc,project,user))
+
+	conn.commit()
+	conn.close()
+
 
 
 def get_rst_doc(doc,project,user):
