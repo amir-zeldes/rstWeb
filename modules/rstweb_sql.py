@@ -284,11 +284,10 @@ def import_plaintext(filename, project, user, rel_hash, do_tokenize=False):
 			cur.execute("INSERT INTO rst_signal_types VALUES(?,?,?,?)",
 			(majtype, subtype, doc, project))
 
-	generic_query("INSERT INTO docs VALUES (?,?,?)", (doc,project,user))
-
 	conn.commit()
 	conn.close()
 
+	generic_query("INSERT INTO docs VALUES (?,?,?)", (doc,project,user))
 
 
 def get_rst_doc(doc,project,user):
