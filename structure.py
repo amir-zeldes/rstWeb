@@ -25,6 +25,8 @@ from modules.logintools import login
 
 def structure_main(user, admin, mode, **kwargs):
 
+	RTL = True
+
 	scriptpath = os.path.dirname(os.path.realpath(__file__)) + os.sep
 	userdir = scriptpath + "users" + os.sep
 	theform = kwargs
@@ -140,7 +142,8 @@ def structure_main(user, admin, mode, **kwargs):
 
 	cpout += '''<div id="canvas" class="canvas">'''
 	cpout += '\t<p id="document_name">Document: <b>'+current_doc+'</b> (project: <i>'+current_project+'</i>)</p>'
-	cpout += '''<div id="inner_canvas">'''
+	DIR = ' dir="rtl"' if RTL else ""
+	cpout += '''<div id="inner_canvas" '''+DIR+'>'
 	cpout += '<script src="./script/structure.js"></script>'
 
 	# Remove floating non-terminal nodes if found
@@ -301,27 +304,31 @@ def structure_main(user, admin, mode, **kwargs):
 		lambda_button = "Λ"
 
 	tok_count = 0
+	LR = "right" if RTL else "left"
 	for key in sorted(nodes.keys(), key=int):
 		node = nodes[key]
 		if node.kind != "edu":
 			g_wid = str(int((node.right- node.left+1) *100 -4 ))
-			cpout += '<div id="lg'+ node.id +'" class="group" style="left: ' +str(int(node.left*100 - 100))+ '; width: ' + g_wid + '; top:'+ str(int(top_spacing + layer_spacing+node.depth*layer_spacing)) +'px; z-index:1"><div id="wsk'+node.id+'" class="whisker" style="width:'+g_wid+';"></div></div>'
-			cpout += '<div id="g'+ node.id +'" class="num_cont" style="position: absolute; left:' + pix_anchors[node.id] +'px; top:'+ str(int(4+ top_spacing + layer_spacing+node.depth*layer_spacing))+'px; z-index:'+str(int(200-(node.right-node.left)))+'"><table class="btn_tb"><tr><td rowspan="2"><button id="unlink_'+ node.id+'"  title="unlink this node" class="minibtn" onclick="act('+"'up:"+node.id+",0'"+');">X</button></td><td rowspan="2"><span class="num_id">'+str(int(node.left))+"-"+str(int(node.right))+'</span></td>'
+			cpout += '<div id="lg'+ node.id +'" class="group" style="'+LR+': ' +str(int(node.left*100 - 100))+ '; width: ' + g_wid + '; top:'+ str(int(top_spacing + layer_spacing+node.depth*layer_spacing)) +'px; z-index:1"><div id="wsk'+node.id+'" class="whisker" style="width:'+g_wid+';"></div></div>'
+			cpout += '<div id="g'+ node.id +'" class="num_cont" style="position: absolute; '+LR+':' + pix_anchors[node.id] +'px; top:'+ str(int(4+ top_spacing + layer_spacing+node.depth*layer_spacing))+'px; z-index:'+str(int(200-(node.right-node.left)))+'"><table class="btn_tb"><tr><td><button id="unlink_'+ node.id+'"  title="unlink this node" class="minibtn" onclick="act('+"'up:"+node.id+",0'"+');">X</button></td><td rowspan="2"><span class="num_id">'+str(int(node.left))+"-"+str(int(node.right))+'</span></td>'
 			if use_span_buttons:
 				cpout += '<td><button id="aspan_'+ node.id+'" title="add span above" class="minibtn" onclick="act('+"'sp:"+node.id+"'"+');">T</button></td>'
 			cpout += '</tr>'
 			if use_multinuc_buttons:
-				cpout += '<tr><td><button id="amulti_'+ node.id+'" title="add multinuc above" class="minibtn" onclick="act('+"'mn:"+node.id+"'"+');">' + lambda_button + '</button></td></tr>'
+				cpout += '<tr><td><button id="zdown_'+ node.id+'"  title="send to back" class="minibtn" onclick="zdown('+"'g"+node.id+"'"+');">v</button></td><td><button id="amulti_'+ node.id+'" title="add multinuc above" class="minibtn" onclick="act('+"'mn:"+node.id+"'"+');">' + lambda_button + '</button></td></tr>'
+			else:
+				cpout += '<tr><td><button id="zdown_'+ node.id+'"  title="send to back" class="minibtn" onclick="zdown('+"'g"+node.id+"'"+');">v</button></td></tr>'
 			cpout += '</table></div><br/>'
-
 		elif node.kind=="edu":
-			cpout += '<div id="edu'+str(node.id)+'" class="edu" title="'+str(node.id)+'" style="left:'+str(int(node.id)*100 - 100) +'; top:'+str(int(top_spacing +layer_spacing+node.depth*layer_spacing))+'; width: 96px">'
-			cpout += '<div id="wsk'+node.id+'" class="whisker" style="width:96px;"></div><div class="edu_num_cont"><table class="btn_tb"><tr><td rowspan="2"><button id="unlink_'+ node.id+'" title="unlink this node" class="minibtn" onclick="act('+"'up:"+node.id+",0'"+');">X</button></td><td rowspan="2"><span class="num_id">&nbsp;'+str(int(node.left))+'&nbsp;</span></td>'
+			cpout += '<div id="edu'+str(node.id)+'" class="edu" title="'+str(node.id)+'" style="'+LR+':'+str(int(node.id)*100 - 100) +'; top:'+str(int(top_spacing +layer_spacing+node.depth*layer_spacing))+'; width: 96px">'
+			cpout += '<div id="wsk'+node.id+'" class="whisker" style="width:96px;"></div><div class="edu_num_cont"><table class="btn_tb"><tr><td><button id="unlink_'+ node.id+'" title="unlink this node" class="minibtn" onclick="act('+"'up:"+node.id+",0'"+');">X</button></td><td rowspan="2"><span class="num_id">&nbsp;'+str(int(node.left))+'&nbsp;</span></td>'
 			if use_span_buttons:
 				cpout += '<td><button id="aspan_'+ node.id+'" title="add span above" class="minibtn" onclick="act('+"'sp:"+node.id+"'"+');">T</button></td>'
 			cpout += '</tr>'
 			if use_multinuc_buttons:
-				cpout += '<tr><td><button id="amulti_'+ node.id+'" title="add multinuc above" class="minibtn" onclick="act('+"'mn:"+node.id+"'"+');">' + lambda_button + '</button></td></tr>'
+				cpout += '<tr><td><button id="zdown_'+ node.id+'"  title="send to back" class="minibtn" onclick="zdown('+"'edu"+str(node.id)+"'"+');">v</button></td><td><button id="amulti_'+ node.id+'" title="add multinuc above" class="minibtn" onclick="act('+"'mn:"+node.id+"'"+');">' + lambda_button + '</button></td></tr>'
+			else:
+				cpout += '<tr><td><button id="zdown_'+ node.id+'"  title="send to back" class="minibtn" onclick="zdown('+"'edu"+str(node.id)+"'"+');">v</button></td></tr>'
 			cpout += '</table></div>'
 
 			for tok in node.text.split(" "):

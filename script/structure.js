@@ -106,15 +106,26 @@ function act(action){
 
     // anim_catch replaces jquery promise to monitor animation queue
     // enable buttons once this final animation is complete
-    if (document.getElementById("anim_catch").style.left=="10px"){
-        jsPlumb.animate("anim_catch",{left: 20},complete=function(){enable_buttons();});
-        }
-    else{
-        jsPlumb.animate("anim_catch",{left: 10},complete=function(){enable_buttons();});
-        }
+    if (rtl()){
+        if (document.getElementById("anim_catch").style.left=="10px"){
+            jsPlumb.animate("anim_catch",{right: 20},complete=function(){enable_buttons();});
+            }
+        else{
+            jsPlumb.animate("anim_catch",{right: 10},complete=function(){enable_buttons();});
+            }
+    }else{
+        if (document.getElementById("anim_catch").style.left=="10px"){
+            jsPlumb.animate("anim_catch",{left: 20},complete=function(){enable_buttons();});
+            }
+        else{
+            jsPlumb.animate("anim_catch",{left: 10},complete=function(){enable_buttons();});
+            }
+    }
 }
 
 function crel(node_id,sel) {act("rl:" + node_id.toString() + "," + sel);}
+
+function rtl(){return true;}
 
 function rst_node(id, parent, kind, left, relname, reltype){
 
@@ -658,9 +669,17 @@ function recalculate_depth(nodes){
             document.getElementById(element_id.replace("l","")).style.zIndex = (200-(nodes[node_id].right - nodes[node_id].left));
         }
 
-        if (nodes[node_id].kind !="edu" && document.getElementById(element_id.replace("l","")).style.left != nodes[node_id].anchor + "px"){
-            document.getElementById(element_id.replace("l","")).style.left= nodes[node_id].anchor + "px";
-            jsPlumb.animate(element_id.replace("l",""),{left: nodes[node_id].anchor});
+        if (rtl()){
+            if (nodes[node_id].kind !="edu" && document.getElementById(element_id.replace("l","")).style.right != nodes[node_id].anchor + "px"){
+                document.getElementById(element_id.replace("l","")).style.right= nodes[node_id].anchor + "px";
+                jsPlumb.animate(element_id.replace("l",""),{right: nodes[node_id].anchor});
+            }
+        }
+        else{
+            if (nodes[node_id].kind !="edu" && document.getElementById(element_id.replace("l","")).style.left != nodes[node_id].anchor + "px"){
+                document.getElementById(element_id.replace("l","")).style.left= nodes[node_id].anchor + "px";
+                jsPlumb.animate(element_id.replace("l",""),{left: nodes[node_id].anchor});
+            }
         }
 
         if (nodes[node_id].kind !="edu" && document.getElementById(element_id.replace("l","")).style.top != (expected_top + 4) + "px"){
@@ -670,8 +689,15 @@ function recalculate_depth(nodes){
             document.getElementById(element_id.replace("l","")).style.zIndex = (200-(nodes[node_id].right-nodes[node_id].left)).toString();
         }
 
-        if (document.getElementById(element_id).style.top != expected_top + "px" || document.getElementById(element_id).style.left != expected_left + "px"){
-            jsPlumb.animate(element_id, {top: expected_top, left: expected_left});
+        if (rtl()){
+            if (document.getElementById(element_id).style.top != expected_top + "px" || document.getElementById(element_id).style.right != expected_left + "px"){
+                jsPlumb.animate(element_id, {top: expected_top, right: expected_left});
+            }
+        }
+        else{
+            if (document.getElementById(element_id).style.top != expected_top + "px" || document.getElementById(element_id).style.left != expected_left + "px"){
+                jsPlumb.animate(element_id, {top: expected_top, left: expected_left});
+            }
         }
     }
     show_warnings(nodes);
@@ -877,10 +903,16 @@ if ($('#lg' + id).length > 0){ // A node with this id already exists, just displ
     document.getElementById("g"+id).style.display = "block";
     document.getElementById("g"+id).style.zIndex = (200-(right-left));
     expected_left = left*100 - 100+"px";
-    document.getElementById("g"+id).style.left = expected_left;
+    if (rtl()){
+        document.getElementById("g"+id).style.right = expected_left;
+        document.getElementById("lg"+id).style.right = expected_left;
+    } else{
+        document.getElementById("g"+id).style.left = expected_left;
+        document.getElementById("lg"+id).style.left = expected_left;
+    }
+
     jsPlumb.recalculateOffsets("g"+id);
     jsPlumb.repaint("g"+id);
-    document.getElementById("lg"+id).style.left = expected_left;
     jsPlumb.recalculateOffsets("lg"+id);
     jsPlumb.repaint("lg"+id);
 
@@ -893,7 +925,11 @@ layer_spacing = 60;
 var lg = document.createElement("div");
 lg.setAttribute("id", "lg" + id);
 lg.className = "group";
-lg.style.left = (left*100 - 100) + "px";
+if (rtl()){
+    lg.style.right = (left*100 - 100) + "px";
+} else{
+    lg.style.left = (left*100 - 100) + "px";
+}
 lg.style.top = (top_spacing + layer_spacing+depth*layer_spacing) + "px";
 lg.style.width =(width *100 -4) + "px";
 lg.innerHTML = '<div id="wsk'+id+'" class="whisker" style="width:'+(width *100 -4) + 'px;"></div></div>';
@@ -914,17 +950,23 @@ else{
 var g = document.createElement("div");
 g.setAttribute("id", "g" + id);
 g.className = "num_cont";
-g.style.left = (anchor)+"px";
+if (rtl()){
+    g.style.right = (anchor)+"px";
+}else{
+    g.style.left = (anchor)+"px";
+}
 g.style.top = (4+top_spacing + layer_spacing+depth*layer_spacing)+'px';
 g.style.position = 'absolute';
 g.style.zIndex = (200-(right-left)).toString();
-innerHTML_string = '<table class="btn_tb"><tr><td rowspan="2"><button id="unlink_'+ id+'" class="minibtn" onclick="act('+"'up:"+id+",0'"+');">X</button></td><td rowspan="2"><span class="num_id">'+left+"-"+right+'</span></td>';
+innerHTML_string = '<table class="btn_tb"><tr><td><button id="unlink_'+ id+'" class="minibtn" onclick="act('+"'up:"+id+",0'"+');">X</button></td><td rowspan="2"><span class="num_id">'+left+"-"+right+'</span></td>';
 if (use_span_buttons){
     innerHTML_string += '<td><button id="aspan_'+ id+'" class="minibtn" onclick="act('+"'sp:"+id+"'"+');">T</button></td>';
 }
 innerHTML_string += '</tr>';
 if (use_multinuc_buttons){
-    innerHTML_string += '<tr><td><button id="amulti_'+ id+'" class="minibtn" onclick="act('+"'mn:"+id+"'"+');">Λ</button></td></tr>';
+    innerHTML_string += '<tr><td><button id="zdown_'+ id+'" title="send to back" class="minibtn" onclick="' +" zdown('g"+id+"'"+');">v</button></td><td><button id="amulti_'+ id+'" class="minibtn" onclick="act('+"'mn:"+id+"'"+');">Λ</button></td></tr>';
+} else {
+    innerHTML_string += '<tr><td><button id="zdown_'+ id+'" title="send to back" class="minibtn" onclick="' +" zdown('g"+id+"'"+');">v</button></td></tr>';
 }
 innerHTML_string += '</table>';
 g.innerHTML = innerHTML_string;
@@ -977,6 +1019,65 @@ function is_ancestor(new_parent_id,node_id){
     return false;
 }
 
+
+function zdown(elem){
+    // restore all other altered z-orders
+    elems = $('[data-origz]');
+    /*for (otherelem in elems){
+        z = otherelem.dataset.origz;
+        otherelem.style.zIndex = z;
+    }*/
+
+    elems.each(function(){
+        z = this.dataset.origz;
+        this.style.zIndex = z;
+    });
+
+
+    // lower z-order of element to prevent occluding another node
+    $('#'+elem).data('origz',  $('#'+elem)[0].style.zIndex);
+    $('#'+elem).css('z-index', 0);
+}
+
+function rerenderRTL(){
+    if (rtl()){
+        nodes = parse_data();
+
+        for (node_id in nodes){
+            if (nodes[node_id].kind == "edu"){
+                element_id = "edu"+node_id.replace("n","");
+            }
+            else{
+                element_id = "g"+node_id.replace("n","");
+            }
+            jsPlumb.recalculateOffsets(element_id);
+
+            if (nodes[node_id].parent!="n0"){
+                if (nodes[nodes[node_id].parent].kind == "edu"){
+                    parent_element_id = "edu"+nodes[node_id].parent.replace("n","");
+                }
+                else{
+                    parent_element_id = "g"+nodes[node_id].parent.replace("n","");
+                }
+                parent_kind = nodes[nodes[node_id].parent].kind;
+                detach_source(element_id);
+                relname = nodes[node_id].relname;
+                if (parent_kind == "multinuc" && nodes[node_id].reltype=="multinuc"){
+                    jsPlumb.connect({source: element_id.replace("l",""),target:parent_element_id, connector:"Straight", anchors: ["Top","Bottom"], overlays: [ ["Custom", {create:function(component) {return make_relchooser(node_id,"multi",relname);},location:0.2,id:"customOverlay"}]]});
+                }
+                else if(nodes[node_id].reltype=="rst") {
+                    jsPlumb.connect({source: element_id.replace("l",""),target:parent_element_id, overlays: [ ["Arrow" , { width:12, length:12, location:0.95 }], ["Custom", {create:function(component) {return make_relchooser(node_id,"rst",relname);},location:0.1,id:"customOverlay"}]]});
+                }
+            }
+             jsPlumb.recalculateOffsets(element_id);
+       }
+
+
+        recalculate_depth(nodes);
+    }
+}
+// capture window resize to redraw RTL content
+window.addEventListener("resize", rerenderRTL);
 
 // signals handling
 var open_signal_drawer;
@@ -1421,3 +1522,4 @@ $(document).ready(function(){
   init_signal_drawer();
   init_show_all_tokens_button();
 });
+
