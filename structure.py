@@ -217,7 +217,7 @@ def structure_main(user, admin, mode, **kwargs):
 
 	for key in nodes:
 		node = nodes[key]
-		get_depth(node,node,nodes)
+		get_depth(node,node,nodes,doc=current_doc,project=current_project,user=user)
 
 	for key in nodes:
 		if nodes[key].kind == "edu":

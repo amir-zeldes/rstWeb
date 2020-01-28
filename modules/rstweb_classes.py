@@ -30,19 +30,28 @@ class SEGMENT:
 		self.text = text
 		self.tokens = text.split(" ")
 
-def get_depth(orig_node, probe_node, nodes):
+def get_depth(orig_node, probe_node, nodes, doc=None, project=None, user=None):
 	"""
 	Calculate graphical nesting depth of a node based on the node list graph.
     Note that RST parentage without span/multinuc does NOT increase depth.
     """
 	if probe_node.parent != "0":
-		parent = nodes[probe_node.parent]
+		try:
+			parent = nodes[probe_node.parent]
+		except KeyError:
+			# Parent node does not exist, set parent to 0
+			from modules.rstweb_sql import update_parent
+			if doc is not None and project is not None and user is not None:
+				update_parent(probe_node.id,"0",doc,project,user)
+				return
+			else:
+				raise KeyError("Node ID " + probe_node.id + " has non existing parent " + probe_node.parent + " and user not set in function\n")
 		if parent.kind != "edu" and (probe_node.relname == "span" or parent.kind == "multinuc" and probe_node.relkind =="multinuc"):
 			orig_node.depth += 1
 			orig_node.sortdepth +=1
 		elif parent.kind == "edu":
 			orig_node.sortdepth += 1
-		get_depth(orig_node, parent, nodes)
+		get_depth(orig_node, parent, nodes, doc=doc, project=project, user=user)
 
 
 def get_left_right(node_id, nodes, min_left, max_right, rel_hash):
