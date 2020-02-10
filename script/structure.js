@@ -488,6 +488,21 @@ function warn_empty_hierarchy(n_list){
                         document.getElementById(child_element_id).style.backgroundColor = "rgba(255, 255, 136, 0.5)";
                         document.getElementById(child_element_id).title = "Warn: span with single span child (empty hierarchy)";
                     }
+                    else if (n_list[child].kind=="multinuc" && n_list[child].reltype=="span"){ // multinuc child of span, check for RST children
+                        multinuc_children = get_children(child,n_list);
+                        rst_children = false;
+                        for (grandchild_idx in multinuc_children){
+                            grandchild = n_list[multinuc_children[grandchild_idx]];
+                            if (grandchild.reltype=="rst"){
+                                rst_children = true;
+                            }
+                        }
+                        if (!rst_children){
+                            child_element_id = get_element_id(child,n_list);
+                            document.getElementById(child_element_id).style.backgroundColor = "rgba(255, 255, 136, 0.5)";
+                            document.getElementById(child_element_id).title = "Warn: span with single multinuc child (empty hierarchy)";
+                        }
+                    }
                 }
             }
             if (node_children.length == 1){
