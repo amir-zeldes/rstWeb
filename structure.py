@@ -224,6 +224,7 @@ def structure_main(user, admin, mode, **kwargs):
 			get_left_right(key, nodes,0,0,rel_kinds)
 
 	signals = {}
+	
 	for signal in get_signals(current_doc, current_project, user):
 		s_id, s_type, subtype, tokens = signal
 		if s_id not in signals:
@@ -245,6 +246,10 @@ def structure_main(user, admin, mode, **kwargs):
 	anchors = {}
 	pix_anchors = {}
 
+	dbpath = os.path.dirname(os.path.realpath(__file__))+os.sep+"rstweb.db"
+	conn = sqlite3.connect(dbpath)
+	cur = conn.cursor()
+
 	# Calculate anchor points for nodes
 	# First get proportional position for anchor
 	for key in sorted(nodes, key = lambda id: nodes[id].depth, reverse=True):
@@ -263,9 +268,9 @@ def structure_main(user, admin, mode, **kwargs):
 			elif node.relkind=="multinuc" and parent.kind =="multinuc":
 				# For multinucs, the anchor is in the middle between leftmost and rightmost of the multinuc children
 				# (not including other rst children)
-				lr = get_multinuc_children_lr(node.parent,current_doc,current_project,user)
+				lr = get_multinuc_children_lr(cur,node.parent,current_doc,current_project,user)
 				lr_wid = (lr[0] + lr[1]) /2
-				lr_ids = get_multinuc_children_lr_ids(node.parent,lr[0],lr[1],current_doc,current_project,user)
+				lr_ids = get_multinuc_children_lr_ids(cur,node.parent,lr[0],lr[1],current_doc,current_project,user)
 				left_child = lr_ids[0]
 				right_child = lr_ids[1]
 				if left_child == right_child:

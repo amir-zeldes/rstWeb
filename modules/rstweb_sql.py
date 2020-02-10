@@ -94,29 +94,30 @@ def update_schema():
 
 	schema = get_schema()
 	if schema < 2:  # versions below 2 do not have guideline_url
-		cur.execute('ALTER TABLE projects ADD COLUMN guideline_url text')
+		if not generic_query("SELECT * from pragma_table_info('projects') where name='guideline_url';", ()):
+			cur.execute('ALTER TABLE projects ADD COLUMN guideline_url text')
 	if schema < 4:  # versions below 4 do not have last save timestamp to prevent resubmit on browser refresh
-		cur.execute('ALTER TABLE users ADD COLUMN timestamp text')
+		if not generic_query("SELECT * from pragma_table_info('users') where name='timestamp';", ()):
+			cur.execute('ALTER TABLE users ADD COLUMN timestamp text')
 	if schema < 5:  # versions below 5 do not validations
-		cur.execute('ALTER TABLE projects ADD COLUMN validations text')
+		if not generic_query("SELECT * from pragma_table_info('projects') where name='validations';", ()):
+			cur.execute('ALTER TABLE projects ADD COLUMN validations text')
+	if schema < 6:
+		initialize_signal_types_on_existing_docs(cur)
 
 	conn.commit()
 	conn.close()
 
-	if schema < 6:
-		initialize_signal_types_on_existing_docs()
 
 	initialize_settings()
 
 
-def initialize_signal_types_on_existing_docs():
+def initialize_signal_types_on_existing_docs(cur):
 	types = read_signals_file()
-
 	for doc, project in get_all_docs_by_project():
 		for majtype in types:
 			for subtype in types[majtype]:
-				generic_query('INSERT INTO rst_signal_types VALUES(?,?,?,?)',
-								(majtype, subtype, doc, project))
+				cur.execute("INSERT INTO rst_signal_types VALUES(?,?,?,?)", (majtype, subtype, doc, project))
 
 
 def get_schema():
@@ -427,14 +428,14 @@ def count_multinuc_children(node_id,doc,project,user):
 	return int(count[0][0])
 
 
-def get_multinuc_children_lr(node_id,doc,project,user):
-	lr = generic_query("SELECT min(rst_nodes.left), max(rst_nodes.right) FROM rst_nodes JOIN rst_relations ON rst_nodes.relname = rst_relations.relname and rst_nodes.doc = rst_relations.doc and rst_nodes.project = rst_relations.project WHERE reltype = 'multinuc' and parent=? and rst_nodes.doc=? and rst_nodes.project=? and user=?",(node_id,doc,project,user))
+def get_multinuc_children_lr(cur,node_id,doc,project,user):
+	lr = cur.execute("SELECT min(rst_nodes.left), max(rst_nodes.right) FROM rst_nodes JOIN rst_relations ON rst_nodes.relname = rst_relations.relname and rst_nodes.doc = rst_relations.doc and rst_nodes.project = rst_relations.project WHERE reltype = 'multinuc' and parent=? and rst_nodes.doc=? and rst_nodes.project=? and user=?",(node_id,doc,project,user)).fetchall()
 	return [int(lr[0][0]),int(lr[0][1])]
 
 
-def get_multinuc_children_lr_ids(node_id,left,right,doc,project,user):
-	id_left = generic_query("SELECT id FROM rst_nodes JOIN rst_relations ON rst_nodes.relname = rst_relations.relname and rst_nodes.doc = rst_relations.doc and rst_nodes.project = rst_relations.project WHERE reltype = 'multinuc' and parent=? and rst_nodes.left=? and rst_nodes.doc=? and rst_nodes.project=? and user=? ORDER BY rst_nodes.left",(node_id,left,doc,project,user))
-	id_right = generic_query("SELECT id FROM rst_nodes JOIN rst_relations ON rst_nodes.relname = rst_relations.relname and rst_nodes.doc = rst_relations.doc and rst_nodes.project = rst_relations.project WHERE reltype = 'multinuc' and parent=? and rst_nodes.right=? and rst_nodes.doc=? and rst_nodes.project=? and user=? ORDER BY rst_nodes.left",(node_id,right,doc,project,user))
+def get_multinuc_children_lr_ids(cur,node_id,left,right,doc,project,user):
+	id_left = cur.execute("SELECT id FROM rst_nodes JOIN rst_relations ON rst_nodes.relname = rst_relations.relname and rst_nodes.doc = rst_relations.doc and rst_nodes.project = rst_relations.project WHERE reltype = 'multinuc' and parent=? and rst_nodes.left=? and rst_nodes.doc=? and rst_nodes.project=? and user=? ORDER BY rst_nodes.left",(node_id,left,doc,project,user)).fetchall()
+	id_right = cur.execute("SELECT id FROM rst_nodes JOIN rst_relations ON rst_nodes.relname = rst_relations.relname and rst_nodes.doc = rst_relations.doc and rst_nodes.project = rst_relations.project WHERE reltype = 'multinuc' and parent=? and rst_nodes.right=? and rst_nodes.doc=? and rst_nodes.project=? and user=? ORDER BY rst_nodes.left",(node_id,right,doc,project,user)).fetchall()
 	return id_left[0][0],id_right[0][0]
 
 
