@@ -284,10 +284,8 @@ def structure_main(user, admin, mode, **kwargs):
 			elif node.relkind=="multinuc" and parent.kind =="multinuc":
 				# For multinucs, the anchor is in the middle between leftmost and rightmost of the multinuc children
 				# (not including other rst children)
-				lr = [0, 0]
-				node_lr = node_to_lr.get(node.parent)
-				if node_lr:
-					lr = [min(node_lr['left'].keys()), max(node_lr['right'].keys())]
+				node_lr = node_to_lr[node.parent]
+				lr = [min(node_lr['left'].keys()), max(node_lr['right'].keys())]
 
 
 				lr_wid = (lr[0] + lr[1]) /2
