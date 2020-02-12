@@ -291,6 +291,7 @@ def structure_main(user, admin, mode, **kwargs):
 				lr_wid = (lr[0] + lr[1]) /2
 				lr_ids = (node_to_lr[node.parent]['left'][lr[0]], node_to_lr[node.parent]['right'][lr[1]])
 				
+
 				left_child = lr_ids[0]
 				right_child = lr_ids[1]
 				if left_child == right_child:
