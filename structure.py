@@ -224,6 +224,7 @@ def structure_main(user, admin, mode, **kwargs):
 			get_left_right(key, nodes,0,0,rel_kinds)
 
 	signals = {}
+
 	for signal in get_signals(current_doc, current_project, user):
 		s_id, s_type, subtype, tokens = signal
 		if s_id not in signals:
@@ -245,8 +246,28 @@ def structure_main(user, admin, mode, **kwargs):
 	anchors = {}
 	pix_anchors = {}
 
+	dbpath = os.path.dirname(os.path.realpath(__file__))+os.sep+"rstweb.db"
+	conn = sqlite3.connect(dbpath)
+	cur = conn.cursor()
+
 	# Calculate anchor points for nodes
 	# First get proportional position for anchor
+
+	nodes_data = get_multinuc_nodes_data(cur,current_doc,current_project,user)
+
+	node_to_lr = {}
+
+	for node in nodes_data:
+		if not node[1] in node_to_lr:
+			node_to_lr[node[1]] = {
+				'left' : {},
+				'right': {}
+			}
+		if not node[2] in node_to_lr[node[1]]['left']:
+			node_to_lr[node[1]]['left'][node[2]] = node[0]
+		if not node[3] in node_to_lr[node[1]]['right']:
+			node_to_lr[node[1]]['right'][node[3]] = node[0]
+
 	for key in sorted(nodes, key = lambda id: nodes[id].depth, reverse=True):
 		node = nodes[key]
 		if node.kind=="edu":
@@ -263,9 +284,13 @@ def structure_main(user, admin, mode, **kwargs):
 			elif node.relkind=="multinuc" and parent.kind =="multinuc":
 				# For multinucs, the anchor is in the middle between leftmost and rightmost of the multinuc children
 				# (not including other rst children)
-				lr = get_multinuc_children_lr(node.parent,current_doc,current_project,user)
+				node_lr = node_to_lr[node.parent]
+				lr = [min(node_lr['left'].keys()), max(node_lr['right'].keys())]
+
+
 				lr_wid = (lr[0] + lr[1]) /2
-				lr_ids = get_multinuc_children_lr_ids(node.parent,lr[0],lr[1],current_doc,current_project,user)
+				lr_ids = (node_to_lr[node.parent]['left'][lr[0]], node_to_lr[node.parent]['right'][lr[1]])
+
 				left_child = lr_ids[0]
 				right_child = lr_ids[1]
 				if left_child == right_child:
@@ -336,18 +361,22 @@ def structure_main(user, admin, mode, **kwargs):
 	# Serialize data in hidden input for JavaScript
 	cpout += '<input id="data" name="data" type="hidden" '
 	hidden_val=""
+
+	doc_relname_to_reltype = get_doc_relname_to_reltype(cur, current_doc, current_project)
 	for key in nodes:
 		node = nodes[key]
+		reltype = doc_relname_to_reltype.get(node.relname)
+
 		if node.relname:
 			safe_relname = node.relname
 		else:
 			safe_relname = "none"
 		if node.kind =="edu":
-			hidden_val += "n" + node.id +",n" +node.parent+",e,"+ str(int(node.left)) + "," + safe_relname + "," + get_rel_type(node.relname,current_doc,current_project) + ";"
+			hidden_val += "n" + node.id +",n" +node.parent+",e,"+ str(int(node.left)) + "," + safe_relname + "," + reltype + ";"
 		elif node.kind =="span":
-			hidden_val += "n" + node.id +",n" +node.parent+",s,0," + safe_relname + "," + get_rel_type(node.relname,current_doc,current_project) + ";"
+			hidden_val += "n" + node.id +",n" +node.parent+",s,0," + safe_relname + "," + reltype + ";"
 		else:
-			hidden_val += "n"+node.id +",n" +node.parent+",m,0," + safe_relname + "," + get_rel_type(node.relname,current_doc,current_project) + ";"
+			hidden_val += "n"+node.id +",n" +node.parent+",m,0," + safe_relname + "," + reltype + ";"
 	hidden_val = hidden_val[0:len(hidden_val)-1]
 	cpout += 'value="' + hidden_val + '"/>'
 
