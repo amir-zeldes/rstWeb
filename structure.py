@@ -224,7 +224,7 @@ def structure_main(user, admin, mode, **kwargs):
 			get_left_right(key, nodes,0,0,rel_kinds)
 
 	signals = {}
-	
+
 	for signal in get_signals(current_doc, current_project, user):
 		s_id, s_type, subtype, tokens = signal
 		if s_id not in signals:
@@ -290,7 +290,6 @@ def structure_main(user, admin, mode, **kwargs):
 
 				lr_wid = (lr[0] + lr[1]) /2
 				lr_ids = (node_to_lr[node.parent]['left'][lr[0]], node_to_lr[node.parent]['right'][lr[1]])
-				
 
 				left_child = lr_ids[0]
 				right_child = lr_ids[1]
