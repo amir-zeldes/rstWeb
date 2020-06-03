@@ -191,6 +191,8 @@ def read_text(filename,rel_hash,do_tokenize=False):
 		contents = line.strip()
 		if len(contents) > 0:
 			id_counter += 1
+			# Replace multiple spaces
+			contents = re.sub(r'\s{2,}', r' ', contents)
 			# Check for invalid XML in segment contents
 			if "<" in contents or ">" in contents or "&" in contents:
 				contents = contents.replace('>','&gt;')
