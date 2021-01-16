@@ -30,8 +30,11 @@ def makecookie(userconfig, password, cookiepath):
     Return the current valid cookie heaader for the values supplied in the
     userconfig, the straight password and the cookiepath.
     """
-    from login import encodestring
-    from Cookie import SimpleCookie
+    from .login import encodestring
+    if sys.version_info[0] < 3:
+        from Cookie import SimpleCookie
+    else:
+        from http.cookies import SimpleCookie
     thecookie = SimpleCookie()
     cookiestring = encodestring(userconfig['username'],password)
     maxage = userconfig['max-age']
@@ -46,7 +49,10 @@ def emptycookie(cookiepath=None):
     """Return an empty cookie with max-age 0.
      Used for logout features.
      """
-    from Cookie import SimpleCookie
+    if sys.version_info[0] < 3:
+        from Cookie import SimpleCookie
+    else:
+        from http.cookies import SimpleCookie
     thecookie = SimpleCookie()
     thecookie['userid'] = ''
     thecookie['userid']['max-age'] = 0 

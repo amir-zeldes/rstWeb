@@ -295,12 +295,17 @@ michael AT foord DOT me DOT uk
 #import sha hashlib.sha1
 import hashlib
 from random import random
+import sys
+
+if sys.version_info[0] > 2:
+    long = int
+    raw_input = input
 
 DATEIN = 1
 if DATEIN:
     try:                # try to import the dateutils and time module
         from time import strftime
-        from dateutils import daycount, returndate          # ,counttodate          # counttodate returns a daynumber as a date
+        from .dateutils import daycount, returndate          # ,counttodate          # counttodate returns a daynumber as a date
     except:
         DATEIN = 0
 
@@ -377,7 +382,11 @@ def pass_enc(instring, indict=None, **keywargs):
     if not indict and keywargs:         # if keyword passed in instead of a dictionary - we use that
         indict = keywargs
     for keyword in arglist:             # any keywords not specified we use the default
-        if not indict.has_key(keyword):
+        if sys.version_info[0] > 2:
+            found = indict.__contains__(keyword)
+        else:
+            found = indict.has_key(keyword)
+        if not found:
             indict[keyword] = arglist[keyword]
             
     if indict['lower']:     # keyword lower :-)
@@ -894,7 +903,10 @@ def internalfunc2(data):
     return ''.join(out1), ''.join(out+data)
 
 def test():                     # the test suite
-    from time import clock
+    try:
+        from time import clock
+    except:
+        from time import time as clock
     from os.path import exists
     print('Printing the TABLE : ')
     index = 0
@@ -951,32 +963,30 @@ def test():                     # the test suite
 # It prints how long it takes and you can verify that the returned file is undamaged.
     
     if exists('test1.zip') and exists('test2.zip'):
-        print
-        print("Reading 'test1.zip' and 'test2.zip'")
+        print("\nReading 'test1.zip' and 'test2.zip'")
         print("Interleaving them together and writing the combined file out as 'test3.zip'")
         print("Then unleaving them and writing 'test1.zip' back out as 'test4.zip'",)
         print(" to confirm it is unchanged by the process")
-        a = file('test1.zip','rb')
+        a = open('test1.zip','rb')
         b = a.read()
         a.close()
-        a = file('test2.zip','rb')
+        a = open('test2.zip','rb')
         c  = a.read()
         a.close()
         d = clock()
         test = binleave(c,b, True)
 
         print(len(test))
-        a = file('test3.zip','wb')
+        a = open('test3.zip','wb')
         a.write(test)
         a.close()
         a1, a2 = binunleave(test)
         print(str(clock()-d)[:6])
-        a = file('test4.zip','wb')
+        a = open('test4.zip','wb')
         a.write(a1)
         a.close()
     else:
-        print
-        print('Unable to perform final test.')
+        print('\nUnable to perform final test.')
         print("We need two files to use for the test : 'test1.zip' and 'test2.zip'")
         print("We then interleave them together, and write the combined file out as 'test3.zip'")
         print("Then we unleave them again, and write 'test1.zip' back out as 'test4.zip'",)

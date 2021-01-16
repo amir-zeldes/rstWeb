@@ -91,7 +91,11 @@ def getform(valuelist, theform, notpresent='', nolist=False):
     """
     data = {}
     for field in valuelist:
-        if not theform.has_key(field):
+        if sys.version_info[0] > 2:
+            found = theform.__contains__(field)
+        else:
+            found = theform.has_key(field)
+        if not found:
             data[field] = notpresent
         else:
             if not isinstance(theform[field], list):
