@@ -13,6 +13,7 @@ from xml.dom import minidom
 from xml.parsers.expat import ExpatError
 from modules.rstweb_classes import *
 from modules.whitespace_tokenize import tokenize
+from six import iterkeys
 
 
 def read_rst(filename, rel_hash, do_tokenize=False):
@@ -40,7 +41,6 @@ def read_rst(filename, rel_hash, do_tokenize=False):
 				default_rst = relname+"_"+rel.attributes["type"].value[0:1]
 		else:  # This is a schema relation
 			schemas.append(relname)
-
 
 	item_list = xmldoc.getElementsByTagName("segment")
 	if len(item_list) < 1:
@@ -116,6 +116,21 @@ def read_rst(filename, rel_hash, do_tokenize=False):
 		total_toks += contents.strip().count(" ") + 1
 		nodes.append([str(ordered_id[edu_id]), id_counter, id_counter, str(ordered_id[parent]), 0, "edu", contents, relname])
 
+	# Collect all children of multinuc parents to prioritize which potentially multinuc relation they have
+	item_list = xmldoc.getElementsByTagName("segment") + xmldoc.getElementsByTagName("group")
+	multinuc_children = collections.defaultdict(lambda : collections.defaultdict(int))
+	for elem in item_list:
+		if elem.attributes.length >= 3:
+			parent = elem.attributes["parent"].value
+			relname = elem.attributes["relname"].value
+			# Tolerate schemas by treating as spans
+			if relname in schemas:
+				relname = "span"
+			relname = re.sub(r"[:;,]", "", relname)  # Remove characters used for undo logging, not allowed in rel names
+			if parent in element_types:
+				if element_types[parent] == "multinuc" and relname+"_m" in rel_hash:
+					multinuc_children[parent][relname] += 1
+
 	item_list = xmldoc.getElementsByTagName("group")
 	for group in item_list:
 		if group.attributes.length == 4:
@@ -130,8 +145,16 @@ def read_rst(filename, rel_hash, do_tokenize=False):
 				
 			relname = re.sub(r"[:;,]","",relname)  # Remove characters used for undo logging, not allowed in rel names
 			# Note that in RSTTool, a multinuc child with a multinuc compatible relation is always interpreted as multinuc
+
+			if parent in multinuc_children:
+				if len(multinuc_children[parent])>0:
+					key_list = list(iterkeys(multinuc_children[parent]))[:]
+					for key in key_list:
+						if multinuc_children[parent][key] < 2:
+							del multinuc_children[parent][key]
+
 			if parent in element_types:
-				if element_types[parent] == "multinuc" and relname+"_m" in rel_hash:
+				if element_types[parent] == "multinuc" and relname+"_m" in rel_hash and (relname in multinuc_children[parent] or len(multinuc_children[parent]) == 0):
 					relname = relname+"_m"
 				elif relname !="span":
 					relname = relname+"_r"
