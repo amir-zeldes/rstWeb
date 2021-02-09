@@ -561,7 +561,10 @@ def structure_main_server():
 		kwargs[key] = theform[key].value
 	output = structure_main(user, admin, 'server', **kwargs)
 
-	print(output)
+	if sys.version_info[0] < 3:
+		print(output)
+	else:
+		sys.stdout.buffer.write(output.encode("utf8"))
 
 
 if "/" in os.environ.get('SCRIPT_NAME', ''):
