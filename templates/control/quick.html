@@ -1,0 +1,155 @@
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+
+	<title>rstWeb - **page_title**</title>
+	<link rel="stylesheet" href="css/rst.css" type="text/css" charset="utf-8"/>
+    <link rel="stylesheet" href="css/font-awesome-4.2.0/css/font-awesome.min.css"/>
+  <link rel="stylesheet" href="./script/jquery-ui.min.css">
+    <script src="./script/jquery-1.11.3.min.js"></script>
+    <script src="./script/jquery-ui.min.js"></script>
+    <script src="./script/nav.js"></script>
+    <script src="./script/structure.js"></script>
+    <script src="./script/quick.js"></script>
+    <script src="./script/html2canvas.min.js"></script>
+    <script src="./script/canvg.min.js"></script>
+
+</head>
+
+<body id="home">
+
+<div class="banner" id="banner">
+<table>
+    <tr>
+<td rowspan="2"><a href="open.py"><img src="img/rstweb_logo.png" alt="rstWeb" class="logo"/></a></td>
+                <td>
+    </td>
+            <td class="logged_in">
+                Quick Edit Mode
+            </td>
+</tr>
+    <tr>
+<td><h1>rstWeb - **page_title**</h1></td>
+
+</tr></table>
+
+</div>
+<div class="edit_bar" id="edit_bar">
+    <form id="edit_form" name="edit_form" action="structure.py" method="post" class="nav_form" enctype="multipart/form-data">
+        <input id="current_doc" name="current_doc" type="hidden" value=""/>
+        <input id="current_project" name="current_project" type="hidden" value=""/>
+        <input id="serve_mode" name="serve_mode" type="hidden" value="**serve_mode**"/>
+        <input id="action" name="action" type="hidden" value=""/>
+        <input id="current_guidelines" name="current_guidelines" type="hidden" value=""/>
+        <input id="logging" name="logging" type="hidden" value=""/>
+        <input id="reset" name="reset" type="hidden" value=""/>
+        <input id="dirty" name="dirty" type="hidden" value=""/>
+        <input id="timestamp" name="timestamp" type="hidden" value=""/>
+    </form>
+    <form id="quickexp_form" name="quickexp_form" action="quick_export" method="post" class="nav_form" enctype="multipart/form-data">
+        <input id="quickexp_doc" name="quickexp_doc" type="hidden" value=""/>
+        <input id="quickexp_project" name="quickexp_project" type="hidden" value=""/>
+    </form>
+
+            <button id="nav_open" class="nav_button" onclick="open_open();" name="open"><i class="fa fa-folder-open" title="Open"></i> open</button>
+            <button id="nav_save" class="nav_button quick_mode" onclick="save();"  disabled="disabled"><i class="fa fa-save" title="Save"></i> save</button>
+            <button id="nav_reset" class="nav_button quick_mode" onclick="do_reset();"  disabled="disabled"><i class="fa fa-refresh on fa-trash" title="Reset"></i> reset</button>
+            <button id="nav_quickexp" class="nav_button quick_mode" onclick="do_quickexp();" disabled="disabled"><i class="fa fa-code" title="Download XML"></i> xml</button>
+            <button id="nav_screenshot" class="nav_button" onclick="do_screenshot();" ><i class="fa fa-image" title="Image"></i> image</button>
+    <span class="divider">|</span>
+            <button class="nav_button" onclick="undo();"><i class="fa fa-undo" title="Undo"></i> undo</button>
+            <button class="nav_button" onclick="redo();"><i class="fa fa-undo fa-flip-horizontal" title="Redo"></i> redo</button>
+    <span class="divider">|</span>
+            <button id="nav_edit" class="nav_button quick_mode" onclick="open_structure();" disabled="disabled"><div class="struct_logo_frame"><i class="fa fa-refresh" title="Edit structure"></i></div> structure</button>
+            <button id="nav_segment" class="nav_button quick_mode" onclick="open_segment();" disabled="disabled"><i class="fa fa-list-ol" title="Segmentation"></i> segment</button>
+    <span class="divider">|</span>
+            <button id="nav_admin" class="nav_button quick_mode" onclick="open_admin();" disabled="disabled"><i class="fa fa-shield" title="Administration"></i> admin</button>
+    <span class="divider">|</span>
+            <button id="guidelines" class="nav_button quick_mode" onclick="show_guidelines();" disabled="disabled"><i class="fa fa-book" title="guidelines"></i> guidelines</button>
+            <button id="nav_help" class="nav_button" onclick="show_help();"><i class="fa fa-question-circle" title="Help"></i> help</button>
+            <button id="nav_about" class="nav_button" onclick="show_about();"><i class="fa fa-info-circle" title="About"></i> about</button>
+</div>
+<div id="help_edit" class="help">
+    <h2>Edit structure - Help</h2><button class="help_mini" onclick='hide_help();'>X</button>
+    <p>In edit mode, each elementary discourse unit (EDU) has its text under a line with a number giving its position in the text. Similarly, groups of units have a range of numbers. You can connect nodes, unlink them, and group them together under spans and multinuclear nodes. You can undo and redo actions at any point using the appropriate buttons. Don't forget to save your work!</p>
+    <p>If a guideline link has been set for the current project, the guidelines button will allow you to access guidelines for your project.</p>
+    <h3>Connections</h3>
+    <ul>
+        <li>To connect nodes, drag from the numbers under one unit to the numbers under a target unit</li>
+        <li>To change the relation between two units, use the drop down list on the connection between them</li>
+        <li>To unlink a node from the graph, click its <button class="dummy_minibtn">X</button> button - all of the nodes connected above it will be unlinked</li>
+    </ul>
+
+    <h3>Spans</h3>
+    <ul>
+        <li>Use the <button class="dummy_minibtn">T</button> button to add a span above a node. The span will group together all of the nodes connected to that node</li>
+    </ul>
+
+    <h3>Multinuclear relations</h3>
+    <ul>
+        <li>Use the <button class="dummy_minibtn">&Lambda;</button> button to create a multinuclear node (multinuc) above a node. The multinuc can have multiple child nodes with the same relation (e.g. a set of items in contrast to each other)</li>
+        <li>To change the relation of a multinuc to its children, change the relation box of any of its children</li>
+        <li>When connecting a new node to a multinuc node, it will be added as a multinuc child by default. You can change the relation to a satellite relation by choosing "change to satellite" in the relation box</li>
+    </ul>
+
+	<h3>Signal annotations</h3>
+    <ul>
+        <li>To use discourse relation signal annotations, make sure signaling annotation is switched on in the Administration &gt; Database tab</li>
+        <li>You can use the <button class="dummy_minibtn">S</button> button next to the relation chooser to open the signal annotation tray and create a new signal annotation</li>
+        <li>Select a signal type and subtype, then click on any words that should be included in the signal annotation</li>
+        <li>You can click on signal annotations in the tray to see associated words, or use the <i>Show all signals</i> button</li>
+        <li>Click Save Changes when done to close the tray</li>
+    </ul>
+
+
+    <button class="close_button" onclick='hide_help();'>Close</button>
+</div><div id="help_seg" class="about">
+    <h2>About rstWeb</h2><button class="help_mini" onclick='hide_about();'>X</button>
+    <table class="about_table">
+
+        <tr><td><img src="img/rstweb_logo.png" height="75px" alt="rstWeb"/></td><td><h1>rstWeb</h1>
+        Version 3.0.0</td></tr>
+        <tr><td colspan="2" class="website">Website: <a href="http://corpling.uis.georgetown.edu/rstweb/info/" target="_new">http://corpling.uis.georgetown.edu/rstweb/info/</a></td></tr>
+        <tr><td colspan="2" class="copyright">&copy; Amir Zeldes 2015-2021</td></tr>
+
+    </table>
+
+</div>
+<script>enable_guidelines();</script>
+<div id="quick_container"> 
+	<button id="load-rs3" onclick="return show_quick_import();" title="Import data">
+	Load .rs3
+	</button>
+	<button id="load-rs3" onclick="return show_quick_export();" title="Export data">
+	Export .rs3
+	</button>
+	<!--
+			<button type="button" class="btn" onclick="return show_import()" title="Paste data (admin only)"><span class="fa-stack fa-1x">
+			<i class="fa fa-file-o fa-stack-1x"></i>
+			<i class="fa fa-arrow-right fa-stack-1x" style="text-indent: -7px;font-size:smaller"></i></span>
+		</button>
+		<button type="button" class="btn" onclick="return show_export()" title="Export data"><span class="fa-stack fa-1x">
+			<i class="fa fa-file-o fa-stack-1x"></i>
+			<i class="fa fa-arrow-right fa-stack-1x" style="text-indent: 7px;font-size:smaller"></i></span>
+		</button>
+-->
+
+	<div id="quick_structure">
+
+	</div>
+</div>
+	<div id="import_dialog" class="dialog">
+		<p>
+			<div>Paste .rs3 data:</div>
+			<textarea></textarea>
+		</p>
+	</div>
+
+	<div id="export_dialog" class="dialog">
+		<p>
+			<textarea></textarea>
+		</p>
+	</div>
+<script src="./script/jquery.jsPlumb-1.7.5-min.js"></script>
+</body>
+</html>

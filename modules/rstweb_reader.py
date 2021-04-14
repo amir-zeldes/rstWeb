@@ -16,11 +16,15 @@ from modules.whitespace_tokenize import tokenize
 from six import iterkeys
 
 
-def read_rst(filename, rel_hash, do_tokenize=False):
+def read_rst(filename, rel_hash, do_tokenize=False, as_string=False):
 
-	f = codecs.open(filename, "r", "utf-8")
+	if as_string:
+		in_rs3 = filename
+	else:
+		f = codecs.open(filename, "r", "utf-8")
+		in_rs3 = f.read()
 	try:
-		xmldoc = minidom.parseString(codecs.encode (f.read(), "utf-8"))
+		xmldoc = minidom.parseString(codecs.encode(in_rs3, "utf-8"))
 	except ExpatError:
 		message = "Invalid .rs3 file"
 		return message
