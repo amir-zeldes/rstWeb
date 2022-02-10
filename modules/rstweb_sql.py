@@ -532,7 +532,7 @@ def export_document(doc, project, exportdir, output_format='rs3'):
 	doc_users = get_users(doc, project)
 	for user in doc_users:
 		this_user = user[0]
-		rst_out = get_export_string_rs3(doc, project, this_user)
+		rst_out = get_export_string(doc, project, this_user)
 		if output_format == 'rs3':
 			file_ending = 'rs3'
 		elif output_format == 'dis':
@@ -548,7 +548,7 @@ def export_document(doc, project, exportdir, output_format='rs3'):
 		f.write(rst_out)
 
 
-def get_export_string_rs3(doc, project, user):
+def get_export_string(doc, project, user):
 	rels = get_rst_rels(doc,project)
 	nodes = get_rst_doc(doc,project,user)
 	signals = get_signals(doc,project,user)
