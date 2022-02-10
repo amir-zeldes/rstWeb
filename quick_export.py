@@ -15,7 +15,7 @@ import cgi
 import os
 from modules.configobj import ConfigObj
 from modules.logintools import login
-from modules.rstweb_sql import get_export_string
+from modules.rstweb_sql import get_export_string_rs3
 
 def quickexp_main(user, admin, mode, **kwargs):
 
@@ -51,7 +51,7 @@ def quickexp_main(user, admin, mode, **kwargs):
 		#cpout += "Content-Type: application/download\n\n\n"
 		pass
 
-	cpout += get_export_string(current_doc,current_project,user)
+	cpout += get_export_string_rs3(current_doc,current_project,user)
 	if mode == "server":
 		return cpout
 	else:

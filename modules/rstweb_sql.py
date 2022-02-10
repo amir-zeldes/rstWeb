@@ -527,17 +527,20 @@ def generic_query(sql,params):
 		return rows
 
 
-def export_document(doc, project,exportdir):
-	doc_users = get_users(doc,project)
+def export_document(doc, project, exportdir, output_format='rs3'):
+	doc_users = get_users(doc, project)
 	for user in doc_users:
 		this_user = user[0]
-		rst_out = get_export_string(doc, project, this_user)
-		filename = project + "_" + doc + "_" + this_user + ".rs3"
-		f = codecs.open(exportdir + filename, 'w','utf-8')
+		if output_format == 'rs3':
+			rst_out = get_export_string_rs3(doc, project, this_user)
+		else:
+			raise NotImplementedError("Output format not supported.")
+		filename = project + "_" + doc + "_" + this_user + ".{}".format(output_format)
+		f = codecs.open(exportdir + filename, 'w', 'utf-8')
 		f.write(rst_out)
 
 
-def get_export_string(doc, project, user):
+def get_export_string_rs3(doc, project, user):
 	rels = get_rst_rels(doc,project)
 	nodes = get_rst_doc(doc,project,user)
 	signals = get_signals(doc,project,user)
