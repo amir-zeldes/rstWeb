@@ -429,6 +429,7 @@ def admin_main(user, admin, mode, **kwargs):
 	<select id="export_file_type_select" name="doclist">
 		<option value="rs3">rs3</option>
 		<option value="dis">dis</option>
+		<option value="binary_dis">dis (+binarization)</option>
 	</select>
 	<button onclick="admin('export');">Export</button>
 	<p>Delete selected document(s):</p>

@@ -13,7 +13,8 @@ import codecs
 import os
 import re
 import json
-import sys
+
+from modules.rst2dis import rst2dis
 
 try:
 	basestring
@@ -531,11 +532,18 @@ def export_document(doc, project, exportdir, output_format='rs3'):
 	doc_users = get_users(doc, project)
 	for user in doc_users:
 		this_user = user[0]
+		rst_out = get_export_string_rs3(doc, project, this_user)
 		if output_format == 'rs3':
-			rst_out = get_export_string_rs3(doc, project, this_user)
+			file_ending = 'rs3'
+		elif output_format == 'dis':
+			rst_out = rst2dis(rst_out, remove_unary=True, binarize=False)
+			file_ending = 'dis'
+		elif output_format == 'binary_dis':
+			rst_out = rst2dis(rst_out, remove_unary=True, binarize=True)
+			file_ending = 'bin.dis'
 		else:
 			raise NotImplementedError("Output format not supported.")
-		filename = project + "_" + doc + "_" + this_user + ".{}".format(output_format)
+		filename = project + "_" + doc + "_" + this_user + ".{}".format(file_ending)
 		f = codecs.open(exportdir + filename, 'w', 'utf-8')
 		f.write(rst_out)
 
