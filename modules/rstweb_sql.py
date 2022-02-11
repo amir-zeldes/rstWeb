@@ -15,6 +15,7 @@ import re
 import json
 
 from modules.rst2dis import rst2dis
+from modules.rst2dep import rst2dep
 
 try:
 	basestring
@@ -541,6 +542,9 @@ def export_document(doc, project, exportdir, output_format='rs3'):
 		elif output_format == 'binary_dis':
 			rst_out = rst2dis(rst_out, remove_unary=True, binarize=True)
 			file_ending = 'bin.dis'
+		elif output_format == 'rsd':
+			rst_out = rst2dep(rst_out.encode('utf-8'))
+			file_ending = 'rsd'
 		else:
 			raise NotImplementedError("Output format not supported.")
 		filename = project + "_" + doc + "_" + this_user + ".{}".format(file_ending)
