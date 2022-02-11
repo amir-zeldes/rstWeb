@@ -7,15 +7,12 @@ Author: Amir Zeldes
 """
 
 
-import sqlite3
-from modules.rstweb_reader import *
-import codecs
-import os
-import re
 import json
+import os
+import sqlite3
 
-from modules.rst2dis import rst2dis
-from modules.rst2dep import rst2dep
+from modules.formats import db2rst, rst2dis, rst2dep
+from modules.rstweb_reader import *
 
 try:
 	basestring
@@ -553,65 +550,10 @@ def export_document(doc, project, exportdir, output_format='rs3'):
 
 
 def get_export_string(doc, project, user):
-	rels = get_rst_rels(doc,project)
-	nodes = get_rst_doc(doc,project,user)
-	signals = get_signals(doc,project,user)
-	rst_out = '''<rst>
-\t<header>
-\t\t<relations>
-'''
-	for rel in rels:
-		relname_string = re.sub(r'_[rm]$','',rel[0])
-		rst_out += '\t\t\t<rel name="' + relname_string + '" type="' + rel[1] + '"/>\n'
-
-	rst_out += '''\t\t</relations>
-\t</header>
-\t<body>
-'''
-	for node in nodes:
-		if node[5] == "edu":
-			if len(node[7]) > 0:
-				relname_string = re.sub(r'_[rm]$','',node[7])
-			else:
-				relname_string = ""
-			if node[3] == "0":
-				parent_string = ""
-				relname_string = ""
-			else:
-				parent_string = 'parent="'+node[3]+'" '
-			if len(relname_string) > 0:
-				relname_string = 'relname="' + relname_string+'"'
-			contents = node[6]
-			# Handle XML escapes
-			contents = re.sub(r'&([^ ;]*) ',r'&amp;\1 ',contents)
-			contents = re.sub(r'&$','&amp;',contents)
-			contents = contents.replace(">","&gt;").replace("<","&lt;")
-			rst_out += '\t\t<segment id="'+node[0]+'" '+ parent_string + relname_string+'>'+contents+'</segment>\n'
-	for node in nodes:
-		if node[5] != "edu":
-			if len(node[7]):
-				relname_string = re.sub(r'_[rm]$','',node[7])
-				relname_string = 'relname="'+relname_string+'"'
-			else:
-				relname_string = ""
-			if node[3] == "0":
-				parent_string = ""
-				relname_string = ""
-			else:
-				parent_string = 'parent="'+node[3]+'"'
-			if len(relname_string) > 0:
-				parent_string += ' '
-			rst_out += '\t\t<group id="'+node[0]+'" type="'+node[5]+'" ' + parent_string + relname_string+'/>\n'
-
-	if len(signals) > 0:
-		rst_out += "\t\t<signals>\n"
-		for signal in signals:
-			source, signal_type, signal_subtype, tokens = signal
-			rst_out += '\t\t\t<signal source="' + source + '" type="' + signal_type + '" subtype="' + signal_subtype + '" tokens="' + tokens + '"/>\n'
-		rst_out += "\t\t</signals>\n"
-	rst_out += '''\t</body>
-</rst>'''
-	return rst_out
+	rels = get_rst_rels(doc, project)
+	nodes = get_rst_doc(doc, project, user)
+	signals = get_signals(doc, project, user)
+	return db2rst(rels, nodes, signals)
 
 
 def delete_document(doc,project):

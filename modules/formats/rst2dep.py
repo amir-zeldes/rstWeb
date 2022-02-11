@@ -10,7 +10,7 @@ import ntpath
 import re
 from xml.dom import minidom
 
-from modules.feature_extraction import ParsedToken, get_tok_info
+from modules.formats.feature_extraction import ParsedToken, get_tok_info
 
 # Add hardwired genre identifiers which appear as substring in filenames here
 GENRES = {"_news_":"news","_whow_":"whow","_voyage_":"voyage","_interview_":"interview",
