@@ -12,12 +12,15 @@ import os
 import sqlite3
 
 from modules.formats import db2rst, rst2dis, rst2dep
+from modules.formats.dep2rst import rsd2rs3
 from modules.rstweb_reader import *
 
 try:
 	basestring
+	PY3 = False
 except NameError:
 	basestring = str
+	PY3 = True
 
 
 def setup_db():
@@ -528,25 +531,43 @@ def generic_query(sql,params):
 
 def export_document(doc, project, exportdir, output_format='rs3'):
 	doc_users = get_users(doc, project)
+	warn = ""
 	for user in doc_users:
 		this_user = user[0]
 		rst_out = get_export_string(doc, project, this_user)
 		if output_format == 'rs3':
 			file_ending = 'rs3'
-		elif output_format == 'dis':
-			rst_out = rst2dis(rst_out, remove_unary=True, binarize=False)
-			file_ending = 'dis'
-		elif output_format == 'binary_dis':
-			rst_out = rst2dis(rst_out, remove_unary=True, binarize=True)
-			file_ending = 'bin.dis'
+		elif 'dis' in output_format:
+			# Do a round-trip dependency conversion to make sure the tree is projective and well formed
+			if PY3:
+				rsd = rst2dep(rst_out)
+			else:
+				rsd = rst2dep(rst_out.encode('utf-8'))
+			rs3 = rsd2rs3(rsd)
+			if PY3:
+				rsd2 = rst2dep(rs3)
+			else:
+				rsd2 = rst2dep(rs3.encode('utf-8'))
+			if rsd != rsd2:
+				warn = '\n<p class="warn">RST graph for '+doc+' failed isomorphic conversion validation - tree may have unprojective or malformed output!</p>'
+			if "binary" not in output_format:
+				rst_out = rst2dis(rst_out, remove_unary=True, binarize=False)
+				file_ending = 'dis'
+			else:
+				rst_out = rst2dis(rst_out, remove_unary=True, binarize=True)
+				file_ending = 'bin.dis'
 		elif output_format == 'rsd':
-			rst_out = rst2dep(rst_out.encode('utf-8'))
+			if PY3:
+				rst_out = rst2dep(rst_out)
+			else:
+				rst_out = rst2dep(rst_out.encode('utf-8'))
 			file_ending = 'rsd'
 		else:
 			raise NotImplementedError("Output format not supported.")
 		filename = project + "_" + doc + "_" + this_user + ".{}".format(file_ending)
 		f = codecs.open(exportdir + filename, 'w', 'utf-8')
 		f.write(rst_out)
+	return warn
 
 
 def get_export_string(doc, project, user):

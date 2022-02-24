@@ -441,7 +441,8 @@ def admin_main(user, admin, mode, **kwargs):
 		if len(export_doc_list) > 0:
 			for doc in export_doc_list.split(";"):
 				try:
-					export_document(doc.split("/")[1], doc.split("/")[0], exportdir, theform["export_file_type"])
+					warnings = export_document(doc.split("/")[1], doc.split("/")[0], exportdir, theform["export_file_type"])
+					cpout += warnings
 				except NotImplementedError:
 					cpout += '<p class="warn">Error occurred during export {}</p>'.format(doc)
 			cpout += '<p class="warn">Export complete</p>'
