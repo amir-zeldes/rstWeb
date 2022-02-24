@@ -129,6 +129,7 @@ def admin_main(user, admin, mode, **kwargs):
 		<input type="hidden" name="delete" id="delete" value=""/>
 		<input type="hidden" name="delete_user" id="delete_user" value=""/>
 		<input type="hidden" name="export" id="export" value=""/>
+		<input type="hidden" name="export_file_type" id="export_file_type" value=""/>
 		<input type="hidden" name="wipe" id="wipe" value=""/>
 		<input type="hidden" name="switch_signals" id="switch_signals" value=""/>
 		<input type="hidden" name="signals_file" id="signals_file" value=""/>
@@ -405,7 +406,6 @@ def admin_main(user, admin, mode, **kwargs):
 					delete_document(docs_to_delete.split("/")[1],docs_to_delete.split("/")[0])
 				cpout += '<p class="warn">Deletion complete</p>'
 
-
 	cpout += '<p>List of documents in the database:</p>'
 	docs = get_all_docs_by_project()
 	if not docs:
@@ -414,8 +414,8 @@ def admin_main(user, admin, mode, **kwargs):
 		cpout += '<select name="doclist_select" id="doclist_select" class="doclist" size="15" multiple="multiple">\n'
 		project_group=""
 		for doc in docs:
-			if project_group!=doc[1]:
-				if project_group !="":
+			if project_group != doc[1]:
+				if project_group != "":
 					cpout += '</optgroup>\n'
 				project_group = doc[1]
 				cpout += '<optgroup label="'+doc[1]+'">\n'
@@ -424,22 +424,27 @@ def admin_main(user, admin, mode, **kwargs):
 		cpout += '</optgroup>\n</select>\n'
 
 	cpout += '''
-	<p>Export selected document(s) to export folder as .rs3 file(s):</p>
+	<p>Export selected document(s) to export folder as file(s):</p>
+	<label for="export-format">Choose output format:</label>
+	<select id="export_file_type_select" name="doclist">
+		<option value="rs3">rs3</option>
+		<option value="dis">dis</option>
+		<option value="binary_dis">dis (+binarization)</option>
+		<option value="rsd">rsd</option>
+	</select>
 	<button onclick="admin('export');">Export</button>
 	<p>Delete selected document(s):</p>
 	<button onclick="admin('delete_doc');">Delete</button>
 	'''
-	if "export" in theform:
+	if theform.get("export") == "export":
 		export_doc_list = theform["doclist"]
-		if len(export_doc_list) > 0 and theform["export"]== "export":
-			export_docs = export_doc_list.split(";")
-			if isinstance(export_docs,list):
-				for doc in export_docs:
-					export_document(doc.split("/")[1],doc.split("/")[0],exportdir)
-			else:
-				export_document(export_docs.split("/")[1],export_docs.split("/")[0],exportdir)
+		if len(export_doc_list) > 0:
+			for doc in export_doc_list.split(";"):
+				try:
+					export_document(doc.split("/")[1], doc.split("/")[0], exportdir, theform["export_file_type"])
+				except NotImplementedError:
+					cpout += '<p class="warn">Error occurred during export {}</p>'.format(doc)
 			cpout += '<p class="warn">Export complete</p>'
-
 
 	# Handle user add and delete before showing user list
 	if "delete_user" in theform:

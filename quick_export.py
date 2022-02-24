@@ -51,7 +51,7 @@ def quickexp_main(user, admin, mode, **kwargs):
 		#cpout += "Content-Type: application/download\n\n\n"
 		pass
 
-	cpout += get_export_string(current_doc,current_project,user)
+	cpout += get_export_string(current_doc, current_project, user)
 	if mode == "server":
 		return cpout
 	else:

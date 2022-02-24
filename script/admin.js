@@ -196,6 +196,7 @@ function admin(action){
             document.getElementById("export").value = "export";
 		    docs_to_export=build_from_select("doclist_select");
             document.getElementById("doclist").value = docs_to_export;
+            document.getElementById("export_file_type").value = document.getElementById("export_file_type_select").value;
             document.getElementById("sel_tab").value = "docs";
 			break;
 		case "create_user":
