@@ -32,7 +32,7 @@ def get_structure_main(**kwargs):
         elif node.relname == "span":
             node.relkind = "span"
     rels = sorted([(k,v) for k,v in iteritems(rels)])
-    output = build_canvas(current_doc, current_project, rels, nodes, show_signals=False, validations="validate_empty;validate_flat;validate_mononuc")
+    output = build_canvas(current_doc, current_project, rels, nodes, signal_data=signals, show_signals=False, validations="validate_empty;validate_flat;validate_mononuc")
     return output
 
 def get_structure_main_server():
