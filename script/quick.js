@@ -122,3 +122,19 @@ $(document).ready(function() {
 		});
 	});
 });
+
+function toggle_ui(){
+	if ($(".minibtn").css("display")=="inline-block"){ //switch off
+		$(".minibtn").css("display","none");
+		$(".rst_rel").css("-webkit-appearance","none");
+		$(".rst_rel").css("-moz-appearance","none");
+		$(".rst_rel").css("width","100px");
+		$(".rst_rel").css("border","0px");
+	}else{ //switch on
+		$(".minibtn").css("display","inline-block");
+		$(".rst_rel").css("-webkit-appearance","initial");
+		$(".rst_rel").css("-moz-appearance","initial");
+		$(".rst_rel").css("width","70px");
+		$(".rst_rel").css("border","");
+	}
+}
