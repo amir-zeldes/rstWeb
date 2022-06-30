@@ -219,7 +219,8 @@ def import_document(filename, project, user, do_tokenize=False):
 
 	cur = conn.cursor()
 
-	doc=os.path.basename(filename)
+	doc = os.path.basename(filename)
+	doc = re.sub(r'[;()<>]','',doc)  # Sanitize doc name
 
 	rel_hash = {}
 
