@@ -162,12 +162,17 @@ __all__ = (
 )
 
 import sys
+from past.builtins import long
+
 INTP_VER = sys.version_info[:2]
 if INTP_VER < (2, 2):
     raise RuntimeError("Python v.2.2 or later needed")
 
 import re
-StringTypes = (str, unicode)
+if sys.version_info[0]<3:
+    StringTypes = (str, unicode)
+else:
+    StringTypes = (str,)
 
 
 _list_arg = re.compile(r'''
@@ -289,7 +294,10 @@ def dottedQuadToNum(ip):
     except socket.error:
         # bug in inet_aton, corrected in Python 2.3
         if ip.strip() == '255.255.255.255':
-            return 0xFFFFFFFFL
+            if sys.version_info[0] < 3:
+                return long(0xFFFFFFFF)
+            else:
+                return 0xFFFFFFFF
         else:
             raise ValueError('Not a good dotted-quad IP: %s' % ip)
     return
@@ -689,7 +697,7 @@ def _is_num_param(names, values, to_float=False):
         elif isinstance(val, (int, long, float, StringTypes)):
             try:
                 out_params.append(fun(val))
-            except ValueError, e:
+            except ValueError:
                 raise VdtParamError(name, val)
         else:
             raise VdtParamError(name, val)
@@ -1162,7 +1170,7 @@ def is_mixed_list(value, *args):
         raise VdtValueTooLongError(value)
     try:
         return [fun_dict[arg](val) for arg, val in zip(args, value)]
-    except KeyError, e:
+    except KeyError as e:
         raise VdtParamError('mixed_list', e)
 
 def is_option(value, *options):

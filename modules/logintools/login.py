@@ -317,7 +317,10 @@ def decodestring(cookiestring, userdir):
         password, daynumber, timestamp = pass_dec(stampedpass)
     except:
         return False
-    thishash = hashlib.sha1(password+ranstring).hexdigest()
+    if sys.version_info[0] > 2:
+        thishash = hashlib.sha1((password+ranstring).encode("utf8")).hexdigest()
+    else:
+        thishash = hashlib.sha1(password+ranstring).hexdigest()
     if thishash != passhash:
         return False
     return user, password, cookiepath
@@ -325,7 +328,10 @@ def decodestring(cookiestring, userdir):
 def encodestring(username, password):
     """Given a username and password return a new encoded string for use by decodecookie."""  
     ranstring = randomstring(10)
-    thishash = hashlib.sha1(password + ranstring).hexdigest()
+    if sys.version_info[0] > 2:
+        thishash = hashlib.sha1((password + ranstring).encode("utf8")).hexdigest()
+    else:
+        thishash = hashlib.sha1(password + ranstring).hexdigest()
     return pass_enc('||'.join([username, thishash, ranstring]), daynumber=True, timestamp=True)
 
 def checkpass(username, password, userdir, thisscript, action):

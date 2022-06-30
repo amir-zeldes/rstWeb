@@ -7,18 +7,20 @@ Author: Amir Zeldes
 """
 
 
-import sqlite3
-from modules.rstweb_reader import *
-import codecs
-import os
-import re
 import json
-import sys
+import os
+import sqlite3
+
+from modules.formats import db2rst, rst2dis, rst2dep
+from modules.formats.dep2rst import rsd2rs3
+from modules.rstweb_reader import *
 
 try:
 	basestring
+	PY3 = False
 except NameError:
 	basestring = str
+	PY3 = True
 
 
 def setup_db():
@@ -217,7 +219,8 @@ def import_document(filename, project, user, do_tokenize=False):
 
 	cur = conn.cursor()
 
-	doc=os.path.basename(filename)
+	doc = os.path.basename(filename)
+	doc = re.sub(r'[;()<>]','',doc)  # Sanitize doc name
 
 	rel_hash = {}
 
@@ -527,76 +530,52 @@ def generic_query(sql,params):
 		return rows
 
 
-def export_document(doc, project,exportdir):
-	doc_users = get_users(doc,project)
+def export_document(doc, project, exportdir, output_format='rs3'):
+	doc_users = get_users(doc, project)
+	warn = ""
 	for user in doc_users:
 		this_user = user[0]
 		rst_out = get_export_string(doc, project, this_user)
-		filename = project + "_" + doc + "_" + this_user + ".rs3"
-		f = codecs.open(exportdir + filename, 'w','utf-8')
+		if output_format == 'rs3':
+			file_ending = 'rs3'
+		elif 'dis' in output_format:
+			# Do a round-trip dependency conversion to make sure the tree is projective and well formed
+			if PY3:
+				rsd = rst2dep(rst_out)
+			else:
+				rsd = rst2dep(rst_out.encode('utf-8'))
+			rs3 = rsd2rs3(rsd)
+			if PY3:
+				rsd2 = rst2dep(rs3)
+			else:
+				rsd2 = rst2dep(rs3.encode('utf-8'))
+			if rsd != rsd2:
+				warn = '\n<p class="warn">RST graph for '+doc+' failed isomorphic conversion validation - tree may have unprojective or malformed output!</p>'
+			if "binary" not in output_format:
+				rst_out = rst2dis(rst_out, remove_unary=True, binarize=False)
+				file_ending = 'dis'
+			else:
+				rst_out = rst2dis(rst_out, remove_unary=True, binarize=True)
+				file_ending = 'bin.dis'
+		elif output_format == 'rsd':
+			if PY3:
+				rst_out = rst2dep(rst_out)
+			else:
+				rst_out = rst2dep(rst_out.encode('utf-8'))
+			file_ending = 'rsd'
+		else:
+			raise NotImplementedError("Output format not supported.")
+		filename = project + "_" + doc + "_" + this_user + ".{}".format(file_ending)
+		f = codecs.open(exportdir + filename, 'w', 'utf-8')
 		f.write(rst_out)
+	return warn
 
 
 def get_export_string(doc, project, user):
-	rels = get_rst_rels(doc,project)
-	nodes = get_rst_doc(doc,project,user)
-	signals = get_signals(doc,project,user)
-	rst_out = '''<rst>
-\t<header>
-\t\t<relations>
-'''
-	for rel in rels:
-		relname_string = re.sub(r'_[rm]$','',rel[0])
-		rst_out += '\t\t\t<rel name="' + relname_string + '" type="' + rel[1] + '"/>\n'
-
-	rst_out += '''\t\t</relations>
-\t</header>
-\t<body>
-'''
-	for node in nodes:
-		if node[5] == "edu":
-			if len(node[7]) > 0:
-				relname_string = re.sub(r'_[rm]$','',node[7])
-			else:
-				relname_string = ""
-			if node[3] == "0":
-				parent_string = ""
-				relname_string = ""
-			else:
-				parent_string = 'parent="'+node[3]+'" '
-			if len(relname_string) > 0:
-				relname_string = 'relname="' + relname_string+'"'
-			contents = node[6]
-			# Handle XML escapes
-			contents = re.sub(r'&([^ ;]*) ',r'&amp;\1 ',contents)
-			contents = re.sub(r'&$','&amp;',contents)
-			contents = contents.replace(">","&gt;").replace("<","&lt;")
-			rst_out += '\t\t<segment id="'+node[0]+'" '+ parent_string + relname_string+'>'+contents+'</segment>\n'
-	for node in nodes:
-		if node[5] != "edu":
-			if len(node[7]):
-				relname_string = re.sub(r'_[rm]$','',node[7])
-				relname_string = 'relname="'+relname_string+'"'
-			else:
-				relname_string = ""
-			if node[3] == "0":
-				parent_string = ""
-				relname_string = ""
-			else:
-				parent_string = 'parent="'+node[3]+'"'
-			if len(relname_string) > 0:
-				parent_string += ' '
-			rst_out += '\t\t<group id="'+node[0]+'" type="'+node[5]+'" ' + parent_string + relname_string+'/>\n'
-
-	if len(signals) > 0:
-		rst_out += "\t\t<signals>\n"
-		for signal in signals:
-			source, signal_type, signal_subtype, tokens = signal
-			rst_out += '\t\t\t<signal source="' + source + '" type="' + signal_type + '" subtype="' + signal_subtype + '" tokens="' + tokens + '"/>\n'
-		rst_out += "\t\t</signals>\n"
-	rst_out += '''\t</body>
-</rst>'''
-	return rst_out
+	rels = get_rst_rels(doc, project)
+	nodes = get_rst_doc(doc, project, user)
+	signals = get_signals(doc, project, user)
+	return db2rst(rels, nodes, signals)
 
 
 def delete_document(doc,project):

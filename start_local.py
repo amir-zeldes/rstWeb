@@ -14,6 +14,8 @@ from open import open_main
 from structure import structure_main
 from segment import segment_main
 from admin import admin_main
+from quick import quick_main
+from get_structure import get_structure_main
 from quick_export import quickexp_main
 from cherrypy.lib import file_generator
 try:
@@ -57,6 +59,16 @@ class Root(object):
 			return '<script>document.location.href="open";</script>'
 		else:
 			return segment_main("local","3",'local',**kwargs)
+
+	@cherrypy.expose
+	def quick(self,**kwargs):
+		print_out(str(kwargs))
+		return quick_main()
+
+	@cherrypy.expose
+	def get_structure(self,**kwargs):
+		print_out(str(kwargs))
+		return get_structure_main(**kwargs)
 
 	@cherrypy.expose
 	def quick_export(self,**kwargs):

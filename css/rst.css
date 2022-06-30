@@ -536,3 +536,12 @@ input:checked + .slider:before {
   overflow:hidden;
   padding:8px;
 }
+
+.dialog textarea{
+	width: 100%;
+    height: 80%;
+}
+
+.ui-dialog { z-index: 1000 !important ;}
+
+#quick_container{padding-top:5px}

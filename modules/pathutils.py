@@ -22,6 +22,7 @@ This module contains convenience functions for working with files and paths.
 __version__ = '0.2.4'
 
 
+import io
 import os
 import sys
 import time
@@ -89,14 +90,14 @@ def writebinary(filename, infile):
 
 def readfile(filename):
     """Given a filename, read a file in text mode. It returns a single string."""
-    filehandle = open(filename, 'r')
+    filehandle = io.open(filename, 'r', encoding="utf8")
     outfile = filehandle.read()
     filehandle.close()
     return outfile
 
 def writefile(filename, infile):
     """Given a filename and a string, write the file in text mode."""
-    filehandle = open(filename, 'w')
+    filehandle = io.open(filename, 'w', encoding="utf8", newline="\n")
     filehandle.write(infile)
     filehandle.close()
     

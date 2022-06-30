@@ -13,13 +13,18 @@ from xml.dom import minidom
 from xml.parsers.expat import ExpatError
 from modules.rstweb_classes import *
 from modules.whitespace_tokenize import tokenize
+from six import iterkeys
 
 
-def read_rst(filename, rel_hash, do_tokenize=False):
+def read_rst(filename, rel_hash, do_tokenize=False, as_string=False):
 
-	f = codecs.open(filename, "r", "utf-8")
+	if as_string:
+		in_rs3 = filename
+	else:
+		f = codecs.open(filename, "r", "utf-8")
+		in_rs3 = f.read()
 	try:
-		xmldoc = minidom.parseString(codecs.encode (f.read(), "utf-8"))
+		xmldoc = minidom.parseString(codecs.encode(in_rs3, "utf-8"))
 	except ExpatError:
 		message = "Invalid .rs3 file"
 		return message
@@ -40,7 +45,6 @@ def read_rst(filename, rel_hash, do_tokenize=False):
 				default_rst = relname+"_"+rel.attributes["type"].value[0:1]
 		else:  # This is a schema relation
 			schemas.append(relname)
-
 
 	item_list = xmldoc.getElementsByTagName("segment")
 	if len(item_list) < 1:
@@ -68,6 +72,21 @@ def read_rst(filename, rel_hash, do_tokenize=False):
 	for element in node_elements:
 		element_types[element.attributes["id"].value] = element.attributes["type"].value
 
+	# Collect all children of multinuc parents to prioritize which potentially multinuc relation they have
+	item_list = xmldoc.getElementsByTagName("segment") + xmldoc.getElementsByTagName("group")
+	multinuc_children = collections.defaultdict(lambda : collections.defaultdict(int))
+	for elem in item_list:
+		if elem.attributes.length >= 3:
+			parent = elem.attributes["parent"].value
+			relname = elem.attributes["relname"].value
+			# Tolerate schemas by treating as spans
+			if relname in schemas:
+				relname = "span"
+			relname = re.sub(r"[:;,]", "", relname)  # Remove characters used for undo logging, not allowed in rel names
+			if parent in element_types:
+				if element_types[parent] == "multinuc" and relname+"_m" in rel_hash:
+					multinuc_children[parent][relname] += 1
+
 	id_counter = 0
 	item_list = xmldoc.getElementsByTagName("segment")
 	for segment in item_list:
@@ -84,14 +103,22 @@ def read_rst(filename, rel_hash, do_tokenize=False):
 		# Tolerate schemas, but no real support yet:
 		if relname in schemas:
 			relname = "span"
-
 			relname = re.sub(r"[:;,]","",relname) #remove characters used for undo logging, not allowed in rel names
+
 		# Note that in RSTTool, a multinuc child with a multinuc compatible relation is always interpreted as multinuc
+		if parent in multinuc_children:
+			if len(multinuc_children[parent]) > 0:
+				key_list = list(iterkeys(multinuc_children[parent]))[:]
+				for key in key_list:
+					if multinuc_children[parent][key] < 2:
+						del multinuc_children[parent][key]
+
 		if parent in element_types:
-			if element_types[parent] == "multinuc" and relname+"_m" in rel_hash:
-				relname = relname+"_m"
-			elif relname !="span":
-				relname = relname+"_r"
+			if element_types[parent] == "multinuc" and relname + "_m" in rel_hash and (
+					relname in multinuc_children[parent] or len(multinuc_children[parent]) == 0):
+				relname = relname + "_m"
+			elif relname != "span":
+				relname = relname + "_r"
 		else:
 			if not relname.endswith("_r") and len(relname)>0:
 				relname = relname+"_r"
@@ -129,9 +156,17 @@ def read_rst(filename, rel_hash, do_tokenize=False):
 				relname = "span"
 				
 			relname = re.sub(r"[:;,]","",relname)  # Remove characters used for undo logging, not allowed in rel names
+
 			# Note that in RSTTool, a multinuc child with a multinuc compatible relation is always interpreted as multinuc
+			if parent in multinuc_children:
+				if len(multinuc_children[parent])>0:
+					key_list = list(iterkeys(multinuc_children[parent]))[:]
+					for key in key_list:
+						if multinuc_children[parent][key] < 2:
+							del multinuc_children[parent][key]
+
 			if parent in element_types:
-				if element_types[parent] == "multinuc" and relname+"_m" in rel_hash:
+				if element_types[parent] == "multinuc" and relname+"_m" in rel_hash and (relname in multinuc_children[parent] or len(multinuc_children[parent]) == 0):
 					relname = relname+"_m"
 				elif relname !="span":
 					relname = relname+"_r"
@@ -220,3 +255,7 @@ def read_relfile(filename):
 				rels[rel_data[0].strip()+"_m"] = "multinuc"
 
 	return rels
+
+
+if __name__ == "__main__":
+	read_rst("..\\wsj_0614.rs3",{})

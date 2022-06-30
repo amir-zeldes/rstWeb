@@ -226,7 +226,11 @@ def segment_main_server():
 	kwargs={}
 	for key in theform:
 		kwargs[key] = theform[key].value
-	print(segment_main(user, admin, 'server', **kwargs))
+	output = segment_main(user, admin, 'server', **kwargs)
+	if sys.version_info[0] < 3:
+		print(output)
+	else:
+		sys.stdout.buffer.write(output.encode("utf8"))
 
 
 scriptpath = os.path.dirname(os.path.realpath(__file__)) + os.sep

@@ -114,7 +114,9 @@ function act(action){
         }
 }
 
-function crel(node_id,sel) {act("rl:" + node_id.toString() + "," + sel);}
+function crel(node_id,sel) {
+	act("rl:" + node_id.toString() + "," + sel);
+}
 
 function rst_node(id, parent, kind, left, relname, reltype){
 
@@ -1015,7 +1017,7 @@ $(document).ready(function(){
     }
 
     function enable_buttons() {
-        $('.canvas').find('button').removeAttr("disabled");
+        $('.canvas').find('button:not(.quick_mode)').removeAttr("disabled");
         $('.canvas').find('select').removeAttr("disabled");
     }
 
@@ -1039,11 +1041,13 @@ $(document).ready(function(){
     function attempt_to_bind_token_reveal_until_success() {
         function attempt_to_bind_token_reveal() {
             var ids = [];
-            Object.keys(window.rstWebSignals).forEach(function(id) {
-                if (window.rstWebSignals[id].length > 0) {
-                    ids.push(id);
-                }
-            });
+            if (window.rstWebSignals!=null){
+                Object.keys(window.rstWebSignals).forEach(function(id) {
+                    if (window.rstWebSignals[id].length > 0) {
+                        ids.push(id);
+                    }
+                });
+            }
 
             if (ids.length > 0) {
                 var testSelDiv = document.getElementById('seldiv' + ids[0]);
@@ -1054,7 +1058,9 @@ $(document).ready(function(){
 
             ids.forEach(function(id) {
                 var selDiv = document.getElementById('seldiv' + id);
-                bind_token_reveal_on_hover(selDiv);
+                if (selDiv != null){
+                    bind_token_reveal_on_hover(selDiv);
+                }
             });
             return true;
         }
@@ -1436,3 +1442,58 @@ $(document).ready(function(){
   init_signal_drawer();
   init_show_all_tokens_button();
 });
+
+
+$(document).on("keydown", function (e) {
+	if (e.ctrlKey){
+		if (e.keyCode == 69){ // User hit ctrl+e, show edge action dialog
+			e.preventDefault();
+			action_spec = window.prompt("Update parent (e.g. enter 1,2 to set parent of node 1 to be 2); double click a node to get its ID.", "");
+			if (action_spec == null){return false;}
+			if (action_spec.includes(",")){
+				parts = action_spec.split(",");
+				let node_id = parts[0]; let new_parent_id = parts[1];
+				nodes = parse_data();
+				if ("n" + node_id in nodes && "n" + new_parent_id in nodes && node_id != new_parent_id){
+
+				// TODO: DRY - some code is duplicated here from literal javascript insertion in structure.py - should clean up to have one entry point for act('up:x,y,')
+				$(".minibtn").prop("disabled",true);
+
+				node_id = "n"+node_id;
+
+				new_parent = nodes["n"+new_parent_id];
+				relname = nodes[node_id].relname;
+				new_parent_kind = new_parent.kind;
+
+				if (new_parent_kind=="edu"){parent_prefix = "edu";} else{parent_prefix="g";}
+				if (nodes[node_id].kind=="edu"){child_prefix = "edu";} else{child_prefix="g";}
+
+				info = {sourceId: child_prefix+node_id.replace("n",""), targetId: parent_prefix+new_parent_id.replace("n","")}
+				new_parent_id = "n"+new_parent_id;
+
+					if (!(is_ancestor(new_parent_id,node_id))){
+						jsPlumb.select({source:info.sourceId}).detach();
+						if (new_parent_kind == "multinuc"){
+							relname = get_multirel(new_parent_id,node_id,nodes);
+							jsPlumb.connect({source:info.sourceId, target:info.targetId, connector:"Straight", anchors: ["Top","Bottom"], overlays: [ ["Custom", {create:function(component) {return make_relchooser(node_id,"multi",relname);},location:0.2,id:"customOverlay"}]]});
+						}
+						else{
+							jsPlumb.connect({source:info.sourceId, target:info.targetId, overlays: [ ["Arrow" , { width:12, length:12, location:0.95 }],["Custom", {create:function(component) {return make_relchooser(node_id,"rst",relname);},location:0.1,id:"customOverlay"}]]});
+						}
+						new_rel = document.getElementById("sel"+ node_id.replace("n","")).value;
+						act('up:' + node_id.replace("n","") + ',' + new_parent_id.replace("n",""));
+						update_rel(node_id,new_rel,nodes);
+						recalculate_depth(parse_data());
+					}
+				
+					$(".minibtn").prop("disabled",false);
+
+				}
+			}
+		}
+	}
+});
+
+$(document).on("dblclick", ".num_cont, .edu",  function(e){
+	alert("Discourse unit ID:\n"+$(e.currentTarget).attr('id').replace(/g|edu/,""));
+}); // show span internal ID on dblclick

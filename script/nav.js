@@ -336,7 +336,7 @@ function disable_buttons(){
 
 function enable_buttons(){
     $(".minibtn").prop("disabled",false);
-    $(".nav_button").prop("disabled",false);
+    $(".nav_button:not(.quick_mode)").prop("disabled",false);
 }
 
 function enable_guidelines(url){
@@ -348,3 +348,16 @@ function enable_guidelines(url){
 function show_guidelines(){
     window.open(document.getElementById("current_guidelines").value,'_blank');
 }
+
+function show_quick_import() {
+    $('#import_dialog').find('textarea').val(''); // clear textarea on modal open
+    $("#import_dialog").dialog("option", "title", "Loading....").dialog("open");
+    $("span.ui-dialog-title").text('Import data');
+}
+
+function show_quick_export() {
+    $('#export_dialog').find('textarea').val(''); // clear textarea on modal open
+    $("#export_dialog").dialog("option", "title", "Loading....").dialog("open");
+    $("span.ui-dialog-title").text('Export data');
+} 
+
