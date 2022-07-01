@@ -287,7 +287,7 @@ function update_assignments(){
         if (document.getElementById("assigned_user_sel").options[i].text == user){
             docs = document.getElementById("assigned_user_sel").options[i].value.substring(0, document.getElementById("assigned_user_sel").options[i].value.length-1).trim().split(";");
             for (doc in docs){
-                sanitized = docs[doc].replace("(","").replace(")","").replace("<","").replace(">","").replace(";","");  // May not contain <>(); to avoid XSS attacks
+                sanitized = docs[doc].replace(/\(/g,"").replace(/\)/g,"").replace(/</g,"").replace(/>/g,"").replace(/;/g,"");  // May not contain <>(); to avoid XSS attacks
                 doc_sel.append('<option value="' + sanitized + '">' + sanitized + '</option>');
             }
         }
