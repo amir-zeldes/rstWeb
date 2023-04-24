@@ -76,11 +76,13 @@ def build_canvas(current_doc, current_project, rels, nodes, def_rstrel="", def_m
 	if def_rstrel == "":
 		def_rstrel = sorted([rel[0] for rel in rels if rel[1] != "multinuc"])[0]  # Take alphabetically first rel
 	if def_rstrel == "":
-		def_rstrel = "elaboration_r"
+		def_rstrel = "elaboration-additional_r"
 	if def_multirel == "":
-		def_multirel = sorted([rel[0] for rel in rels if rel[1] == "multinuc"])[0]  # Take alphabetically first rel
+		multirels = sorted([rel[0] for rel in rels if rel[1] == "multinuc"])
+		if len(multirels) > 0:
+			def_multirel = multirels[0]  # Take alphabetically first rel
 	if def_multirel == "":
-		def_multirel = "joint_m"
+		def_multirel = "joint-other_m"
 	for rel in rels:
 		rel_list.append(rel[0])
 		if rel[1] == "multinuc":
