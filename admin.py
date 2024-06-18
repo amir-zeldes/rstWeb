@@ -136,6 +136,7 @@ def admin_main(user, admin, mode, **kwargs):
 		<input type="hidden" name="switch_logging" id="switch_logging" value=""/>
 		<input type="hidden" name="switch_span_buttons" id="switch_span_buttons" value=""/>
 		<input type="hidden" name="switch_multinuc_buttons" id="switch_multinuc_buttons" value=""/>
+		<input type="hidden" name="switch_secedges" id="switch_secedges" value=""/>
 		<input type="hidden" name="update_schema" id="update_schema" value=""/>
 		<input type="hidden" name="imp_project" id="imp_project" value=""/>
 		<input type="hidden" name="import_file_type" id="import_file_type" value=""/>
@@ -718,6 +719,31 @@ def admin_main(user, admin, mode, **kwargs):
 
 	cpout += '''<button onclick="admin('switch_span_buttons')">'''+ opposite_span +''' span buttons</button><br/><br/>'''
 	cpout += '''<button onclick="admin('switch_multinuc_buttons')">'''+ opposite_multinuc +''' multinuc buttons</button>'''
+
+	# spans/multinucs
+	cpout += '''<h2>Allow secondary edges</h2>
+	<p>Allow adding tree-breaking secondary edges using ctrl+drag.</p>'''
+
+	try:
+		secedge_state = get_setting("use_secedges")
+	except IndexError:
+		secedge_state="False"
+
+	if "switch_secedges" in theform:
+		if int(get_schema()) < 7:
+			update_schema()
+		if theform["switch_secedges"] == "switch_secedges":
+			if secedge_state == "True":
+				secedge_state = "False"
+			else:
+				secedge_state = "True"
+			save_setting("use_secedges",secedge_state)
+	if secedge_state == "True":
+		opposite_secedge = "Disable"
+	else:
+		opposite_secedge = "Enable"
+	cpout += '''<button onclick="admin('switch_secedges')">'''+ opposite_secedge +''' secondary edges</button><br/>'''
+
 
 	cpout += '''<h2>Update schema</h2>
 	<p>Update the schema without losing data between major schema upgrades.</p>'''

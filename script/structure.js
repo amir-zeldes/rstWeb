@@ -11,6 +11,13 @@
 
 //TODO: get_max_node_id(nodes) can be implemented without reference to nodes, by parsing hidden data model
 
+var sigtype_num = 1;
+var signal_highlight_colors = {
+	//"dm" : "signal-red",
+	//"orphan": "signal-blue"
+};
+var ctrlPressed = false;
+
 function act(action){
 
     disable_buttons();
@@ -31,6 +38,7 @@ function act(action){
     var action_params = action.split(":")[1];
     var params = action_params && action_params.split(",");
     nodes = parse_data();
+    secedges = parse_secedges();
 
     document.getElementById("logging").value += action;
     if (action_type == 'mn' || action_type == 'sp'){
@@ -99,10 +107,23 @@ function act(action){
         document.getElementById("g"+params[0]).style.display = "none";
         recalculate_depth(parse_data());
     }
-		else if (action_type=="sg") {
-				// do nothing--all client-side UI changes handled elsewhere
-				// TODO: support undo
-		}
+    else if (action_type=="sg") {
+            // do nothing--all client-side UI changes handled elsewhere
+            // TODO: support undo for signals
+    }
+    else if (action_type=="sc"){ // secedge
+        append_undo("xs:" + params[0].split("-")[0] + "," + params[0].split("-")[1]);
+        add_secedge("n"+params[0].split("-")[0],"n"+params[0].split("-")[1],params[1],nodes);
+        enable_buttons();
+    }
+    else if (action_type=="xs"){ // remove secedge
+        src_trg = params[0].split("-");
+        src_trg = "n"+src_trg[0] + "-" + "n" + src_trg[1];
+        old_rel = secedges[src_trg];
+        append_undo("sc:" + params[0] + "," + old_rel);
+        delete_secedge(params[0]);
+        enable_buttons();
+    }
 
     // anim_catch replaces jquery promise to monitor animation queue
     // enable buttons once this final animation is complete
@@ -115,7 +136,13 @@ function act(action){
 }
 
 function crel(node_id,sel) {
-	act("rl:" + node_id.toString() + "," + sel);
+    let nid_string = node_id.toString();
+    if (nid_string.includes("-")){
+	    act("sc:" + nid_string + "," + sel);
+	} else{
+	    act("rl:" + nid_string + "," + sel);
+	}
+
 }
 
 function rst_node(id, parent, kind, left, relname, reltype){
@@ -691,7 +718,26 @@ function recalculate_depth(nodes){
             jsPlumb.animate(element_id, {top: expected_top, left: expected_left});
         }
     }
+    render_all_secedges(nodes);
     show_warnings(nodes);
+}
+
+function render_all_secedges(nodes){
+    secedges = parse_secedges();
+    sec_by_src = secedges_by_source(secedges);
+    for (node_id in nodes){
+        let nid = node_id.replace(/n/,'');
+        if (nid in sec_by_src){
+            for (trg in sec_by_src[nid]){
+                let eid = nid + "-" + trg;
+                if (!($("#unlink_sc" + eid).length)){  // edge has not been rendered, add it unlink_sc3-2
+                    let relname = secedges[eid];
+                    render_secedge(nid, trg, relname, nodes);
+                }
+            }
+        }
+    }
+
 }
 
 function get_left_right(node_id, nodes, min_left, max_right){
@@ -810,6 +856,18 @@ function detach_target(element_id){
     jsPlumb.select({target:element_id}).detach();
     jsPlumb.selectEndpoints({target:element_id}).each(function(ep){jsPlumb.deleteEndpoint(ep);});
     jsPlumb.repaint(element_id);
+}
+
+function detach_source_target(src,trg){
+    source_elem_id = "g" + src;
+    if (nodes["n"+src].kind=="edu"){
+        source_elem_id = "edu" + src;
+    }
+    target_elem_id = "g" + trg;
+    if (nodes["n"+trg].kind=="edu"){
+        target_elem_id = "edu" + trg;
+    }
+    jsPlumb.select({source:source_elem_id, target: target_elem_id, scope: "secedge"}).detach();
 }
 
 function insert_parent(node_id,new_rel,node_kind){
@@ -997,7 +1055,6 @@ function is_ancestor(new_parent_id,node_id){
 
 // signals handling
 var open_signal_drawer;
-$(document).ready(function(){
 
     function raise_shield_of_justice () {
         var div = document.createElement("div");
@@ -1162,9 +1219,40 @@ $(document).ready(function(){
             .removeClass("tok--selected");
     }
 
+    function bind_tok_contextmenu(){
+		$(".tok").unbind("contextmenu");
+		$(".tok").contextmenu(function(event) {
+			if ($(".custom-menu").length > 0){  // context menu will only exist if signals are on
+				event.preventDefault();
+				// Show contextmenu
+				$(".custom-menu").finish().show(100).css({
+					top: event.pageY -90 + "px",
+					left: event.pageX + "px"
+				});
+				let tokid = $(event.target).attr("id");
+				$(".custom-menu").attr("data-action", tokid);
+			}
+        });
+		$(document).bind("mousedown", function (e) {
+			
+			// If the clicked element is not the menu
+			if (!$(e.target).parents(".custom-menu").length > 0 && $($(e.target).parents(".custom-menu").context).attr("id") != $(".custom-menu").attr("data-action")) {
+				// Hide it
+				$(".custom-menu").hide(100);
+			}
+		});
+		
+		$(".custom-menu li").unbind("click");
+		$(".custom-menu li").click(function(){
+			switch($(this).attr("data-action")) {
+				case "quick_delete_signals": quick_delete_signals($(".custom-menu").attr("data-action")); break;
+			}
+	  });
+   }
+
     function update_signal_button(selDiv) {
         var id = selDiv.attr('id').slice(6);
-        var btn = selDiv.find("button.minibtn");
+        var btn = selDiv.find("button.minibtn:not(.closer)");
 
         var numSigs = window.rstWebSignals[id] && window.rstWebSignals[id].length;
         if (numSigs > 0) {
@@ -1210,30 +1298,13 @@ $(document).ready(function(){
         }
     }
 
-    function make_signal_action(signals) {
-        var s = "sg:";
-
-        Object.keys(signals).forEach(function(id) {
-            signals[id].forEach(function(signal) {
-                s += id + ",";
-                s += signal.type + ",";
-                s += signal.subtype + ",";
-                s += signal.tokens.join("-") + ":";
-            });
-        });
-
-        if (s.endsWith(":")) {
-            s = s.substring(0, s.length - 1);
-        }
-        return s;
-    }
-
     function close_signal_drawer(should_save) {
         var selDiv = $(".seldiv--active");
         lower_shield_of_justice();
         enable_buttons();
         remove_classes();
         deselect_and_unbind_toks();
+        bind_tok_contextmenu();
 
         if (should_save) {
             if (JSON.stringify(window.rstWebSignals) !== signalsWhenOpened) {
@@ -1297,7 +1368,7 @@ $(document).ready(function(){
         // for when a <select> item is changed
         function typeUpdated(e) {
             var index = item.index();
-            console.log(index, signals[id]);
+            //console.log(index, signals[id]);
             var signal = signals[id][index];
             var typeVal = type_select.val();
             var subtypeVal = subtype_select.val();
@@ -1411,13 +1482,24 @@ $(document).ready(function(){
     return btn.text() === "Hide Signal Tokens";
   }
 
+
+
   function highlight_all_tokens() {
+    for (stype in window.rstWebSignalTypes){
+        signal_highlight_colors[stype] = "signal-type-" + sigtype_num.toString();
+        sigtype_num++;
+    }
+    sigtype_num = 1;
     Object.keys(window.rstWebSignals).forEach(function(id) {
       window.rstWebSignals[id].forEach(function(signal) {
-        signal.tokens.forEach(function(tid) {
+        var this_sig = signal;
+        signal.tokens.forEach(function(tid,this_sig) {
           var tok = $('#tok' + tid);
+          tok.removeClass (function (index, className) { return (className.match(/(^|\s)signal-type-[0-9]+/g) || []).join(' ');});
           tok.addClass('tok--highlighted-by-button');
-        });
+          tok.addClass("signal-color");
+          tok.addClass(signal_highlight_colors[this.type]);
+        },this_sig);
       });
     });
   }
@@ -1438,14 +1520,18 @@ $(document).ready(function(){
       }
     });
   }
-
+  
+$(document).ready(function(){
   init_signal_drawer();
   init_show_all_tokens_button();
+  bind_tok_contextmenu();
+  ctrlPressed = false;
 });
 
 
 $(document).on("keydown", function (e) {
 	if (e.ctrlKey){
+		ctrlPressed = true;
 		if (e.keyCode == 69){ // User hit ctrl+e, show edge action dialog
 			e.preventDefault();
 			action_spec = window.prompt("Update parent (e.g. enter 1,2 to set parent of node 1 to be 2); double click a node to get its ID.", "");
@@ -1497,3 +1583,196 @@ $(document).on("keydown", function (e) {
 $(document).on("dblclick", ".num_cont, .edu",  function(e){
 	alert("Discourse unit ID:\n"+$(e.currentTarget).attr('id').replace(/g|edu/,""));
 }); // show span internal ID on dblclick
+
+
+function parse_secedges(){
+    let secedges_string = document.getElementById("secedges").value;
+    let secedge_array = secedges_string.split(";");
+    let secedges = {};
+    
+    for (e of secedge_array){
+        if (e.includes(":")){
+            let parts = e.split(":");
+            secedges[parts[0]] = parts[1];
+        }
+    }
+
+    return secedges;   
+}
+
+function secedges_by_source(secedge_data){
+    let secedges = {};
+
+    for (e in secedge_data){
+        parts = e.split("-");
+        src = parts[0];
+        trg = parts[1];
+        relname = secedge_data[e];
+        if (!(src in secedges)){ secedges[src]={};}
+        secedges[src][trg] = relname;
+    }
+    return secedges;
+}
+
+function delete_secedge(src_trg){
+    let secedges = parse_secedges();
+    let secedge_array = [];
+    for (k of Object.keys(secedges)){
+        if (k != src_trg){
+            secedge_array.push(k + ":" + secedges[k]);
+        }
+    }
+    document.getElementById("secedges").value = secedge_array.join(";");
+    parts = src_trg.replace(/n/g,"").split("-");
+    src = parts[0];
+    trg = parts[1];
+    detach_source_target(src, trg);
+    if (src + "-" + trg in window.rstWebSignals){
+        delete window.rstWebSignals[src+"-"+trg];
+        if (all_tokens_are_highlighted()){
+            unhighlight_tokens();
+            unhighlight_all_tokens();
+            highlight_all_tokens();
+        }
+    }
+}
+
+function add_secedge(src,trg,relname){
+    var nodes = {};
+    nodes = parse_data();
+    if (relname == null){
+        relname = get_def_rstrel();
+    }
+    var secedges;
+    secedges = parse_secedges();
+    
+    // check that nodes exist
+    if (!(src in nodes)){
+        alert("secedge source node " + src + " not in data model!");
+        return;
+    }
+    if (!(trg in nodes)){
+        alert("secedge target node " + trg + " not in data model!");
+        return;
+    }
+
+    // check that nodes do not have the same span and set direction
+    let direction = "ltr";
+    if (nodes[trg].left > nodes[src].left) {
+        direction = "rtl"
+    } else if (nodes[trg].left == nodes[src].left){
+        return;
+    }
+
+    if (src.replace(/n/,"") + "-" +trg.replace(/n/,"") in secedges){
+        delete_secedge(src.replace(/n/,"") + "-" +trg.replace(/n/,"")); // delete existing secedge with same src-trg
+    }
+
+    secedges[src.replace(/n/,"") + "-" + trg.replace(/n/,"")] = relname;
+
+    let secedge_array = [];
+    for (k of Object.keys(secedges)){
+        secedge_array.push(k + ":" + secedges[k]);
+    }
+    document.getElementById("secedges").value = secedge_array.join(";");
+
+    render_secedge(src.replace(/n/,""),trg.replace(/n/,""),relname,nodes);
+
+}
+
+function render_secedge(src, trg, relname, nodes){
+
+    let direction = "ltr";
+    if (nodes["n"+trg].left > nodes["n"+src].left) {
+        direction = "rtl"
+    }
+
+    // render
+    src_elem = "g" + src.replace(/n/,'');
+    if (nodes["n"+src].kind=="edu"){
+        src_elem = "edu" + src.replace(/n/,'');
+    }
+    trg_elem = "g" + trg.replace(/n/,'');
+    if (nodes["n"+trg].kind=="edu"){
+        trg_elem = "edu" + trg.replace(/n/,'');
+    }
+
+    let curv = direction == "ltr" ? -10 :10;
+    jsPlumb.connect({source: src_elem, target: trg_elem, scope: "secedge",
+        connector : [ "Bezier", { curviness:curv } ],
+        paintStyle : {
+            lineWidth:2,
+            //dashStyle:"stroke-dashoffset",
+            //strokeNode: {dashstyle:"stroke-dashoffset"},
+            strokeStyle: 'rgba(0,0,255,1)'
+        },
+        overlays: [ ["Arrow" , { width:12, length:12, location:0.95 }],["Custom", {create:function(component) {return make_secedge_chooser(src,trg,relname);},location:0.5,id:"customOverlay"}]]});
+
+}
+
+function make_secedge_chooser(id,parent_id,rel){
+    var s = "<div id='seldiv"+id.replace("n","")+"-"+parent_id.replace("n","")+"' style='white-space:nowrap; z-index:5000'>";
+    s += make_signal_button(id + "-" + parent_id);
+    s += "<button id='unlink_sc"+id.replace("n","")+"-"+parent_id.replace("n","")+"' title='unlink secondary edge' class='minibtn closer' onclick='act(" + '"xs:' + id.replace("n","") + "-" + parent_id.replace("n","") + '"' + ");'>X</button>"
+    s += "<select id='secsel"+id.replace("n","")+"t"+parent_id.replace("n","")+"' style='color:blue; width: 50px; z-index: 5000; height: 18px' class='rst_rel' onchange='crel(" + '"' + id.replace("n","") +"-"+ parent_id.replace("n","") + '"' +",this.options[this.selectedIndex].value);'>" + select_my_rel("both",rel) + "</select>";
+    return $(s);
+}
+
+$(document).keyup(function(evt) {
+    ctrlPressed = false;
+});
+
+function make_signal_action(signals) {
+	var s = "sg:";
+
+	Object.keys(signals).forEach(function(id) {
+		signals[id].forEach(function(signal) {
+			s += id + ",";
+			s += signal.type + ",";
+			s += signal.subtype + ",";
+			s += signal.tokens.join("-") + ":";
+		});
+	});
+
+	if (s.endsWith(":")) {
+		s = s.substring(0, s.length - 1);
+	}
+	return s;
+}
+
+
+function quick_delete_signals(tokid){
+	tokid = parseInt(tokid.replace('tok',''));
+	sources_to_remove = [];
+	selDivs_to_update = [];
+	for (source_id in window.rstWebSignals){
+		signals_to_remove = [];
+		for (signal_idx in window.rstWebSignals[source_id]){
+			signal = window.rstWebSignals[source_id][signal_idx];
+			if (signal.tokens.includes(tokid)){
+				signals_to_remove.push(signal_idx);
+				selDivs_to_update.push(source_id);
+			}
+		}
+		for (signal_idx of signals_to_remove.slice().reverse()){
+			window.rstWebSignals[source_id].splice(signal_idx,1);
+		}
+		if (window.rstWebSignals[source_id].length == 0){
+			sources_to_remove.push(source_id);
+		}
+	}
+	for (source_id of sources_to_remove){
+		delete window.rstWebSignals[source_id];
+	}
+	for (source_id of selDivs_to_update){
+		update_signal_button($("#seldiv"+source_id));
+	}
+	act(make_signal_action(window.rstWebSignals));
+	unhighlight_all_tokens();
+	// reset token highlighting
+	attempt_to_bind_token_reveal_until_success();
+	if (all_tokens_are_highlighted()) {
+		highlight_all_tokens();
+	}
+	$(".custom-menu").hide(100);
+}

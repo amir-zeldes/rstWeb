@@ -14,6 +14,7 @@ import sqlite3
 from modules.formats import db2rst, rst2dis, rst2dep
 from modules.formats.dep2rst import rsd2rs3
 from modules.rstweb_reader import *
+from collections import defaultdict
 
 try:
 	basestring
@@ -45,7 +46,7 @@ def setup_db():
 
 	# Create tables
 	cur.execute('''CREATE TABLE IF NOT EXISTS rst_nodes
-	             (id text, left real, right real, parent text, depth real, kind text, contents text, relname text, doc text, project text, user text, UNIQUE (id, doc, project, user) ON CONFLICT REPLACE)''')
+	             (id text, left real, right real, parent text, depth real, kind text, contents text, relname text, doc text, project text, user text, secedges text, UNIQUE (id, doc, project, user) ON CONFLICT REPLACE)''')
 	cur.execute('''CREATE TABLE IF NOT EXISTS rst_signals
 	             (source text, type text, subtype text, tokens text, doc text, project text, user text, UNIQUE (source, type, subtype, tokens, doc, project, user) ON CONFLICT REPLACE)''')
 	cur.execute('''CREATE TABLE IF NOT EXISTS rst_signal_types
@@ -76,7 +77,7 @@ def update_schema():
 
 	# Create tables
 	cur.execute('''CREATE TABLE IF NOT EXISTS rst_nodes
-	             (id text, left real, right real, parent text, depth real, kind text, contents text, relname text, doc text, project text, user text, UNIQUE (id, doc, project, user) ON CONFLICT REPLACE)''')
+	             (id text, left real, right real, parent text, depth real, kind text, contents text, relname text, doc text, project text, user text, secedges text, UNIQUE (id, doc, project, user) ON CONFLICT REPLACE)''')
 	cur.execute('''CREATE TABLE IF NOT EXISTS rst_relations
 	             (relname text, reltype text, doc text, project text, UNIQUE (relname, reltype, doc, project) ON CONFLICT REPLACE)''')
 	cur.execute('''CREATE TABLE IF NOT EXISTS rst_signals
@@ -107,10 +108,12 @@ def update_schema():
 			cur.execute('ALTER TABLE projects ADD COLUMN validations text')
 	if schema < 6:
 		initialize_signal_types_on_existing_docs(cur)
+	if schema < 7:
+		if not generic_query("SELECT * from pragma_table_info('rst_nodes') where name='secedges';", ()):
+			cur.execute('ALTER TABLE rst_nodes ADD COLUMN secedges text')
 
 	conn.commit()
 	conn.close()
-
 
 	initialize_settings()
 
@@ -148,7 +151,7 @@ def initialize_settings():
 	save_setting("signals_file", "default.json")
 	save_setting("use_span_buttons", "True")
 	save_setting("use_multinuc_buttons", "True")
-	set_schema('6')
+	set_schema('7')
 
 
 def check_refresh(user, timestamp):
@@ -213,6 +216,7 @@ def read_signals_file():
 	except IOError:
 		return {}
 
+
 def import_document(filename, project, user, do_tokenize=False):
 	dbpath = os.path.dirname(os.path.realpath(__file__)) + os.sep +".."+os.sep+"rstweb.db"
 	conn = sqlite3.connect(dbpath)
@@ -228,7 +232,7 @@ def import_document(filename, project, user, do_tokenize=False):
 	if schema < 6:  # Schemas below 6 do not support importing signals
 		update_schema()
 
-	rst_nodes, rst_signals = read_rst(filename, rel_hash, do_tokenize=do_tokenize)
+	rst_nodes, rst_signals, signal_types = read_rst(filename, rel_hash, do_tokenize=do_tokenize)
 	if isinstance(rst_nodes,basestring):
 		return rst_nodes
 
@@ -237,14 +241,15 @@ def import_document(filename, project, user, do_tokenize=False):
 
 	for key in rst_nodes:
 		node = rst_nodes[key]
-		cur.execute("INSERT INTO rst_nodes VALUES(?,?,?,?,?,?,?,?,?,?,?)", (node.id,node.left,node.right,node.parent,node.depth,node.kind,node.text,node.relname,doc,project,user)) #user's instance
-		cur.execute("INSERT INTO rst_nodes VALUES(?,?,?,?,?,?,?,?,?,?,?)", (node.id,node.left,node.right,node.parent,node.depth,node.kind,node.text,node.relname,doc,project,"_orig")) #backup instance
+		cur.execute("INSERT INTO rst_nodes VALUES(?,?,?,?,?,?,?,?,?,?,?,?)", (node.id,node.left,node.right,node.parent,node.depth,node.kind,node.text,node.relname,doc,project,user,node.secedges)) #user's instance
+		cur.execute("INSERT INTO rst_nodes VALUES(?,?,?,?,?,?,?,?,?,?,?,?)", (node.id,node.left,node.right,node.parent,node.depth,node.kind,node.text,node.relname,doc,project,"_orig",node.secedges)) #backup instance
 
 	for signal in rst_signals:
 		cur.execute("INSERT INTO rst_signals VALUES(?,?,?,?,?,?,?)", (signal[0],signal[1],signal[2],signal[3],doc,project,user)) #user's instance
 		cur.execute("INSERT INTO rst_signals VALUES(?,?,?,?,?,?,?)", (signal[0],signal[1],signal[2],signal[3],doc,project,"_orig")) #backup instance
 
-	signal_types = read_signals_file()
+	if signal_types is None:
+		signal_types = read_signals_file()
 	for majtype, subtypes in signal_types.items():
 		for subtype in subtypes:
 			cur.execute("INSERT INTO rst_signal_types VALUES(?,?,?,?)",
@@ -275,8 +280,8 @@ def import_plaintext(filename, project, user, rel_hash, do_tokenize=False):
 
 	for key in rst_nodes:
 		node = rst_nodes[key]
-		generic_query("INSERT INTO rst_nodes VALUES(?,?,?,?,?,?,?,?,?,?,?)", (node.id,node.left,node.right,node.parent,node.depth,node.kind,node.text,node.relname,doc,project,user)) #user's instance
-		generic_query("INSERT INTO rst_nodes VALUES(?,?,?,?,?,?,?,?,?,?,?)", (node.id,node.left,node.right,node.parent,node.depth,node.kind,node.text,node.relname,doc,project,"_orig")) #backup instance
+		generic_query("INSERT INTO rst_nodes VALUES(?,?,?,?,?,?,?,?,?,?,?,?)", (node.id,node.left,node.right,node.parent,node.depth,node.kind,node.text,node.relname,doc,project,user,'')) #user's instance
+		generic_query("INSERT INTO rst_nodes VALUES(?,?,?,?,?,?,?,?,?,?,?,?)", (node.id,node.left,node.right,node.parent,node.depth,node.kind,node.text,node.relname,doc,project,"_orig",'')) #backup instance
 
 	for key in rel_hash:
 		rel_name = key
@@ -301,7 +306,7 @@ def get_rst_doc(doc,project,user):
 
 	with conn:
 		cur = conn.cursor()
-		cur.execute("SELECT id, left, right, parent, depth, kind, contents, relname, doc, project, user FROM rst_nodes WHERE doc=? and project=? and user=? ORDER BY CAST(id AS int)", (doc,project,user))
+		cur.execute("SELECT id, left, right, parent, depth, kind, contents, relname, secedges, doc, project, user FROM rst_nodes WHERE doc=? and project=? and user=? ORDER BY CAST(id AS int)", (doc,project,user))
 
 		rows = cur.fetchall()
 		return rows
@@ -339,7 +344,7 @@ def get_all_docs_by_project():
 
 
 def add_node(node_id,left,right,parent,rel_name,text,node_kind,doc,project,user):
-	generic_query("INSERT INTO rst_nodes VALUES(?,?,?,?,?,?,?,?,?,?,?)", (node_id,left,right,parent,0,node_kind,text,rel_name,doc,project,user))
+	generic_query("INSERT INTO rst_nodes VALUES(?,?,?,?,?,?,?,?,?,?,?,?)", (node_id,left,right,parent,0,node_kind,text,rel_name,doc,project,user,""))
 
 
 def get_all_projects():
@@ -351,7 +356,10 @@ def create_project(project_name):
 
 
 def update_parent(node_id,new_parent_id,doc,project,user):
-	prev_parent = get_parent(node_id,doc,project,user)
+	try:
+		prev_parent = get_parent(node_id,doc,project,user)
+	except:
+		return
 	generic_query("UPDATE rst_nodes SET parent=? WHERE id=? and doc=? and project=? and user=?",(new_parent_id,node_id,doc,project,user))
 	if new_parent_id == "0":
 		update_rel(node_id,get_def_rel("rst",doc,project),doc,project,user)
@@ -475,6 +483,19 @@ def delete_node(node_id,doc,project,user):
 					update_parent(child[0],"0",doc,project,user)
 			generic_query("DELETE FROM rst_nodes WHERE id=? and doc=? and project=? and user=?",(node_id,doc,project,user))
 			generic_query("DELETE FROM rst_signals WHERE source=? and doc=? and project=? and user=?",(node_id,doc,project,user))
+			generic_query("DELETE from rst_signals WHERE source like ? and doc=? and project=? and user=?",("%-" + node_id, doc, project, user))
+			generic_query("DELETE from rst_signals WHERE source like ? and doc=? and project=? and user=?",(node_id + "-%", doc, project, user))
+			target_secedges = generic_query("SELECT secedges from rst_nodes WHERE secedges like ? and doc=? and project=? and user=?",("%-"+node_id+":", doc, project, user))
+			for t in target_secedges:
+				old_secedges = t[0]
+				secedges = old_secedges.split(";")
+				new_secedges = []
+				for s in secedges:
+					if "-" + node_id + ":" in s:
+						continue
+					new_secedges.append(s)
+				new_secedges = ";".join(new_secedges)
+				generic_query("UPDATE rst_nodes set secedges=? WHERE secedges=? and doc=? and project=? and user=?",(new_secedges,old_secedges,doc,project,user))
 		if not parent=="0":
 			if not count_children(parent,doc,project,user)>0:
 				delete_node(parent,doc,project,user)
@@ -496,8 +517,8 @@ def insert_parent(node_id,new_rel,node_kind,doc,project,user):
 
 def reset_rst_doc(doc,project,user):
 	generic_query("DELETE FROM rst_nodes WHERE doc=? and project=? and user=?",(doc,project,user))
-	generic_query("""INSERT INTO rst_nodes (id, left, right, parent, depth, kind, contents, relname, doc, project, user)
-	              SELECT id, left, right, parent, depth, kind, contents, relname, doc, project, '""" + user + "' FROM rst_nodes WHERE doc=? and project=? and user='_orig'""",(doc,project))
+	generic_query("""INSERT INTO rst_nodes (id, left, right, parent, depth, kind, contents, relname, doc, project, user, secedges)
+	              SELECT id, left, right, parent, depth, kind, contents, relname, doc, project, '""" + user + "', secedges FROM rst_nodes WHERE doc=? and project=? and user='_orig'""",(doc,project))
 	generic_query("DELETE FROM rst_signals WHERE doc=? and project=? and user=?",(doc,project,user))
 	generic_query("""INSERT INTO rst_signals (source, type, subtype, tokens, doc, project, user)
 	              SELECT source, type, subtype, tokens, doc, project, '""" + user + "' FROM rst_signals WHERE doc=? and project=? and user='_orig'""",(doc,project))
@@ -516,7 +537,7 @@ def get_max_right(doc,project,user):
 
 
 def get_users(doc,project):
-	return generic_query("SELECT user from rst_nodes WHERE doc=? and project=? and not user='_orig'",(doc,project))
+	return generic_query("SELECT DISTINCT user from rst_nodes WHERE doc=? and project=? and not user='_orig'",(doc,project))
 
 
 def generic_query(sql,params):
@@ -574,14 +595,20 @@ def export_document(doc, project, exportdir, output_format='rs3'):
 def get_export_string(doc, project, user):
 	rels = get_rst_rels(doc, project)
 	nodes = get_rst_doc(doc, project, user)
+	secedges = get_secedges(doc, project, user)
 	signals = get_signals(doc, project, user)
-	return db2rst(rels, nodes, signals)
+	signal_rows = get_signal_types(doc, project)
+	signal_types = defaultdict(list)
+	for row in signal_rows:
+		signal_types[row[0]].append(row[1])
+	return db2rst(rels, nodes, secedges, signals, signal_types, doc, project, user)
 
 
 def delete_document(doc,project):
 	generic_query("DELETE FROM rst_nodes WHERE doc=? and project=?",(doc,project))
 	generic_query("DELETE FROM rst_relations WHERE doc=? and project=?",(doc,project))
 	generic_query("DELETE FROM rst_signals WHERE doc=? and project=?",(doc,project))
+	generic_query("DELETE FROM rst_signal_types WHERE doc=? and project=?",(doc,project))
 	generic_query("DELETE FROM docs WHERE doc=? and project=?",(doc,project))
 
 
@@ -589,6 +616,7 @@ def delete_project(project):
 	generic_query("DELETE FROM rst_nodes WHERE project=?",(project,))
 	generic_query("DELETE FROM rst_relations WHERE project=?",(project,))
 	generic_query("DELETE FROM rst_signals WHERE project=?",(project,))
+	generic_query("DELETE FROM rst_signal_types WHERE project=?",(project,))
 	generic_query("DELETE FROM docs WHERE project=?",(project,))
 	generic_query("DELETE FROM projects WHERE project=?",(project,))
 
@@ -600,6 +628,7 @@ def insert_seg(token_num, doc, project, user):
 	parts = get_split_text(token_num,doc,project,user)
 	update_seg_contents(seg_to_split,parts[0].strip(),doc,project,user)
 	add_seg(str(int(seg_to_split)+1),parts[1].strip(),doc,project,user)
+
 
 def get_tok_map(doc,project,user):
 	rows = generic_query("SELECT id, contents FROM rst_nodes WHERE kind='edu' and doc=? and project=? and user=? ORDER BY CAST(id AS int)",(doc,project,user))
@@ -616,25 +645,85 @@ def get_tok_map(doc,project,user):
 
 
 def push_up(push_above_this_seg,doc,project,user):
-	ids_above_push = generic_query("SELECT id from rst_nodes WHERE CAST(id as int) > ? and doc=? and project=? and user=? ORDER BY CAST(id as int) DESC",(push_above_this_seg,doc,project,user))
-	for row in ids_above_push: #Do this row-wise to avoid sqlite unique constraint behavior
-		id_to_increment = row[0]
-		generic_query("UPDATE rst_nodes set id = CAST((CAST(id as int) + 1) as text) WHERE id=? and doc=? and project=? and user=?",(id_to_increment,doc,project,user))
-		generic_query("UPDATE rst_signals set source = CAST((CAST(source as int) + 1) as text) WHERE source=? and doc=? and project=? and user=?",(id_to_increment,doc,project,user))
+	all_rows = generic_query("SELECT id, secedges from rst_nodes WHERE doc=? and project=? and user=? ORDER BY CAST(id as int) DESC",(doc,project,user))
+	for row in all_rows:  # Do this row-wise to avoid sqlite unique constraint behavior
+		row_id = row[0]
+		secedges = row[1]
+		if secedges is not None:  # Update secedges with source or target above push
+			if len(secedges) > 0:
+				updated_edges = []
+				secedges = secedges.split(";")
+				for secedge in secedges:
+					src_trg, relname = secedge.split(":")
+					src, trg = src_trg.split("-")
+					if int(src) > push_above_this_seg:
+						src = str((int(src) + 1))
+					if int(trg) > push_above_this_seg:
+						trg = str((int(trg) + 1))
+					edge = src + "-" + trg + ":" + relname
+					updated_edges.append(edge)
+				updated_edges = ";".join(updated_edges)
+				if updated_edges != row[1]:
+					generic_query("UPDATE rst_nodes set secedges = ? WHERE id=? and doc=? and project=? and user=?", (updated_edges, row_id, doc, project, user))
+		if int(row_id) > push_above_this_seg:
+			generic_query("UPDATE rst_nodes set id = CAST((CAST(id as int) + 1) as text) WHERE id=? and doc=? and project=? and user=?", (row_id, doc, project, user))
+			generic_query("UPDATE rst_signals set source = CAST((CAST(source as int) + 1) as text) WHERE source=? and doc=? and project=? and user=?",(row_id, doc, project, user))
 	generic_query("UPDATE rst_nodes set parent = CAST((CAST(parent as int) + 1) as text) WHERE CAST(parent as int)>? and doc=? and project=? and user=?",(push_above_this_seg,doc,project,user))
 	generic_query("UPDATE rst_nodes set left = left + 1 WHERE left>? and doc=? and project=? and user=?",(push_above_this_seg,doc,project,user))
 	generic_query("UPDATE rst_nodes set right = right + 1 WHERE right>? and doc=? and project=? and user=?",(push_above_this_seg,doc,project,user))
 
+	# Update secedge signals
+	secedge_signals	= generic_query("SELECT DISTINCT source from rst_signals WHERE source like '%-%' and doc=? and project=? and user=?",(doc,project,user))
+	for row in secedge_signals:
+		src, trg = row[0].split("-")
+		if int(src) > push_above_this_seg:
+			src = str((int(src) + 1))
+		if int(trg) > push_above_this_seg:
+			trg = str((int(trg) + 1))
+		src_trg = src + "-" + trg
+		if src_trg != row[0]:
+			generic_query("UPDATE rst_signals set source = ? WHERE source=? and doc=? and project=? and user=?",(src_trg, row[0], doc, project, user))
+
 
 def push_down(push_above_this_seg,doc,project,user):
-	ids_above_push = generic_query("SELECT id from rst_nodes WHERE CAST(id as int) > ? and doc=? and project=? and user=? ORDER BY CAST(id as int)",(push_above_this_seg,doc,project,user))
-	for row in ids_above_push: #Do this row-wise to avoid sqlite unique constraint behavior
-		id_to_decrement = row[0]
-		generic_query("UPDATE rst_nodes set id = CAST((CAST(id as int) - 1) as text) WHERE id=? and doc=? and project=? and user=?",(id_to_decrement,doc,project,user))
-		generic_query("UPDATE rst_signals set source = CAST((CAST(source as int) - 1) as text) WHERE source=? and doc=? and project=? and user=?",(id_to_decrement,doc,project,user))
+	all_rows = generic_query("SELECT id, secedges from rst_nodes WHERE doc=? and project=? and user=? ORDER BY CAST(id as int)",(doc,project,user))
+	for row in all_rows:  # Do this row-wise to avoid sqlite unique constraint behavior
+		row_id = row[0]
+		secedges = row[1]
+		if secedges is not None:  # Update secedges with source or target above push
+			if len(secedges) > 0:
+				updated_edges = []
+				secedges = secedges.split(";")
+				for secedge in secedges:
+					src_trg, relname = secedge.split(":")
+					src, trg = src_trg.split("-")
+					if int(src) > push_above_this_seg:
+						src = str((int(src) - 1))
+					if int(trg) > push_above_this_seg:
+						trg = str((int(trg) - 1))
+					edge = src + "-" + trg + ":" + relname
+					updated_edges.append(edge)
+				updated_edges = ";".join(updated_edges)
+				if updated_edges != row[1]:
+					generic_query("UPDATE rst_nodes set secedges = ? WHERE id=? and doc=? and project=? and user=?", (updated_edges, row_id, doc, project, user))
+		if int(row_id) > push_above_this_seg:
+			generic_query("UPDATE rst_nodes set id = CAST((CAST(id as int) - 1) as text) WHERE id=? and doc=? and project=? and user=?", (row_id, doc, project, user))
+			generic_query("UPDATE rst_signals set source = CAST((CAST(source as int) - 1) as text) WHERE source=? and doc=? and project=? and user=?",(row_id, doc, project, user))
 	generic_query("UPDATE rst_nodes set parent = CAST((CAST(parent as int) - 1) as text) WHERE CAST(parent as int)>? and doc=? and project=? and user=?",(push_above_this_seg,doc,project,user))
 	generic_query("UPDATE rst_nodes set left = left - 1 WHERE left>? and doc=? and project=? and user=?",(push_above_this_seg,doc,project,user))
 	generic_query("UPDATE rst_nodes set right = right - 1 WHERE right>? and doc=? and project=? and user=?",(push_above_this_seg,doc,project,user))
+
+	# Update secedge signals
+	secedge_signals	= generic_query("SELECT DISTINCT source from rst_signals WHERE source like '%-%' and doc=? and project=? and user=?",(doc,project,user))
+	for row in secedge_signals:
+		src, trg = row[0].split("-")
+		if int(src) > push_above_this_seg:
+			src = str((int(src) - 1))
+		if int(trg) > push_above_this_seg:
+			trg = str((int(trg) - 1))
+		src_trg = src + "-" + trg
+		if src_trg != row[0]:
+			generic_query("UPDATE rst_signals set source = ? WHERE source=? and doc=? and project=? and user=?",(src_trg, row[0], doc, project, user))
 
 
 def get_split_text(tok_num,doc,project,user):
@@ -676,7 +765,7 @@ def get_seg_contents(id,doc,project,user):
 
 
 def add_seg(id,contents,doc,project,user):
-	generic_query("INSERT INTO rst_nodes VALUES(?,?,?,?,?,?,?,?,?,?,?)", (id,id,id,"0","0","edu",contents,get_def_rel("rst",doc,project),doc,project,user))
+	generic_query("INSERT INTO rst_nodes VALUES(?,?,?,?,?,?,?,?,?,?,?,?)", (id,id,id,"0","0","edu",contents,get_def_rel("rst",doc,project),doc,project,user,""))
 
 
 def merge_seg_forward(last_tok_num,doc,project,user):
@@ -707,12 +796,13 @@ def copy_doc_to_user(doc, project, user):
 	copy = []
 	for row in doc_to_copy:
 		row += (user,)
+		row += ("",)  # secedges field
 		copy += (row,)
 
 	dbpath = os.path.dirname(os.path.realpath(__file__)) + os.sep +".."+os.sep+"rstweb.db"
 	conn = sqlite3.connect(dbpath)
 	cur = conn.cursor()
-	cur.executemany('INSERT INTO rst_nodes VALUES(?,?,?,?,?,?,?,?,?,?,?)', copy)
+	cur.executemany('INSERT INTO rst_nodes VALUES(?,?,?,?,?,?,?,?,?,?,?,?)', copy)
 	cur.execute("INSERT INTO docs VALUES (?,?,?)", (doc,project,user))
 	conn.commit()
 
@@ -847,3 +937,43 @@ def get_signal_types_dict(doc, project):
 		d[majtype].append(subtype)
 
 	return d
+
+
+def get_secedges(doc, project, user):
+	# Return all secedges as a ; separated string in the format: 1-2:elaboration_r;6-3:concession_r
+	schema = get_schema()
+	if schema < 7:
+		update_schema()
+	output = ""
+	secedges = generic_query("SELECT DISTINCT secedges FROM rst_nodes WHERE doc=? and project=? and user=?", (doc,project,user))
+	if secedges is not None:
+		if len(secedges)>0:
+			secedges = [str(s[0]) for s in secedges]
+			output = ";".join(secedges).replace(";;",";")
+			if output.startswith(";"):
+				output = output[1:]
+			if output.endswith(";"):
+				output = output[:-1]
+	return output
+
+
+def update_secedge(node_id,parent_id,new_rel,doc,project,user):
+	params = (node_id,doc,project,user)
+	old_secedges = generic_query("SELECT secedges FROM rst_nodes WHERE id=? and doc=? and project=? and user=?", params)
+	if len(old_secedges) == 0 or old_secedges[0][0] is None:
+		secedges_string = ""
+	else:
+		secedges_string = old_secedges[0][0]
+	secedges = secedges_string.split(";")
+	secedges = [s for s in secedges if not s.startswith(node_id + "-" + parent_id + ":") and ":" in s]
+	if new_rel != "-ERASE-":
+		secedges.append(node_id + "-" + parent_id + ":" + new_rel)
+	else:
+		generic_query("DELETE from rst_signals WHERE source like ? and doc=? and project=? and user=?", (node_id + "-" + parent_id, doc, project, user))
+	secedges_string = ";".join(secedges)
+	params = (secedges_string,node_id,doc,project,user)
+	generic_query("UPDATE rst_nodes set secedges = ? WHERE id=? and doc=? and project=? and user=?", params)
+
+if __name__ == "__main__":
+	#get_rst_doc("GUM_academic_huh.rs4", "A nice demo for the workshop", "amir")
+	get_export_string("GUM_whow_basil.rs4", "rst++", "sp1184")

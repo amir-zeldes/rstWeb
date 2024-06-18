@@ -23,7 +23,8 @@ def get_structure_main(**kwargs):
     current_project = "quick"
 
     rels = {}
-    nodes, signals = read_rst(rs3,rels,as_string=True)
+    nodes, signals, signal_type_dict = read_rst(rs3,rels,as_string=True)
+    secedges = []
     for nid in nodes:
         node = nodes[nid]
         node.relkind = "rst"
@@ -31,8 +32,12 @@ def get_structure_main(**kwargs):
             node.relkind = "multinuc"
         elif node.relname == "span":
             node.relkind = "span"
+        if node.secedges != "":
+            secedges += node.secedges.split(";")
+    secedge_data = ";".join(secedges)
     rels = sorted([(k,v) for k,v in iteritems(rels)])
-    output = build_canvas(current_doc, current_project, rels, nodes, signal_data=signals, show_signals=False, validations="validate_empty;validate_flat;validate_mononuc")
+    output = build_canvas(current_doc, current_project, rels, nodes, secedge_data=secedge_data, signal_data=signals,
+                          validations="validate_empty;validate_flat;validate_mononuc", signal_type_dict=signal_type_dict)
     return output
 
 def get_structure_main_server():

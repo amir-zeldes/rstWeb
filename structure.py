@@ -24,7 +24,7 @@ from modules.pathutils import *
 from modules.logintools import login
 
 
-def build_canvas(current_doc, current_project, rels, nodes, def_rstrel="", def_multirel="", signal_data=None, user=None, show_signals=True, validations=None):
+def build_canvas(current_doc, current_project, rels, nodes, secedge_data="", def_rstrel="", def_multirel="", signal_data=None, user=None, show_signals=True, validations=None, signal_type_dict=None):
 	###GRAPHICAL PARAMETERS###
 	top_spacing = 20
 	layer_spacing = 60
@@ -40,6 +40,9 @@ def build_canvas(current_doc, current_project, rels, nodes, def_rstrel="", def_m
 		cpout += '''	            <button id="show-all-signals">
 	              Show All Signal Tokens
 	            </button>\n'''
+		cpout += '''<ul class='custom-menu' data-action="">
+  <li data-action="quick_delete_signals">Delete signals</li>
+</ul>\n'''   # Signal context menu on right click token
 
 	cpout += '''	            <div class="signal-drawer">
 	              <div id="signal-list"> </div>
@@ -115,9 +118,13 @@ def build_canvas(current_doc, current_project, rels, nodes, def_rstrel="", def_m
 		signals[s_id].append({'type': s_type,
 							  'subtype': subtype,
 							  'tokens': tokens})
+
+	if signal_type_dict is None:
+		signal_type_dict = get_signal_types_dict(current_doc, current_project)
+
 	cpout += '<script>'
 	cpout += 'window.rstWebSignals = ' + json.dumps(signals) + ';'
-	cpout += 'window.rstWebSignalTypes = ' + json.dumps(get_signal_types_dict(current_doc, current_project),
+	cpout += 'window.rstWebSignalTypes = ' + json.dumps(signal_type_dict,
 														sort_keys=True) + ';'
 	cpout += 'window.rstWebDefaultSignalType = Object.keys(window.rstWebSignalTypes)[0];'
 	cpout += 'if (window.rstWebDefaultSignalType != null) {window.rstWebDefaultSignalSubtype = window.rstWebSignalTypes[window.rstWebDefaultSignalType][0];}'
@@ -211,6 +218,12 @@ def build_canvas(current_doc, current_project, rels, nodes, def_rstrel="", def_m
 		use_span_buttons = True
 		use_multinuc_buttons = True
 
+	# Check whether secondary edges should be allowed
+	if int(get_schema()) > 6:
+		use_secedges = True if get_setting("use_secedges") == "True" else False
+	else:
+		use_secedges = False
+
 	if sys.version_info[0] == 2:
 		lambda_button = "Λ".decode("utf-8")
 	else:
@@ -278,6 +291,11 @@ def build_canvas(current_doc, current_project, rels, nodes, def_rstrel="", def_m
 	hidden_val = hidden_val[0:len(hidden_val) - 1]
 	cpout += 'value="' + hidden_val + '"/>'
 
+	# secondary edges, if any
+	cpout += '<input id="secedges" name="secedges" type="hidden" '
+	hidden_val = secedge_data
+	cpout += 'value="' + hidden_val + '"/>'
+
 	cpout += '<input id="def_multi_rel" type="hidden" value="' + def_multirel + '"/>\n'
 	cpout += '<input id="def_rst_rel" type="hidden" value="' + def_rstrel + '"/>\n'
 	cpout += '<input id="undo_log" type="hidden" value=""/>\n'
@@ -287,6 +305,7 @@ def build_canvas(current_doc, current_project, rels, nodes, def_rstrel="", def_m
 	cpout += '<input id="validations" type="hidden" value="' + validations + '"/>\n'
 	cpout += '<input id="use_span_buttons" type="hidden" value="' + str(use_span_buttons) + '"/>\n'
 	cpout += '<input id="use_multinuc_buttons" type="hidden" value="' + str(use_multinuc_buttons) + '"/>\n'
+	cpout += '<input id="use_secedges" type="hidden" value="' + str(use_secedges) + '"/>\n'
 
 	cpout += '''	<script src="./script/jquery.jsPlumb-1.7.5-min.js"></script>
 
@@ -298,8 +317,15 @@ def build_canvas(current_doc, current_project, rels, nodes, def_rstrel="", def_m
 	cpout += 'function select_my_rel(options,my_rel){'
 	cpout += 'var multi_options = `' + multi_options + '`;\n'
 	cpout += 'var rst_options = `' + rst_options + '`;\n'
-	cpout += 'if (options =="multi"){options = multi_options;} else {options=rst_options;}'
-	cpout += '		return options.replace("<option value=' + "'" + '"' + '+my_rel+' + '"' + "'" + '","<option selected=' + "'" + 'selected' + "'" + ' value=' + "'" + '"' + '+my_rel+' + '"' + "'" + '");'
+	cpout += 'var relname_mapping = {"adversative-antithesis":"antithesis","adversative-concession":"concession","adversative-contrast":"contrast","attribution-negative":"attrib.-negative","attribution-positive":"attrib.-positive","causal-cause":"cause","causal-result":"result","context-background":"background","context-circumstance":"circumstance","contingency-condition":"condition","elaboration-additional":"elab.-additional","elaboration-attribute":"elab.-attribute","evaluation-comment":"eval.-comment","explanation-evidence":"evidence","explanation-justify":"justify","explanation-motivation":"motivation","joint-disjunction":"disjunction","joint-list":"list","joint-other":"other","joint-sequence":"sequence","mode-manner":"manner","mode-means":"means","organization-heading":"heading","organization-phatic":"phatic","organization-preparation":"preparation","purpose-attribute":"purp.-attribute","purpose-goal":"purp.-goal","restatement-partial":"restat.-partial","restatement-repetition":"restat.-repetition","same-unit":"same-unit","topic-question":"question","topic-solutionhood":"solutionhood"}\n'
+	cpout += '''if (options =="both"){options = multi_options.replace(/<option value=[^<>]+?>.?(satellite|same-unit)[^<>]*<.option>/g,"").replace(/\\n+/g,"\\n").replace(/_m'/g,"_r'") + rst_options;}\n'''
+	cpout += 'else if (options =="multi"){options = multi_options;} else {options=rst_options;}\n'
+	cpout += '		replaced = options.replace("<option value=' + "'" + '"' + '+my_rel+' + '"' + "'" + '","<option selected=' + "'" + 'selected' + "'" + ' value=' + "'" + '"' + '+my_rel+' + '"' + "'" + '");\n'
+	cpout += '      const longrel = /([a-z]{4})[a-z]+-([a-z]+<.option)/gi;\n'
+	cpout += '      for (f in relname_mapping) {replaced = replaced.replace(">" + f + "<",">" + relname_mapping[f] + "<");}\n'
+	#cpout += '      replaced = replaced.replace(longrel,"$1-$2"); //shorten long names\n'
+	cpout += '		replaced = replaced.trim().split("\\n").sort( (a,b) => a.match(/>([^<>]+)</)[1] > b.match(/>([^<>]+)</)[1] ).join("\\n"); \n'
+	cpout += '      return replaced + "\\n";\n'
 	cpout += '			}\n'
 	cpout += '''function make_relchooser(id,option_type,rel){
 		    var s = "<div id='seldiv"+id.replace("n","")+"' style='white-space:nowrap;'>";
@@ -333,8 +359,11 @@ def build_canvas(current_doc, current_project, rels, nodes, def_rstrel="", def_m
 				  Anchor:"Top",
 		            Connector : [ "Bezier", { curviness:50 } ]
 				})
+				var loading_done = false;
 				 jsPlumb.ready(function() {
 
+		if (loading_done){return;}
+		loading_done = true;
 		jsPlumb.setContainer(document.getElementById("inner_canvas"));
 		'''
 
@@ -389,6 +418,12 @@ def build_canvas(current_doc, current_project, rels, nodes, def_rstrel="", def_m
 				var node_id = "n"+info.sourceId.replace(/edu|g|lg/,"");
 				var new_parent_id = "n"+info.targetId.replace(/edu|g|lg/,"");
 
+				if (ctrlPressed && $('#use_secedges').val().toLowerCase() == "true"){
+					defrel = get_def_rstrel(); 
+					act("sc:"+node_id.replace(/n/,'') + "-"+new_parent_id.replace(/n/,'')+"," + defrel);
+					return;
+				}
+
 				nodes = parse_data();
 				new_parent = nodes[new_parent_id];
 				relname = nodes[node_id].relname;
@@ -421,6 +456,9 @@ def build_canvas(current_doc, current_project, rels, nodes, def_rstrel="", def_m
 			    $(".minibtn").prop("disabled",false);
 
 			});
+			loading_done = true;
+			nodes = parse_data();
+		    render_all_secedges(nodes);
 
 		});
 			nodes = parse_data();
@@ -558,6 +596,10 @@ def structure_main(user, admin, mode, **kwargs):
 						update_rel(params[0], params[1], current_doc, current_project, user)
 					elif action_type == "sg":
 						update_signals(action.split(":")[1:], current_doc, current_project, user)
+					elif action_type == "sc":  # Add secedge
+						update_secedge(params[0].split("-")[0], params[0].split("-")[1], params[1], current_doc, current_project, user)
+					elif action_type == "xs":  # Delete secedge
+						update_secedge(params[0].split("-")[0], params[0].split("-")[1], "-ERASE-", current_doc, current_project, user)
 					else:
 						cpout += '<script>alert("the action was: " + theform["action"]);</script>\n'
 
@@ -575,6 +617,7 @@ def structure_main(user, admin, mode, **kwargs):
 	rows = get_rst_doc(current_doc, current_project, user)
 	signal_data = get_signals(current_doc, current_project, user)
 	nodes = {}
+	secedge_data = []
 	for row in rows:
 		relkind = "span"
 		if row[7].endswith("_m"):
@@ -582,11 +625,20 @@ def structure_main(user, admin, mode, **kwargs):
 		elif row[7].endswith("_r"):
 			relkind = "rst"
 		if row[5] == "edu":
-			nodes[row[0]] = NODE(row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7], relkind)
+			nodes[row[0]] = NODE(row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7], relkind, row[8])
 		else:
-			nodes[row[0]] = NODE(row[0], 0, 0, row[3], row[4], row[5], row[6], row[7], relkind)
+			nodes[row[0]] = NODE(row[0], 0, 0, row[3], row[4], row[5], row[6], row[7], relkind, row[8])
+		if row[8] is not None:
+			sec = row[8]
+			if sec.startswith(";"):
+				sec = sec[1:]
+			if row[8].endswith(";"):
+				sec = sec[:-1]
+			if len(sec) > 0:
+				secedge_data += sec.split(";")
+	secedge_data = ";".join(sorted(list(set(secedge_data))))
 
-	cpout += build_canvas(current_doc, current_project, rels, nodes, def_rstrel=def_rstrel, def_multirel=def_multirel, signal_data=signal_data)
+	cpout += build_canvas(current_doc, current_project, rels, nodes, secedge_data=secedge_data, user=user, def_rstrel=def_rstrel, def_multirel=def_multirel, signal_data=signal_data)
 	cpout += '''		</body>
 		</html>
 '''

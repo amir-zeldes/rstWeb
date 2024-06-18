@@ -23,11 +23,13 @@ def read_rst(filename, rel_hash, do_tokenize=False, as_string=False):
 	else:
 		f = codecs.open(filename, "r", "utf-8")
 		in_rs3 = f.read()
+	# Remove processing instruction
+	in_rs3 = re.sub(r'<\?xml[^<>]*?\?>','',in_rs3)
 	try:
 		xmldoc = minidom.parseString(codecs.encode(in_rs3, "utf-8"))
 	except ExpatError:
 		message = "Invalid .rs3 file"
-		return message
+		return message, None
 
 	nodes = []
 	ordered_id = {}
@@ -184,10 +186,19 @@ def read_rst(filename, rel_hash, do_tokenize=False, as_string=False):
 	signals = []
 	for signal in item_list:
 		source = signal.attributes["source"].value
-		# This will crash if signal source refers to a non-existing node:
-		source = ordered_id[source]
-		if source not in all_node_ids:
-			raise IOError("Invalid source node ID for signal: " + str(source) + " (from XML file source="+signal.attributes["source"].value+"(\n")
+		if "-" in source:  # Secedge signal
+			src, trg = source.split("-")
+			# We assume .rs4 format files are properly ordered, so directly look up IDs from secedge
+			if int(src) not in all_node_ids or int(trg) not in all_node_ids:
+				raise IOError("Invalid secedge ID for signal: " + str(source) + " (from XML file source="+signal.attributes["source"].value+")\n")
+			src = str(ordered_id[src])
+			trg = str(ordered_id[trg])
+			source = src + "-" + trg
+		else:
+			# This will crash if signal source refers to a non-existing node:
+			source = ordered_id[source]
+			if source not in all_node_ids:
+				raise IOError("Invalid source node ID for signal: " + str(source) + " (from XML file source="+signal.attributes["source"].value+")\n")
 		type = signal.attributes["type"].value
 		subtype = signal.attributes["subtype"].value
 		tokens = signal.attributes["tokens"].value
@@ -199,15 +210,42 @@ def read_rst(filename, rel_hash, do_tokenize=False, as_string=False):
 				raise IOError("Signal refers to non-existent token: " + str(max_tok))
 		signals.append([str(source),type,subtype,tokens])
 
+	# Collect signal type inventory declaration if available
+	item_list = xmldoc.getElementsByTagName("sig")
+	signal_type_dict = {}
+	for sig in item_list:
+		sigtype = sig.attributes["type"].value
+		subtypes = sig.attributes["subtypes"].value.split(";")
+		signal_type_dict[sigtype] = subtypes
+	if len(signal_type_dict) == 0:
+		signal_type_dict = None
+
+	# Collect secondary edges if any are available
+	item_list = xmldoc.getElementsByTagName("secedge")
+	secedge_dict = collections.defaultdict(set)
+	for secedge in item_list:
+		source = secedge.attributes["source"].value
+		target = secedge.attributes["target"].value
+		relname = secedge.attributes["relname"].value
+		# This will crash if signal source or target refers to a non-existing node:
+		source = ordered_id[source]
+		target = ordered_id[target]
+		if source not in all_node_ids:
+			raise IOError("Invalid source node ID for secedge: " + str(source) + " (from XML file source="+secedge.attributes["source"].value+"(\n")
+		if target not in all_node_ids:
+			raise IOError("Invalid target node ID for secedge: " + str(target) + " (from XML file source="+secedge.attributes["target"].value+"(\n")
+		secedge_dict[str(source)].add(str(source) + "-" + str(target) + ":" + relname + "_r")
+
 	elements = {}
 	for row in nodes:
-		elements[row[0]] = NODE(row[0],row[1],row[2],row[3],row[4],row[5],row[6],row[7],"")
+		secedges = ";".join(secedge_dict[row[0]]) if row[0] in secedge_dict else ""
+		elements[row[0]] = NODE(row[0],row[1],row[2],row[3],row[4],row[5],row[6],row[7],"",secedges)
 
 	for element in elements:
 		if elements[element].kind == "edu":
 			get_left_right(element, elements,0,0,rel_hash)
 
-	return elements, signals
+	return elements, signals, signal_type_dict
 
 
 def read_text(filename,rel_hash,do_tokenize=False):
@@ -238,7 +276,7 @@ def read_text(filename,rel_hash,do_tokenize=False):
 				contents = tokenize(contents)
 				contents = " ".join(contents)
 
-			nodes[str(id_counter)] = NODE(str(id_counter),id_counter,id_counter,"0",0,"edu",contents,list(rels.keys())[0],list(rels.values())[0])
+			nodes[str(id_counter)] = NODE(str(id_counter),id_counter,id_counter,"0",0,"edu",contents,list(rels.keys())[0],list(rels.values())[0],"")
 
 	return nodes
 

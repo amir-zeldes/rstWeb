@@ -184,19 +184,44 @@ div.shield-of-justice {
 }
 
 .edu--clickable .tok:not(.tok--selected):hover {
-		background: rgba(255,255,0,0.3);
+		background-color: rgba(255,255,0,0.6);
 }
 
 .tok--highlighted {
-		background: rgba(255,255,0,0.3);
+		background-color: rgba(255,255,0,0.8) !important;
+}
+.tok--highlighted.signal-color {
+        background-color: rgba(var(--rgb), 0.8) !important;
 }
 
 .tok--highlighted-by-button {
-	background: rgba(255,255,0,0.2);
+    --rgb: 255,255,0;
+	background-color: rgba(var(--rgb),0.2);
 }
 
+.tok--highlighted-by-button.signal-type-1{--rgb: 255,0,0;background-color: rgba(var(--rgb),0.2);} /*red*/
+.tok--highlighted-by-button.signal-type-2{--rgb: 247,231,51;background-color: rgba(var(--rgb),0.2);} /*yellow*/
+.tok--highlighted-by-button.signal-type-3{--rgb: 251,183,52;background-color: rgba(var(--rgb),0.2);} /*orange*/
+.tok--highlighted-by-button.signal-type-4{--rgb: 128,128,0;background-color: rgba(var(--rgb),0.2);} /*ochre*/
+.tok--highlighted-by-button.signal-type-5{--rgb: 255,0,255;background-color: rgba(var(--rgb),0.2);} /*pink*/
+.tok--highlighted-by-button.signal-type-6{--rgb: 0,0,255;background-color: rgba(var(--rgb),0.2);} /*blue*/
+.tok--highlighted-by-button.signal-type-7{--rgb: 4,93,161;background-color: rgba(var(--rgb),0.2);} /*glas*/
+.tok--highlighted-by-button.signal-type-8{--rgb: 0,255,0;background-color: rgba(var(--rgb),0.2);} /*green*/
+.tok--highlighted-by-button.signal-type-9{--rgb: 0,255,255;background-color: rgba(var(--rgb),0.2);} /*cyan*/
+.tok--highlighted-by-button.signal-type-10{--rgb: 105,3,117;background-color: rgba(var(--rgb),0.2);}/*violet*/
+.tok--highlighted-by-button.signal-type-11{--rgb: 15,8,75;background-color: rgba(var(--rgb),0.2);} /* gray*/
+.tok--highlighted-by-button.signal-type-12{--rgb: 199,214,109;background-color: rgba(var(--rgb),0.2);}
+.tok--highlighted-by-button.signal-type-13{--rgb: 131,10,72;background-color: rgba(var(--rgb),0.2);}
+.tok--highlighted-by-button.signal-type-14{--rgb: 174,132,126;background-color: rgba(var(--rgb),0.2);}
+.tok--highlighted-by-button.signal-type-15{--rgb: 0,255,0;background-color: rgba(var(--rgb),0.2);}
+.tok--highlighted-by-button.signal-type-16{--rgb: 255,255,0;background-color: rgba(var(--rgb),0.2);}
+.tok--highlighted-by-button.signal-type-17{--rgb: 0,255,255;background-color: rgba(var(--rgb),0.2);}
+.tok--highlighted-by-button.signal-type-18{--rgb: 255,0,255;background-color: rgba(var(--rgb),0.2);}
+.tok--highlighted-by-button.signal-type-19{--rgb: 255,0,255;background-color: rgba(var(--rgb),0.2);}
+.tok--highlighted-by-button.signal-type-20{--rgb: 255,0,255;background-color: rgba(var(--rgb),0.2);}
+
 .edu--clickable .tok--selected {
-		background: rgba(255,255,0,0.7);
+		background-color: rgba(255,255,0,0.7);
 }
 
 
@@ -341,7 +366,7 @@ select.rst_rel {
 .seg_end:before{content:"\a0\a0"}
 .seg_end:hover:before{content:"x"}
 
-.tab{position: absolute;left: 0px; top:86px; background-color:white;height: 700px; width: 500px;padding-left:5px}
+.tab{position: absolute;left: 0px; top:86px; background-color:white;height: 800px; width: 500px;padding-left:5px}
 .tab_btn{width:82px;top:85px;position:absolute;z-index:2;border-width:1px;border-color: black black black black; border-style: solid; text-align:center; border-top-left-radius: 6px; border-top-right-radius: 6px; cursor: pointer; background-color: buttonface; border-bottom-color: black}
 .tab_btn:after{content: "\a0"; width:8px; border-bottom-style: solid; border-bottom-width:1px;border-bottom-color: black; left: 82px;position:absolute;top:0px}
 button:hover:enabled, .nav_button:hover:enabled{  color: red; background: #f5f5f5; }
@@ -542,6 +567,33 @@ input:checked + .slider:before {
     height: 80%;
 }
 
-.ui-dialog { z-index: 1000 !important ;}
+.ui-dialog { z-index: 10000 !important ;}
 
 #quick_container{padding-top:5px}
+
+.custom-menu {
+    display: none;
+    z-index: 10000;
+    position: absolute;
+    overflow: hidden;
+    border: 1px solid #CCC;
+    white-space: nowrap;
+    font-family: sans-serif;
+    background: #FFF;
+    color: #333;
+    border-radius: 5px;
+    padding: 0;
+}
+
+/* Each of the items in the list */
+.custom-menu li {
+    padding: 8px 12px;
+    cursor: pointer;
+    list-style-type: none;
+    transition: all .3s ease;
+    user-select: none;
+}
+
+.custom-menu li:hover {
+    background-color: #DEF;
+}

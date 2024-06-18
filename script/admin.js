@@ -254,6 +254,10 @@ function admin(action){
             document.getElementById("switch_multinuc_buttons").value = "switch_multinuc_buttons";
             document.getElementById("sel_tab").value = "database";
             break;
+        case "switch_secedges":
+            document.getElementById("switch_secedges").value = "switch_secedges";
+            document.getElementById("sel_tab").value = "database";
+            break;
         case "update_schema":
             document.getElementById("update_schema").value = "update_schema";
             document.getElementById("sel_tab").value = "database";
