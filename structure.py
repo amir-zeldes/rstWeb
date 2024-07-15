@@ -418,7 +418,7 @@ def build_canvas(current_doc, current_project, rels, nodes, secedge_data="", def
 				var node_id = "n"+info.sourceId.replace(/edu|g|lg/,"");
 				var new_parent_id = "n"+info.targetId.replace(/edu|g|lg/,"");
 
-				if (ctrlPressed && $('#use_secedges').val().toLowerCase() == "true"){
+				if (ctrlPressed.value && $('#use_secedges').val().toLowerCase() == "true"){
 					defrel = get_def_rstrel(); 
 					act("sc:"+node_id.replace(/n/,'') + "-"+new_parent_id.replace(/n/,'')+"," + defrel);
 					return;

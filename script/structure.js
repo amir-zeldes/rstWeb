@@ -16,7 +16,8 @@ var signal_highlight_colors = {
 	//"dm" : "signal-red",
 	//"orphan": "signal-blue"
 };
-var ctrlPressed = false;
+window.ctrlPressed = {};
+ctrlPressed.value = false;
 
 function act(action){
 
@@ -1525,13 +1526,13 @@ $(document).ready(function(){
   init_signal_drawer();
   init_show_all_tokens_button();
   bind_tok_contextmenu();
-  ctrlPressed = false;
+  ctrlPressed.value = false;
 });
 
 
 $(document).on("keydown", function (e) {
 	if (e.ctrlKey){
-		ctrlPressed = true;
+		ctrlPressed.value = true;
 		if (e.keyCode == 69){ // User hit ctrl+e, show edge action dialog
 			e.preventDefault();
 			action_spec = window.prompt("Update parent (e.g. enter 1,2 to set parent of node 1 to be 2); double click a node to get its ID.", "");
@@ -1577,6 +1578,7 @@ $(document).on("keydown", function (e) {
 				}
 			}
 		}
+		//ctrlPressed.value = false;
 	}
 });
 
@@ -1719,7 +1721,7 @@ function make_secedge_chooser(id,parent_id,rel){
 }
 
 $(document).keyup(function(evt) {
-    ctrlPressed = false;
+    ctrlPressed.value = false;
 });
 
 function make_signal_action(signals) {
