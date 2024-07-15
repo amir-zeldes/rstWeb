@@ -97,7 +97,7 @@ was being done before the interruption. (A simple way of saving state).
 # login is the function most frequently imported
 # and called directly by external scripts
 
-def login(theform, userdir, thisscript=None, action=None):
+def login(theform, userdir, thisscript=None, action=None, print_cookie=True):
     """From the form decide which function to call."""
     # FIXME: this function got a bit more complicated than intended
     # it also handles checking logins when editaccount or admin
@@ -185,8 +185,9 @@ def login(theform, userdir, thisscript=None, action=None):
 
     else:
         displaylogin(userdir, thisscript, action) # we haven't understood - just display the login screen XXXX error message instead ?          
-    
-    print(newcookie)     # XXXX ought to be a way of returning the cookie object instead...
+
+    if print_cookie:
+        print(newcookie)     # XXXX ought to be a way of returning the cookie object instead...
     if action == 'EMPTY_VAL_MJF':           # the programmer ought never to 'see' this value, although it might get passed to his script by the login code a few times....
         action = None
     userconfig['lastused'] = str(time())

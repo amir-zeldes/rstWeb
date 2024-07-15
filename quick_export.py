@@ -12,7 +12,7 @@ import cgitb
 import codecs
 import sys
 import cgi
-import os
+import os, re
 from modules.configobj import ConfigObj
 from modules.logintools import login
 from modules.rstweb_sql import get_export_string
@@ -64,7 +64,7 @@ def quickexp_main_server():
 	theform = cgi.FieldStorage()
 	scriptpath = os.path.dirname(os.path.realpath(__file__)) + os.sep
 	userdir = scriptpath + "users" + os.sep
-	action, userconfig = login(theform, userdir, thisscript, action)
+	action, userconfig = login(theform, userdir, thisscript, action, print_cookie=False)
 	user = userconfig["username"]
 	admin = userconfig["admin"]
 	kwargs={}
@@ -72,6 +72,8 @@ def quickexp_main_server():
 		kwargs[key] = theform[key].value
 
 	output = quickexp_main(user, admin, 'server', **kwargs)
+	output = re.sub(r'Set-Cookie[^\n]+','',output)  # Remove any cookies
+	sys.stdout.buffer.flush()
 	if sys.version_info[0] < 3:
 		print(output)
 	else:

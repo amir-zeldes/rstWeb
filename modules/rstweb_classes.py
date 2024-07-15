@@ -7,7 +7,7 @@ Author: Amir Zeldes
 """
 
 class NODE:
-	def __init__(self, id, left, right, parent, depth, kind, text, relname, relkind):
+	def __init__(self, id, left, right, parent, depth, kind, text, relname, relkind, secedges):
 
 		"""Basic class to hold all nodes (EDU, span and multinuc) in structure.py and while importing"""
 
@@ -21,6 +21,7 @@ class NODE:
 		self.relname = relname
 		self.relkind = relkind #rst (a.k.a. satellite), multinuc or span relation
 		self.sortdepth = depth
+		self.secedges = secedges
 
 
 class SEGMENT:

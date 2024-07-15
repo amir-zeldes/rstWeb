@@ -42,23 +42,72 @@ function get_rs3(){
 			groups.push('\t\t<group id="'+nid.replace("n","")+'" type="'+node.kind+'" ' + parent_string + relname_string+'/>');
 		}
 	}
-		for (rel of reltypes.sort()){
-			if (rel=="span" || rel=="none"){continue;}
-			relname_string = rel.replace(/_[rm]/,'');
-			if (rel.endsWith("_m")){
-				reltype = "multinuc";
-			}
-			else{
-				reltype = "rst";
-			}
-			rels.push('\t\t\t<rel name="' + relname_string + '" type="' + reltype + '"/>');
-		}
+    for (rel of reltypes.sort()){
+        if (rel=="span" || rel=="none"){continue;}
+        relname_string = rel.replace(/_[rm]/,'');
+        if (rel.endsWith("_m")){
+            reltype = "multinuc";
+        }
+        else{
+            reltype = "rst";
+        }
+        rels.push('\t\t\t<rel name="' + relname_string + '" type="' + reltype + '"/>');
+    }
 
 	rst_out = '<rst>\n\t<header>\n\t\t<relations>\n';
 	rst_out += rels.join("\n") + "\n";
-	rst_out += "\t\t</relations>\n\t</header>\n\t<body>\n";
+	rst_out += "\t\t</relations>\n";
+
+	signal_types = window.rstWebSignalTypes;
+    if (Object.keys(signal_types).length > 0){
+        rst_out += "\t\t<sigtypes>\n";
+        for (major_type in signal_types){
+            minor_types = signal_types[major_type];
+            minor_types = minor_types.join(";");
+            rst_out += '\t\t\t<sig type="'+major_type+'" subtypes="'+minor_types+'"/>\n';
+        }
+        rst_out += "\t\t</sigtypes>\n";
+    }
+
+	rst_out += "\t</header>\n\t<body>\n";
 	rst_out += edus.join("\n") + "\n";
 	rst_out += groups.join("\n") + "\n";
+
+    secedges = document.getElementById("secedges").value;
+	if (secedges.length > 0){
+		rst_out += "\t\t<secedges>\n"
+		for (s of secedges.split(";")){
+			if (!s.includes(":")){continue;}
+			parts = s.split(":");
+			src_trg = parts[0];
+			relname = parts[1];
+			parts = src_trg.split("-");
+			src = parts[0];
+			trg = parts[1];
+			if (relname.endsWith("_r") || relname.endsWith("_m")){
+				relname = relname.slice(0,-2);
+			}
+			rst_out += '\t\t\t<secedge id="'+src+"-"+trg+'" source="' + src + '" target="' + trg + '" relname="' + relname + '"/>\n';
+		}
+		rst_out += "\t\t</secedges>\n";
+	}
+
+    signals = window.rstWebSignals;
+
+	if (Object.keys(signals).length > 0){
+		rst_out += "\t\t<signals>\n";
+		for (source in signals){
+		    for (signal of signals[source]){
+			    signal_type = signal["type"];
+			    signal_subtype = signal["subtype"];
+			    tokens = signal["tokens"];
+			    tokens = tokens.join(",");
+			    rst_out += '\t\t\t<signal source="' + source + '" type="' + signal_type + '" subtype="' + signal_subtype + '" tokens="' + tokens + '"/>\n';
+			}
+		}
+		rst_out += "\t\t</signals>\n";
+	}
+
 	rst_out += "\t</body>\n</rst>\n";
 	return rst_out;
 }
@@ -91,6 +140,7 @@ $(document).ready(function() {
 							data: rs3},
 								function(newData){
 										$("#quick_structure").html(newData);
+										$("#show-all-signals").click();
 								}
 							);
 						}
