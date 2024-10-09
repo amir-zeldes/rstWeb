@@ -1,5 +1,8 @@
-FROM debian
-RUN apt-get -yqq update
+FROM httpd:bullseye
+RUN apt -yqq update
+RUN apt install -yqq software-properties-common
+RUN ln -s /usr/bin/python3.9 /usr/bin/python
+RUN apt install -yqq python3-pip && python -m pip install six
 RUN apt-get install -yqq supervisor apache2
 RUN a2enmod rewrite
 RUN a2enmod cgi
